@@ -1,0 +1,11 @@
+{
+  "dart.flutterSdkPath": ".fvm/versions/3.32.4",
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit",
+    "source.organizeImports": "explicit",
+    "source.sortMembers": "explicit"
+  },
+  "dart.renameFilesWithClasses": "always",
+  "editor.formatOnSaveMode": "file",
+  "editor.formatOnSave": true
+}

@@ -1,0 +1,14 @@
+---
+dependencies:
+  image: ^4.5.4
+  meta: ">=1.16.0 <2.0.0"
+description: "'A pure Dart implementation of Canvas API compatible with dart:ui.'"
+dev_dependencies:
+  auto_exporter: ^3.0.0
+  build_runner: ^2.4.11
+  test: ^1.26.0
+environment:
+  sdk: ^3.7.0
+name: pure_ui
+repository: https://github.com/normidar/pure_ui
+version: 0.0.1

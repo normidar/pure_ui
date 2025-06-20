@@ -1,0 +1,8 @@
+targets:
+  $default:
+    builders:
+      auto_exporter:
+        options:
+          output: lib/pure_ui.dart
+          global: false
+          project_name: pure_ui
