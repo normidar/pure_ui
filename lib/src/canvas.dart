@@ -26,24 +26,24 @@ class Canvas {
   /// The [PictureRecorder] will record the drawing operations
   /// performed on this canvas.
   Canvas(PictureRecorder recorder)
-    : _image = null,
-      _operations = [],
-      _isRecording = true {
+      : _image = null,
+        _operations = [],
+        _isRecording = true {
     // Set this canvas to the recorder's picture
     recorder.setCanvasForPicture(this);
   }
 
   /// Creates a canvas for the given image.
   Canvas.forImage(Image image)
-    : _image = image,
-      _operations = [],
-      _isRecording = false;
+      : _image = image,
+        _operations = [],
+        _isRecording = false;
 
   /// Creates a canvas for recording operations only.
   Canvas.forRecording()
-    : _image = Image(1, 1),
-      _operations = [],
-      _isRecording = true;
+      : _image = Image(1, 1),
+        _operations = [],
+        _isRecording = true;
 
   final Image? _image;
   final List<_CanvasOperation> _operations;
@@ -353,16 +353,12 @@ class Canvas {
     if (paint.style == PaintingStyle.fill ||
         paint.style == PaintingStyle.stroke && paint.strokeWidth > 1) {
       // 塗りつぶし円または太い線の円
-      for (
-        int y = (centerY - r - antiAliasRadius).floor();
-        y <= (centerY + r + antiAliasRadius).ceil();
-        y++
-      ) {
-        for (
-          int x = (centerX - r - antiAliasRadius).floor();
-          x <= (centerX + r + antiAliasRadius).ceil();
-          x++
-        ) {
+      for (int y = (centerY - r - antiAliasRadius).floor();
+          y <= (centerY + r + antiAliasRadius).ceil();
+          y++) {
+        for (int x = (centerX - r - antiAliasRadius).floor();
+            x <= (centerX + r + antiAliasRadius).ceil();
+            x++) {
           if (x < 0 || x >= target.width || y < 0 || y >= target.height)
             continue;
 
@@ -769,8 +765,7 @@ class Canvas {
             final dy = y - centerYi;
 
             // 正しい楕円の式を使用
-            final value =
-                (dx * dx) / (radiusXi * radiusXi) +
+            final value = (dx * dx) / (radiusXi * radiusXi) +
                 (dy * dy) / (radiusYi * radiusYi);
 
             if (value <= 1.0) {
@@ -841,8 +836,7 @@ class Canvas {
           final dy = y - centerYi;
 
           // 正しい楕円の式を使用
-          final value =
-              (dx * dx) / (radiusXi * radiusXi) +
+          final value = (dx * dx) / (radiusXi * radiusXi) +
               (dy * dy) / (radiusYi * radiusYi);
 
           if (value <= 1.0) {
@@ -2105,267 +2099,267 @@ class Canvas {
 /// A canvas operation.
 class _CanvasOperation {
   _CanvasOperation.drawCircle(this._p1, this._radiusX, this._paint)
-    : _type = _OperationType.drawCircle,
-      _p2 = null,
-      _rect = null,
-      _rect2 = null,
-      _radiusY = null,
-      _path = null,
-      _image = null,
-      _picture = null,
-      _paragraph = null,
-      _vertices = null,
-      _blendMode = null,
-      _matrix4 = null;
+      : _type = _OperationType.drawCircle,
+        _p2 = null,
+        _rect = null,
+        _rect2 = null,
+        _radiusY = null,
+        _path = null,
+        _image = null,
+        _picture = null,
+        _paragraph = null,
+        _vertices = null,
+        _blendMode = null,
+        _matrix4 = null;
 
   _CanvasOperation.drawImage(this._image, this._p1, this._paint)
-    : _type = _OperationType.drawImage,
-      _p2 = null,
-      _rect = null,
-      _rect2 = null,
-      _radiusX = null,
-      _radiusY = null,
-      _path = null,
-      _picture = null,
-      _paragraph = null,
-      _vertices = null,
-      _blendMode = null,
-      _matrix4 = null;
+      : _type = _OperationType.drawImage,
+        _p2 = null,
+        _rect = null,
+        _rect2 = null,
+        _radiusX = null,
+        _radiusY = null,
+        _path = null,
+        _picture = null,
+        _paragraph = null,
+        _vertices = null,
+        _blendMode = null,
+        _matrix4 = null;
 
   _CanvasOperation.drawImageRect(
     this._image,
     this._rect,
     this._rect2,
     this._paint,
-  ) : _type = _OperationType.drawImageRect,
-      _p1 = null,
-      _p2 = null,
-      _radiusX = null,
-      _radiusY = null,
-      _path = null,
-      _picture = null,
-      _paragraph = null,
-      _vertices = null,
-      _blendMode = null,
-      _matrix4 = null;
+  )   : _type = _OperationType.drawImageRect,
+        _p1 = null,
+        _p2 = null,
+        _radiusX = null,
+        _radiusY = null,
+        _path = null,
+        _picture = null,
+        _paragraph = null,
+        _vertices = null,
+        _blendMode = null,
+        _matrix4 = null;
 
   _CanvasOperation.drawLine(this._p1, this._p2, this._paint)
-    : _type = _OperationType.drawLine,
-      _rect = null,
-      _rect2 = null,
-      _radiusX = null,
-      _radiusY = null,
-      _path = null,
-      _image = null,
-      _picture = null,
-      _paragraph = null,
-      _vertices = null,
-      _blendMode = null,
-      _matrix4 = null;
+      : _type = _OperationType.drawLine,
+        _rect = null,
+        _rect2 = null,
+        _radiusX = null,
+        _radiusY = null,
+        _path = null,
+        _image = null,
+        _picture = null,
+        _paragraph = null,
+        _vertices = null,
+        _blendMode = null,
+        _matrix4 = null;
 
   _CanvasOperation.drawOval(this._rect, this._paint)
-    : _type = _OperationType.drawOval,
-      _p1 = null,
-      _p2 = null,
-      _rect2 = null,
-      _radiusX = null,
-      _radiusY = null,
-      _path = null,
-      _image = null,
-      _picture = null,
-      _paragraph = null,
-      _vertices = null,
-      _blendMode = null,
-      _matrix4 = null;
+      : _type = _OperationType.drawOval,
+        _p1 = null,
+        _p2 = null,
+        _rect2 = null,
+        _radiusX = null,
+        _radiusY = null,
+        _path = null,
+        _image = null,
+        _picture = null,
+        _paragraph = null,
+        _vertices = null,
+        _blendMode = null,
+        _matrix4 = null;
 
   _CanvasOperation.drawPath(this._path, this._paint)
-    : _type = _OperationType.drawPath,
-      _p1 = null,
-      _p2 = null,
-      _rect = null,
-      _rect2 = null,
-      _radiusX = null,
-      _radiusY = null,
-      _image = null,
-      _picture = null,
-      _paragraph = null,
-      _vertices = null,
-      _blendMode = null,
-      _matrix4 = null;
+      : _type = _OperationType.drawPath,
+        _p1 = null,
+        _p2 = null,
+        _rect = null,
+        _rect2 = null,
+        _radiusX = null,
+        _radiusY = null,
+        _image = null,
+        _picture = null,
+        _paragraph = null,
+        _vertices = null,
+        _blendMode = null,
+        _matrix4 = null;
 
   _CanvasOperation.drawPicture(this._picture)
-    : _type = _OperationType.drawPicture,
-      _p1 = null,
-      _p2 = null,
-      _rect = null,
-      _rect2 = null,
-      _radiusX = null,
-      _radiusY = null,
-      _paint = null,
-      _path = null,
-      _image = null,
-      _paragraph = null,
-      _vertices = null,
-      _blendMode = null,
-      _matrix4 = null;
+      : _type = _OperationType.drawPicture,
+        _p1 = null,
+        _p2 = null,
+        _rect = null,
+        _rect2 = null,
+        _radiusX = null,
+        _radiusY = null,
+        _paint = null,
+        _path = null,
+        _image = null,
+        _paragraph = null,
+        _vertices = null,
+        _blendMode = null,
+        _matrix4 = null;
 
   _CanvasOperation.drawRect(this._rect, this._paint)
-    : _type = _OperationType.drawRect,
-      _p1 = null,
-      _p2 = null,
-      _rect2 = null,
-      _radiusX = null,
-      _radiusY = null,
-      _path = null,
-      _image = null,
-      _picture = null,
-      _paragraph = null,
-      _vertices = null,
-      _blendMode = null,
-      _matrix4 = null;
+      : _type = _OperationType.drawRect,
+        _p1 = null,
+        _p2 = null,
+        _rect2 = null,
+        _radiusX = null,
+        _radiusY = null,
+        _path = null,
+        _image = null,
+        _picture = null,
+        _paragraph = null,
+        _vertices = null,
+        _blendMode = null,
+        _matrix4 = null;
 
   _CanvasOperation.drawRRect(
     this._rect,
     this._radiusX,
     this._radiusY,
     this._paint,
-  ) : _type = _OperationType.drawRRect,
-      _p1 = null,
-      _p2 = null,
-      _rect2 = null,
-      _path = null,
-      _image = null,
-      _picture = null,
-      _paragraph = null,
-      _vertices = null,
-      _blendMode = null,
-      _matrix4 = null;
+  )   : _type = _OperationType.drawRRect,
+        _p1 = null,
+        _p2 = null,
+        _rect2 = null,
+        _path = null,
+        _image = null,
+        _picture = null,
+        _paragraph = null,
+        _vertices = null,
+        _blendMode = null,
+        _matrix4 = null;
 
   _CanvasOperation.restore()
-    : _type = _OperationType.restore,
-      _p1 = null,
-      _p2 = null,
-      _rect = null,
-      _rect2 = null,
-      _radiusX = null,
-      _radiusY = null,
-      _paint = null,
-      _path = null,
-      _image = null,
-      _picture = null,
-      _paragraph = null,
-      _vertices = null,
-      _blendMode = null,
-      _matrix4 = null;
+      : _type = _OperationType.restore,
+        _p1 = null,
+        _p2 = null,
+        _rect = null,
+        _rect2 = null,
+        _radiusX = null,
+        _radiusY = null,
+        _paint = null,
+        _path = null,
+        _image = null,
+        _picture = null,
+        _paragraph = null,
+        _vertices = null,
+        _blendMode = null,
+        _matrix4 = null;
 
   _CanvasOperation.save()
-    : _type = _OperationType.save,
-      _p1 = null,
-      _p2 = null,
-      _rect = null,
-      _rect2 = null,
-      _radiusX = null,
-      _radiusY = null,
-      _paint = null,
-      _path = null,
-      _image = null,
-      _picture = null,
-      _paragraph = null,
-      _vertices = null,
-      _blendMode = null,
-      _matrix4 = null;
+      : _type = _OperationType.save,
+        _p1 = null,
+        _p2 = null,
+        _rect = null,
+        _rect2 = null,
+        _radiusX = null,
+        _radiusY = null,
+        _paint = null,
+        _path = null,
+        _image = null,
+        _picture = null,
+        _paragraph = null,
+        _vertices = null,
+        _blendMode = null,
+        _matrix4 = null;
 
   _CanvasOperation.drawVertices(this._vertices, this._blendMode, this._paint)
-    : _type = _OperationType.drawVertices,
-      _p1 = null,
-      _p2 = null,
-      _rect = null,
-      _rect2 = null,
-      _radiusX = null,
-      _radiusY = null,
-      _path = null,
-      _image = null,
-      _picture = null,
-      _paragraph = null,
-      _matrix4 = null;
+      : _type = _OperationType.drawVertices,
+        _p1 = null,
+        _p2 = null,
+        _rect = null,
+        _rect2 = null,
+        _radiusX = null,
+        _radiusY = null,
+        _path = null,
+        _image = null,
+        _picture = null,
+        _paragraph = null,
+        _matrix4 = null;
 
   _CanvasOperation.drawParagraph(this._paragraph, this._p1)
-    : _type = _OperationType.drawParagraph,
-      _p2 = null,
-      _rect = null,
-      _rect2 = null,
-      _radiusX = null,
-      _radiusY = null,
-      _paint = null,
-      _path = null,
-      _image = null,
-      _picture = null,
-      _vertices = null,
-      _blendMode = null,
-      _matrix4 = null;
+      : _type = _OperationType.drawParagraph,
+        _p2 = null,
+        _rect = null,
+        _rect2 = null,
+        _radiusX = null,
+        _radiusY = null,
+        _paint = null,
+        _path = null,
+        _image = null,
+        _picture = null,
+        _vertices = null,
+        _blendMode = null,
+        _matrix4 = null;
 
   _CanvasOperation.transform(this._matrix4)
-    : _type = _OperationType.transform,
-      _p1 = null,
-      _p2 = null,
-      _rect = null,
-      _rect2 = null,
-      _radiusX = null,
-      _radiusY = null,
-      _paint = null,
-      _path = null,
-      _image = null,
-      _picture = null,
-      _paragraph = null,
-      _vertices = null,
-      _blendMode = null;
+      : _type = _OperationType.transform,
+        _p1 = null,
+        _p2 = null,
+        _rect = null,
+        _rect2 = null,
+        _radiusX = null,
+        _radiusY = null,
+        _paint = null,
+        _path = null,
+        _image = null,
+        _picture = null,
+        _paragraph = null,
+        _vertices = null,
+        _blendMode = null;
 
   _CanvasOperation.saveLayer(this._rect, this._paint)
-    : _type = _OperationType.saveLayer,
-      _p1 = null,
-      _p2 = null,
-      _rect2 = null,
-      _radiusX = null,
-      _radiusY = null,
-      _path = null,
-      _image = null,
-      _picture = null,
-      _paragraph = null,
-      _vertices = null,
-      _blendMode = null,
-      _matrix4 = null;
+      : _type = _OperationType.saveLayer,
+        _p1 = null,
+        _p2 = null,
+        _rect2 = null,
+        _radiusX = null,
+        _radiusY = null,
+        _path = null,
+        _image = null,
+        _picture = null,
+        _paragraph = null,
+        _vertices = null,
+        _blendMode = null,
+        _matrix4 = null;
 
   _CanvasOperation.clipPath(this._path)
-    : _type = _OperationType.clipPath,
-      _p1 = null,
-      _p2 = null,
-      _rect = null,
-      _rect2 = null,
-      _radiusX = null,
-      _radiusY = null,
-      _paint = null,
-      _image = null,
-      _picture = null,
-      _paragraph = null,
-      _vertices = null,
-      _blendMode = null,
-      _matrix4 = null;
+      : _type = _OperationType.clipPath,
+        _p1 = null,
+        _p2 = null,
+        _rect = null,
+        _rect2 = null,
+        _radiusX = null,
+        _radiusY = null,
+        _paint = null,
+        _image = null,
+        _picture = null,
+        _paragraph = null,
+        _vertices = null,
+        _blendMode = null,
+        _matrix4 = null;
 
   _CanvasOperation.clipRect(this._rect)
-    : _type = _OperationType.clipRect,
-      _p1 = null,
-      _p2 = null,
-      _rect2 = null,
-      _radiusX = null,
-      _radiusY = null,
-      _paint = null,
-      _path = null,
-      _image = null,
-      _picture = null,
-      _paragraph = null,
-      _vertices = null,
-      _blendMode = null,
-      _matrix4 = null;
+      : _type = _OperationType.clipRect,
+        _p1 = null,
+        _p2 = null,
+        _rect2 = null,
+        _radiusX = null,
+        _radiusY = null,
+        _paint = null,
+        _path = null,
+        _image = null,
+        _picture = null,
+        _paragraph = null,
+        _vertices = null,
+        _blendMode = null,
+        _matrix4 = null;
 
   final _OperationType _type;
   final Offset? _p1;

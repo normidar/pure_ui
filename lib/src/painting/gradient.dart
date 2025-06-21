@@ -101,12 +101,12 @@ class LinearGradient extends Gradient {
 
   @override
   int get hashCode => Object.hash(
-    from,
-    to,
-    tileMode,
-    Object.hashAll(colors),
-    stops == null ? null : Object.hashAll(stops!),
-  );
+        from,
+        to,
+        tileMode,
+        Object.hashAll(colors),
+        stops == null ? null : Object.hashAll(stops!),
+      );
 
   @override
   bool operator ==(Object other) {
@@ -213,15 +213,15 @@ class RadialGradient extends Gradient {
 
   @override
   int get hashCode => Object.hash(
-    center,
-    radius,
-    tileMode,
-    focal,
-    focalRadius,
-    matrix4,
-    Object.hashAll(colors),
-    stops == null ? null : Object.hashAll(stops!),
-  );
+        center,
+        radius,
+        tileMode,
+        focal,
+        focalRadius,
+        matrix4,
+        Object.hashAll(colors),
+        stops == null ? null : Object.hashAll(stops!),
+      );
 
   @override
   bool operator ==(Object other) {
@@ -319,13 +319,13 @@ class SweepGradient extends Gradient {
 
   @override
   int get hashCode => Object.hash(
-    center,
-    startAngle,
-    endAngle,
-    tileMode,
-    Object.hashAll(colors),
-    stops == null ? null : Object.hashAll(stops!),
-  );
+        center,
+        startAngle,
+        endAngle,
+        tileMode,
+        Object.hashAll(colors),
+        stops == null ? null : Object.hashAll(stops!),
+      );
 
   @override
   bool operator ==(Object other) {

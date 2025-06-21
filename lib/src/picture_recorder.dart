@@ -11,7 +11,9 @@ import 'package:pure_ui/src/picture.dart';
 /// This class is designed to be API-compatible with dart:ui's PictureRecorder.
 class PictureRecorder {
   /// Creates a new PictureRecorder for recording canvas operations.
-  PictureRecorder() : _picture = Picture(), _isRecording = true {
+  PictureRecorder()
+      : _picture = Picture(),
+        _isRecording = true {
     _canvas = Canvas(this);
   }
 

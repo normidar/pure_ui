@@ -109,10 +109,10 @@ class _LinearToSrgbGammaColorFilter implements ColorFilter {
 class _MatrixColorFilter implements ColorFilter {
   /// Creates a color filter that transforms colors based on a matrix.
   const _MatrixColorFilter(this.matrix)
-    : assert(
-        matrix.length == 20,
-        'Color matrix must have 20 entries for a 4x5 matrix',
-      );
+      : assert(
+          matrix.length == 20,
+          'Color matrix must have 20 entries for a 4x5 matrix',
+        );
 
   /// The matrix used to transform colors.
   ///

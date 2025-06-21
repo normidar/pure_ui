@@ -102,14 +102,14 @@ class TextStyle {
     this.shadows,
     this.overflow,
     this.locale,
-  }) : assert(
-         foreground == null || color == null,
-         'Cannot provide both a color and a foreground',
-       ),
-       assert(
-         background == null || backgroundColor == null,
-         'Cannot provide both a backgroundColor and a background',
-       );
+  })  : assert(
+          foreground == null || color == null,
+          'Cannot provide both a color and a foreground',
+        ),
+        assert(
+          background == null || backgroundColor == null,
+          'Cannot provide both a backgroundColor and a background',
+        );
 
   /// The color to use when painting the text.
   final Color? color;
@@ -175,27 +175,27 @@ class TextStyle {
 
   @override
   int get hashCode => Object.hash(
-    color,
-    backgroundColor,
-    fontSize,
-    fontWeight,
-    fontStyle,
-    letterSpacing,
-    wordSpacing,
-    textBaseline,
-    height,
-    foreground,
-    background,
-    decoration,
-    decorationColor,
-    decorationStyle,
-    decorationThickness,
-    fontFamily,
-    fontFamilyFallback != null ? Object.hashAll(fontFamilyFallback!) : null,
-    shadows != null ? Object.hashAll(shadows!) : null,
-    overflow,
-    locale,
-  );
+        color,
+        backgroundColor,
+        fontSize,
+        fontWeight,
+        fontStyle,
+        letterSpacing,
+        wordSpacing,
+        textBaseline,
+        height,
+        foreground,
+        background,
+        decoration,
+        decorationColor,
+        decorationStyle,
+        decorationThickness,
+        fontFamily,
+        fontFamilyFallback != null ? Object.hashAll(fontFamilyFallback!) : null,
+        shadows != null ? Object.hashAll(shadows!) : null,
+        overflow,
+        locale,
+      );
 
   @override
   bool operator ==(Object other) {

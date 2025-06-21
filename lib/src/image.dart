@@ -6,22 +6,22 @@ import 'package:image/image.dart' as img;
 class Image {
   /// Creates a new image with the given dimensions.
   Image(this.width, this.height)
-    : _image = img.Image(width: width, height: height);
+      : _image = img.Image(width: width, height: height);
 
   /// Creates an image from an Image object.
   Image.fromImage(img.Image image)
-    : width = image.width,
-      height = image.height,
-      _image = image;
+      : width = image.width,
+        height = image.height,
+        _image = image;
 
   /// Creates an image from raw RGBA pixel data.
   Image.fromRawRgba(this.width, this.height, Uint8List pixels)
-    : _image = img.Image.fromBytes(
-        width: width,
-        height: height,
-        bytes: pixels.buffer,
-        numChannels: 4,
-      );
+      : _image = img.Image.fromBytes(
+          width: width,
+          height: height,
+          bytes: pixels.buffer,
+          numChannels: 4,
+        );
 
   /// The width of the image in pixels.
   final int width;

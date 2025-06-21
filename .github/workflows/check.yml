@@ -1,0 +1,53 @@
+name: Check
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: kuhnroyal/flutter-fvm-config-action/config@v3
+        id: fvm-config-action
+
+      - name: Cache fvm
+        uses: actions/cache@v3
+        with:
+          path: /opt/hostedtoolcache/flutter
+          key: ${{ runner.OS }}-${{ steps.fvm-config-action.outputs.FLUTTER_VERSION }}
+
+      - name: Install fvm
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ steps.fvm-config-action.outputs.FLUTTER_VERSION }}
+
+      - name: Dart version
+        run: |
+          dart --version
+
+      - name: Safe directory
+        run: |
+          git config --global --add safe.directory $GITHUB_WORKSPACE
+
+      - name: Install dependencies
+        run: |
+          dart pub get
+
+      - name: Run format
+        run: |
+          dart format .
+
+      - name: Run analyze
+        run: |
+          dart analyze
+
+      - name: Check git diff
+        run: |
+          git diff --exit-code

@@ -12,7 +12,7 @@ class Rect {
   /// Construct a rectangle from its left and top edges,
   /// its width, and its height.
   const Rect.fromLTWH(double left, double top, double width, double height)
-    : this.fromLTRB(left, top, left + width, top + height);
+      : this.fromLTRB(left, top, left + width, top + height);
 
   /// A rectangle with all coordinates set to zero.
   static const Rect zero = Rect.fromLTRB(0, 0, 0, 0);

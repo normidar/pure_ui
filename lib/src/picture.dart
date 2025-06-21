@@ -50,8 +50,7 @@ class Picture {
     // Fill with white background to ensure visibility
     final clearCanvas = Canvas.forImage(image);
     final clearPaint = Paint()
-      ..color =
-          Color.fromRGBA(255, 255, 255, 255) // White background
+      ..color = Color.fromRGBA(255, 255, 255, 255) // White background
       ..style = PaintingStyle.fill;
     clearCanvas.drawRect(
       Rect.fromLTWH(0, 0, width.toDouble(), height.toDouble()),

@@ -156,8 +156,8 @@ class ParagraphConstraints {
 class ParagraphBuilder {
   /// Creates a new paragraph builder.
   ParagraphBuilder(this._paragraphStyle)
-    : _textStyle = const TextStyle(),
-      _buffer = StringBuffer();
+      : _textStyle = const TextStyle(),
+        _buffer = StringBuffer();
 
   final ParagraphStyle _paragraphStyle;
   TextStyle _textStyle;

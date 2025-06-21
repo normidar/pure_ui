@@ -65,14 +65,14 @@ class AccessibilityFeatures {
 
   @override
   int get hashCode => Object.hash(
-    accessibleNavigation,
-    invertColors,
-    disableAnimations,
-    boldText,
-    reduceMotion,
-    highContrast,
-    onOffSwitchLabels,
-  );
+        accessibleNavigation,
+        invertColors,
+        disableAnimations,
+        boldText,
+        reduceMotion,
+        highContrast,
+        onOffSwitchLabels,
+      );
 
   @override
   bool operator ==(Object other) {

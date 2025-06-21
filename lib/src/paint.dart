@@ -7,16 +7,16 @@ import 'package:pure_ui/src/painting/shader.dart';
 class Paint {
   /// Creates a paint object with default properties.
   Paint()
-    : color = Color.black,
-      strokeWidth = 0.0,
-      strokeCap = StrokeCap.butt,
-      strokeJoin = StrokeJoin.miter,
-      strokeMiterLimit = 4.0,
-      style = PaintingStyle.fill,
-      blendMode = BlendMode.srcOver,
-      isAntiAlias = true,
-      colorFilter = null,
-      shader = null;
+      : color = Color.black,
+        strokeWidth = 0.0,
+        strokeCap = StrokeCap.butt,
+        strokeJoin = StrokeJoin.miter,
+        strokeMiterLimit = 4.0,
+        style = PaintingStyle.fill,
+        blendMode = BlendMode.srcOver,
+        isAntiAlias = true,
+        colorFilter = null,
+        shader = null;
 
   /// The color to use when drawing with this paint.
   Color color;
