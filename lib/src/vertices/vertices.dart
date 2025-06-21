@@ -23,11 +23,11 @@ class Vertices {
     this.colors,
     this.indices,
   }) : assert(
-         (textureCoordinates == null ||
-                 positions.length == textureCoordinates.length) &&
-             (colors == null || positions.length == colors.length),
-         'textureCoordinates and colors must have the same length as positions',
-       );
+          (textureCoordinates == null ||
+                  positions.length == textureCoordinates.length) &&
+              (colors == null || positions.length == colors.length),
+          'textureCoordinates and colors must have the same length as positions',
+        );
 
   /// Creates a set of vertices for a rectangle using the specified vertex mode.
   ///
@@ -94,12 +94,12 @@ class Vertices {
 
   @override
   int get hashCode => Object.hash(
-    mode,
-    Object.hashAll(positions),
-    indices != null ? Object.hashAll(indices!) : null,
-    textureCoordinates != null ? Object.hashAll(textureCoordinates!) : null,
-    colors != null ? Object.hashAll(colors!) : null,
-  );
+        mode,
+        Object.hashAll(positions),
+        indices != null ? Object.hashAll(indices!) : null,
+        textureCoordinates != null ? Object.hashAll(textureCoordinates!) : null,
+        colors != null ? Object.hashAll(colors!) : null,
+      );
 
   @override
   bool operator ==(Object other) {

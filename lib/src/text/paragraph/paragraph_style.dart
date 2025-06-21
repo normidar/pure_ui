@@ -61,19 +61,19 @@ class ParagraphStyle {
 
   @override
   int get hashCode => Object.hash(
-    textAlign,
-    textDirection,
-    maxLines,
-    fontFamily,
-    fontSize,
-    fontWeight,
-    fontStyle,
-    lineHeight,
-    textHeightBehavior,
-    strutStyle,
-    ellipsis,
-    locale,
-  );
+        textAlign,
+        textDirection,
+        maxLines,
+        fontFamily,
+        fontSize,
+        fontWeight,
+        fontStyle,
+        lineHeight,
+        textHeightBehavior,
+        strutStyle,
+        ellipsis,
+        locale,
+      );
 
   @override
   bool operator ==(Object other) {
@@ -172,15 +172,15 @@ class StrutStyle {
 
   @override
   int get hashCode => Object.hash(
-    fontFamily,
-    fontFamilyFallback != null ? Object.hashAll(fontFamilyFallback!) : null,
-    fontSize,
-    height,
-    leading,
-    fontWeight,
-    fontStyle,
-    forceStrutHeight,
-  );
+        fontFamily,
+        fontFamilyFallback != null ? Object.hashAll(fontFamilyFallback!) : null,
+        fontSize,
+        height,
+        leading,
+        fontWeight,
+        fontStyle,
+        forceStrutHeight,
+      );
 
   @override
   bool operator ==(Object other) {
@@ -261,10 +261,10 @@ class TextHeightBehavior {
 
   @override
   int get hashCode => Object.hash(
-    applyHeightToFirstAscent,
-    applyHeightToLastDescent,
-    leadingDistribution,
-  );
+        applyHeightToFirstAscent,
+        applyHeightToLastDescent,
+        leadingDistribution,
+      );
 
   @override
   bool operator ==(Object other) {

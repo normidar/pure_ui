@@ -70,12 +70,12 @@ class ImageShader extends Shader {
 
   @override
   int get hashCode => Object.hash(
-    image,
-    tileModeX,
-    tileModeY,
-    _matrixHashCode(matrix4),
-    filterQuality,
-  );
+        image,
+        tileModeX,
+        tileModeY,
+        _matrixHashCode(matrix4),
+        filterQuality,
+      );
 
   @override
   void dispose() {

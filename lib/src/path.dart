@@ -12,7 +12,10 @@ import 'package:pure_ui/src/rect.dart';
 /// self-intersect.
 class Path {
   /// Creates an empty path.
-  Path() : _commands = [], _points = [], _fillType = PathFillType.nonZero;
+  Path()
+      : _commands = [],
+        _points = [],
+        _fillType = PathFillType.nonZero;
 
   final List<PathCommand> _commands;
   final List<Offset> _points;

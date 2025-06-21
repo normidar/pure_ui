@@ -11,9 +11,9 @@ class Local {
   /// Creates a new Local object. The first argument is the primary language subtag,
   /// the second is the region (also referred to as 'country') subtag.
   const Local(String languageCode, [String? countryCode])
-    : _languageCode = languageCode,
-      _countryCode = countryCode,
-      _scriptCode = null;
+      : _languageCode = languageCode,
+        _countryCode = countryCode,
+        _scriptCode = null;
 
   /// Creates a new Local object.
   ///
@@ -24,9 +24,9 @@ class Local {
     String languageCode = 'und',
     String? scriptCode,
     String? countryCode,
-  }) : _languageCode = languageCode,
-       _countryCode = countryCode,
-       _scriptCode = scriptCode;
+  })  : _languageCode = languageCode,
+        _countryCode = countryCode,
+        _scriptCode = scriptCode;
 
   final String _languageCode;
   final String? _countryCode;

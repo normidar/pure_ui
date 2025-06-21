@@ -18,12 +18,11 @@ class Color {
   /// The [r], [g], and [b] values are typically between 0 and 255.
   /// The [a] value is typically between 0 and 255, representing opacity.
   const Color.fromARGB(int a, int r, int g, int b)
-    : value =
-          (((a & 0xff) << 24) |
-              ((r & 0xff) << 16) |
-              ((g & 0xff) << 8) |
-              ((b & 0xff) << 0)) &
-          0xFFFFFFFF;
+      : value = (((a & 0xff) << 24) |
+                ((r & 0xff) << 16) |
+                ((g & 0xff) << 8) |
+                ((b & 0xff) << 0)) &
+            0xFFFFFFFF;
 
   /// Creates a color from the given [r], [g], and [b] values.
   ///
