@@ -232,7 +232,7 @@ class Canvas {
     Paint paint,
   ) {
     // Approximate with lines
-    const segments = 30; // セグメント数を増加
+    const segments = 30; // Increased number of segments
 
     final startAngle = (start - center).direction;
     final endAngle = (end - center).direction;
@@ -273,34 +273,34 @@ class Canvas {
 
     final target = _image.image;
 
-    // シェーダーがある場合はシェーダーを使用する
+    // Use shader if available
     if (paint.shader != null) {
-      // 円の範囲を計算
+      // Calculate circle bounds
       final int centerX = center.dx.round();
       final int centerY = center.dy.round();
       final int r = radius.round();
 
-      // 円の外接矩形を計算
+      // Calculate circle bounding rectangle
       final int left = (centerX - r).floor();
       final int top = (centerY - r).floor();
       final int right = (centerX + r).ceil();
       final int bottom = (centerY + r).ceil();
 
-      // 円の内部を走査
+      // Scan inside the circle
       for (int y = top; y <= bottom; y++) {
         for (int x = left; x <= right; x++) {
           if (x < 0 || x >= target.width || y < 0 || y >= target.height) {
             continue;
           }
 
-          // ピクセル中心からの距離を計算
+          // Calculate distance from pixel center
           final dx = x + 0.5 - centerX;
           final dy = y + 0.5 - centerY;
           final distance = math.sqrt(dx * dx + dy * dy);
 
-          // 円の内側ならシェーダーの色を適用
+          // Apply shader color if inside the circle
           if (distance <= r) {
-            // LinearGradientの場合
+            // For LinearGradient
             if (paint.shader is LinearGradient) {
               final gradient = paint.shader as LinearGradient;
               final colorValue = _evaluateLinearGradient(
@@ -309,7 +309,7 @@ class Canvas {
               );
               target.setPixel(x, y, _colorToImgColor(colorValue));
             }
-            // RadialGradientの場合
+            // For RadialGradient
             else if (paint.shader is RadialGradient) {
               final gradient = paint.shader as RadialGradient;
               final colorValue = _evaluateRadialGradient(
@@ -318,7 +318,7 @@ class Canvas {
               );
               target.setPixel(x, y, _colorToImgColor(colorValue));
             }
-            // SweepGradientの場合
+            // For SweepGradient
             else if (paint.shader is SweepGradient) {
               final gradient = paint.shader as SweepGradient;
               final colorValue = _evaluateSweepGradient(
@@ -333,8 +333,8 @@ class Canvas {
       return;
     }
 
-    // シェーダーがない場合は通常のカラー処理
-    // image パッケージの最新バージョンでは RGB 値を直接使う
+    // Regular color processing when no shader is present
+    // Use RGB values directly with the latest image package version
     final red = paint.color.red;
     final green = paint.color.green;
     final blue = paint.color.blue;
@@ -342,37 +342,38 @@ class Canvas {
 
     final color = img.ColorRgba8(red, green, blue, alpha);
 
-    // 円の中心と半径
+    // Circle center and radius
     final centerX = center.dx;
     final centerY = center.dy;
     final r = radius;
 
-    // アンチエイリアス処理を追加
-    final double antiAliasRadius = 1.0; // アンチエイリアシングの幅
+    // Add anti-aliasing processing
+    final double antiAliasRadius = 1.0; // Anti-aliasing width
 
     if (paint.style == PaintingStyle.fill ||
         paint.style == PaintingStyle.stroke && paint.strokeWidth > 1) {
-      // 塗りつぶし円または太い線の円
+      // Filled circle or thick stroked circle
       for (int y = (centerY - r - antiAliasRadius).floor();
           y <= (centerY + r + antiAliasRadius).ceil();
           y++) {
         for (int x = (centerX - r - antiAliasRadius).floor();
             x <= (centerX + r + antiAliasRadius).ceil();
             x++) {
-          if (x < 0 || x >= target.width || y < 0 || y >= target.height)
+          if (x < 0 || x >= target.width || y < 0 || y >= target.height) {
             continue;
+          }
 
-          // ピクセル中心からの距離を計算
+          // Calculate distance from pixel center
           final dx = x + 0.5 - centerX;
           final dy = y + 0.5 - centerY;
           final distance = math.sqrt(dx * dx + dy * dy);
 
           if (paint.style == PaintingStyle.fill) {
-            // 塗りつぶしの場合
+            // For fill mode
             if (distance <= r) {
-              // 内側は完全に塗りつぶし
+              // Completely fill the inside
               if (distance >= r - antiAliasRadius) {
-                // エッジ付近はアンチエイリアシング
+                // Anti-aliasing near edges
                 final opacity = (r - distance) / antiAliasRadius;
                 final alphaValue = (alpha * opacity).round().clamp(0, 255);
                 target.setPixel(
@@ -381,21 +382,21 @@ class Canvas {
                   img.ColorRgba8(red, green, blue, alphaValue),
                 );
               } else {
-                // 完全に内側
+                // Completely inside
                 target.setPixel(x, y, color);
               }
             }
           } else if (paint.style == PaintingStyle.stroke) {
-            // 輪郭の場合（太い線）
+            // For stroke mode (thick lines)
             final strokeHalfWidth = paint.strokeWidth / 2;
             final innerRadius = r - strokeHalfWidth;
             final outerRadius = r + strokeHalfWidth;
 
             if (distance >= innerRadius && distance <= outerRadius) {
-              // 線の内側
+              // Inside the stroke
               if (distance <= innerRadius + antiAliasRadius ||
                   distance >= outerRadius - antiAliasRadius) {
-                // エッジ付近はアンチエイリアシング
+                // Anti-aliasing near edges
                 final opacity = distance <= innerRadius + antiAliasRadius
                     ? (distance - innerRadius) / antiAliasRadius
                     : (outerRadius - distance) / antiAliasRadius;
@@ -406,7 +407,7 @@ class Canvas {
                   img.ColorRgba8(red, green, blue, alphaValue),
                 );
               } else {
-                // 線の中央部分
+                // Center of the stroke
                 target.setPixel(x, y, color);
               }
             }
@@ -414,7 +415,7 @@ class Canvas {
         }
       }
     } else if (paint.style == PaintingStyle.stroke) {
-      // 細い線の場合はimageパッケージのdrawCircleを使用
+      // Use image package's drawCircle for thin lines
       img.drawCircle(
         target,
         x: centerX.round(),
@@ -434,9 +435,9 @@ class Canvas {
     Paint paint,
   ) {
     // Approximate with lines
-    const segments = 30; // 増加したセグメント数
+    const segments = 30; // Increased number of segments
     var current = start;
-    final List<Offset> bezierPoints = [start]; // ベジェ曲線の点を収集
+    final List<Offset> bezierPoints = [start]; // Collect bezier curve points
 
     for (var i = 1; i <= segments; i++) {
       final t = i / segments;
@@ -457,10 +458,10 @@ class Canvas {
         _renderLine(current, point, paint);
       }
       current = point;
-      bezierPoints.add(point); // 全ての点を記録
+      bezierPoints.add(point); // Record all points
     }
 
-    // ベジェ曲線の点のリストを返す
+    // Return the list of bezier curve points
     return bezierPoints;
   }
 
@@ -516,19 +517,19 @@ class Canvas {
 
     final target = _image.image;
 
-    // シェーダーがある場合はシェーダーを使用する
+    // Use shader if available
     if (paint.shader != null) {
-      // 線分の方程式に基づいて各ピクセルを計算
+      // Calculate each pixel based on the line equation
       final lineDx = p2.dx - p1.dx;
       final lineDy = p2.dy - p1.dy;
       final length = math.sqrt(lineDx * lineDx + lineDy * lineDy);
 
       if (length < 1) {
-        // 長さが非常に短い場合は単一点として描画
+        // Draw as a single point if the length is very short
         final x = p1.dx.round();
         final y = p1.dy.round();
         if (x >= 0 && x < target.width && y >= 0 && y < target.height) {
-          // LinearGradientの場合
+          // For LinearGradient
           if (paint.shader is LinearGradient) {
             final gradient = paint.shader as LinearGradient;
             final colorValue = _evaluateLinearGradient(
@@ -559,13 +560,13 @@ class Canvas {
         return;
       }
 
-      // 線の幅を考慮
+      // Consider line width
       final halfWidth = (paint.strokeWidth / 2).round();
       if (halfWidth <= 0) {
-        // 太さが1px以下の場合はブレゼンハムのアルゴリズムで描画
+        // Use Bresenham's algorithm for lines with 1px or less thickness
         final steep = lineDy.abs() > lineDx.abs();
 
-        // x,y座標を入れ替え
+        // Swap x,y coordinates
         int x0, y0, x1, y1;
         if (steep) {
           x0 = p1.dy.round();
@@ -579,7 +580,7 @@ class Canvas {
           y1 = p2.dy.round();
         }
 
-        // 常に左から右へ描画
+        // Always draw from left to right
         if (x0 > x1) {
           final temp = x0;
           x0 = x1;
@@ -606,7 +607,7 @@ class Canvas {
           }
 
           if (px >= 0 && px < target.width && py >= 0 && py < target.height) {
-            // LinearGradientの場合
+            // For LinearGradient
             if (paint.shader is LinearGradient) {
               final gradient = paint.shader as LinearGradient;
               final colorValue = _evaluateLinearGradient(
@@ -615,7 +616,7 @@ class Canvas {
               );
               target.setPixel(px, py, _colorToImgColor(colorValue));
             }
-            // RadialGradientの場合
+            // For RadialGradient
             else if (paint.shader is RadialGradient) {
               final gradient = paint.shader as RadialGradient;
               final colorValue = _evaluateRadialGradient(
@@ -624,7 +625,7 @@ class Canvas {
               );
               target.setPixel(px, py, _colorToImgColor(colorValue));
             }
-            // SweepGradientの場合
+            // For SweepGradient
             else if (paint.shader is SweepGradient) {
               final gradient = paint.shader as SweepGradient;
               final colorValue = _evaluateSweepGradient(
@@ -642,7 +643,7 @@ class Canvas {
           }
         }
       } else {
-        // 線の範囲を計算
+        // Calculate line bounds
         final x0 = math.min(p1.dx, p2.dx) - halfWidth;
         final y0 = math.min(p1.dy, p2.dy) - halfWidth;
         final x1 = math.max(p1.dx, p2.dx) + halfWidth;
@@ -654,23 +655,23 @@ class Canvas {
               continue;
             }
 
-            // 点と線の距離を計算
+            // Calculate distance from point to line
             final px = x - p1.dx;
             final py = y - p1.dy;
 
-            // 線上の最も近い点のパラメータtを計算
+            // Calculate parameter t for the closest point on the line
             final t = (px * lineDx + py * lineDy) / (length * length);
 
             if (t < 0 || t > 1) {
-              // 線分の外側
+              // Outside the line segment
               continue;
             }
 
-            // 線上の最も近い点
+            // Closest point on the line
             final nearestX = p1.dx + t * lineDx;
             final nearestY = p1.dy + t * lineDy;
 
-            // 点と線の距離
+            // Distance from point to line
             final distance = math.sqrt(
               (x - nearestX) * (x - nearestX) + (y - nearestY) * (y - nearestY),
             );
@@ -710,23 +711,165 @@ class Canvas {
       return;
     }
 
-    // シェーダーがない場合は通常のカラー処理
-    // image パッケージの最新バージョンでは RGB 値を直接使う
+    // Regular color processing when no shader is present
+    // Use RGB values directly with the latest image package version
     final red = paint.color.red;
     final green = paint.color.green;
     final blue = paint.color.blue;
     final alpha = paint.color.alpha;
+    final color = img.ColorRgba8(red, green, blue, alpha);
 
-    // Use image package to draw a line
+    // Line drawing considering StrokeCap
+    _drawLineWithStrokeCap(
+        target, p1, p2, paint.strokeWidth, paint.strokeCap, color);
+  }
+
+  /// Line drawing considering StrokeCapの実装
+  void _drawLineWithStrokeCap(img.Image target, Offset p1, Offset p2,
+      double strokeWidth, StrokeCap strokeCap, img.Color color) {
+    // Draw the basic line
     img.drawLine(
       target,
       x1: p1.dx.round(),
       y1: p1.dy.round(),
       x2: p2.dx.round(),
       y2: p2.dy.round(),
-      color: img.ColorRgba8(red, green, blue, alpha),
-      thickness: paint.strokeWidth.round(),
+      color: color,
+      thickness: strokeWidth.round(),
     );
+
+    // Add shapes to both ends according to StrokeCap
+    final halfWidth = strokeWidth / 2;
+
+    switch (strokeCap) {
+      case StrokeCap.butt:
+        // Default flat ends - do nothing
+        break;
+
+      case StrokeCap.round:
+        // Add semicircles to both ends
+        img.fillCircle(
+          target,
+          x: p1.dx.round(),
+          y: p1.dy.round(),
+          radius: halfWidth.round(),
+          color: color,
+        );
+        img.fillCircle(
+          target,
+          x: p2.dx.round(),
+          y: p2.dy.round(),
+          radius: halfWidth.round(),
+          color: color,
+        );
+        break;
+
+      case StrokeCap.square:
+        // Add rectangular extensions to both ends
+        final lineDx = p2.dx - p1.dx;
+        final lineDy = p2.dy - p1.dy;
+        final length = math.sqrt(lineDx * lineDx + lineDy * lineDy);
+
+        if (length > 0) {
+          // Normalized direction vector
+          final dirX = lineDx / length;
+          final dirY = lineDy / length;
+
+          // Perpendicular vector
+          final perpX = -dirY;
+          final perpY = dirX;
+
+          // Start point extension rectangle
+          final startCorner1 = Offset(
+            p1.dx - dirX * halfWidth + perpX * halfWidth,
+            p1.dy - dirY * halfWidth + perpY * halfWidth,
+          );
+          final startCorner2 = Offset(
+            p1.dx - dirX * halfWidth - perpX * halfWidth,
+            p1.dy - dirY * halfWidth - perpY * halfWidth,
+          );
+          final startCorner3 = Offset(
+            p1.dx + perpX * halfWidth,
+            p1.dy + perpY * halfWidth,
+          );
+          final startCorner4 = Offset(
+            p1.dx - perpX * halfWidth,
+            p1.dy - perpY * halfWidth,
+          );
+
+          // End point extension rectangle
+          final endCorner1 = Offset(
+            p2.dx + dirX * halfWidth + perpX * halfWidth,
+            p2.dy + dirY * halfWidth + perpY * halfWidth,
+          );
+          final endCorner2 = Offset(
+            p2.dx + dirX * halfWidth - perpX * halfWidth,
+            p2.dy + dirY * halfWidth - perpY * halfWidth,
+          );
+          final endCorner3 = Offset(
+            p2.dx + perpX * halfWidth,
+            p2.dy + perpY * halfWidth,
+          );
+          final endCorner4 = Offset(
+            p2.dx - perpX * halfWidth,
+            p2.dy - perpY * halfWidth,
+          );
+
+          // Start point extension rectangleを描画
+          _fillQuadrilateral(target, startCorner1, startCorner2, startCorner4,
+              startCorner3, color);
+
+          // End point extension rectangleを描画
+          _fillQuadrilateral(
+              target, endCorner3, endCorner4, endCorner2, endCorner1, color);
+        }
+        break;
+    }
+  }
+
+  /// 四角形を塗りつぶす（四つの頂点を指定）
+  void _fillQuadrilateral(img.Image target, Offset p1, Offset p2, Offset p3,
+      Offset p4, img.Color color) {
+    // 四角形の境界を計算
+    final minX = [p1.dx, p2.dx, p3.dx, p4.dx].reduce(math.min).floor();
+    final maxX = [p1.dx, p2.dx, p3.dx, p4.dx].reduce(math.max).ceil();
+    final minY = [p1.dy, p2.dy, p3.dy, p4.dy].reduce(math.min).floor();
+    final maxY = [p1.dy, p2.dy, p3.dy, p4.dy].reduce(math.max).ceil();
+
+    // 各ピクセルが四角形内にあるかをチェック
+    for (int y = minY; y <= maxY; y++) {
+      for (int x = minX; x <= maxX; x++) {
+        if (x >= 0 && x < target.width && y >= 0 && y < target.height) {
+          final point = Offset(x.toDouble(), y.toDouble());
+          if (_isPointInQuadrilateral(point, p1, p2, p3, p4)) {
+            target.setPixel(x, y, color);
+          }
+        }
+      }
+    }
+  }
+
+  /// 点が四角形内にあるかを判定
+  bool _isPointInQuadrilateral(
+      Offset point, Offset p1, Offset p2, Offset p3, Offset p4) {
+    // 四つの辺の内側にあるかをチェック
+    final vertices = [p1, p2, p3, p4];
+
+    // すべての辺に対して点が内側にあるかをチェック
+    for (int i = 0; i < 4; i++) {
+      final current = vertices[i];
+      final next = vertices[(i + 1) % 4];
+
+      // 外積を使って点が辺の左側にあるかチェック
+      final cross = (next.dx - current.dx) * (point.dy - current.dy) -
+          (next.dy - current.dy) * (point.dx - current.dx);
+
+      if (cross < 0) {
+        return false;
+      }
+    }
+
+    return true;
   }
 
   void _renderOval(Rect rect, Paint paint) {
@@ -805,7 +948,7 @@ class Canvas {
       return;
     }
 
-    // シェーダーがない場合は通常のカラー処理
+    // Regular color processing when no shader is present
     // RGB値を取得
     final red = paint.color.red;
     final green = paint.color.green;
@@ -1072,8 +1215,8 @@ class Canvas {
       return;
     }
 
-    // シェーダーがない場合は通常のカラー処理
-    // image パッケージの最新バージョンでは RGB 値を直接使う
+    // Regular color processing when no shader is present
+    // Use RGB values directly with the latest image package version
     final red = paint.color.red;
     final green = paint.color.green;
     final blue = paint.color.blue;
@@ -1871,7 +2014,7 @@ class Canvas {
       return;
     }
 
-    // シェーダーがない場合は通常のカラー処理
+    // Regular color processing when no shader is present
     // RGB値を取得
     final red = paint.color.red;
     final green = paint.color.green;
