@@ -18,7 +18,7 @@ jobs:
         id: fvm-config-action
 
       - name: Cache fvm
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: /opt/hostedtoolcache/flutter
           key: ${{ runner.OS }}-${{ steps.fvm-config-action.outputs.FLUTTER_VERSION }}
