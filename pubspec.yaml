@@ -11,4 +11,4 @@ environment:
   sdk: ^3.2.0
 name: pure_ui
 repository: https://github.com/normidar/pure_ui
-version: 0.0.1
+version: 0.0.2
