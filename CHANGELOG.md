@@ -1,3 +1,7 @@
+## 0.0.2
+
+- Fix StrokeCap.round cant use issue.
+
 ## 0.0.1
 
 - Initial release of Pure UI
