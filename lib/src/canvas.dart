@@ -776,41 +776,93 @@ class Canvas {
           final perpX = -dirY;
           final perpY = dirX;
           
-          // 開始点の四角形延長
-          final startExtended = Offset(
-            p1.dx - dirX * halfWidth,
-            p1.dy - dirY * halfWidth,
+          // 開始点の延長四角形
+          final startCorner1 = Offset(
+            p1.dx - dirX * halfWidth + perpX * halfWidth,
+            p1.dy - dirY * halfWidth + perpY * halfWidth,
+          );
+          final startCorner2 = Offset(
+            p1.dx - dirX * halfWidth - perpX * halfWidth,
+            p1.dy - dirY * halfWidth - perpY * halfWidth,
+          );
+          final startCorner3 = Offset(
+            p1.dx + perpX * halfWidth,
+            p1.dy + perpY * halfWidth,
+          );
+          final startCorner4 = Offset(
+            p1.dx - perpX * halfWidth,
+            p1.dy - perpY * halfWidth,
           );
           
-          // 終了点の四角形延長
-          final endExtended = Offset(
-            p2.dx + dirX * halfWidth,
-            p2.dy + dirY * halfWidth,
+          // 終了点の延長四角形
+          final endCorner1 = Offset(
+            p2.dx + dirX * halfWidth + perpX * halfWidth,
+            p2.dy + dirY * halfWidth + perpY * halfWidth,
+          );
+          final endCorner2 = Offset(
+            p2.dx + dirX * halfWidth - perpX * halfWidth,
+            p2.dy + dirY * halfWidth - perpY * halfWidth,
+          );
+          final endCorner3 = Offset(
+            p2.dx + perpX * halfWidth,
+            p2.dy + perpY * halfWidth,
+          );
+          final endCorner4 = Offset(
+            p2.dx - perpX * halfWidth,
+            p2.dy - perpY * halfWidth,
           );
           
-          // 延長部分の四角形を描画
-          _fillRectangleFromLine(target, p1, startExtended, halfWidth, color);
-          _fillRectangleFromLine(target, p2, endExtended, halfWidth, color);
+          // 開始点の延長四角形を描画
+          _fillQuadrilateral(target, startCorner1, startCorner2, startCorner4, startCorner3, color);
+          
+          // 終了点の延長四角形を描画
+          _fillQuadrilateral(target, endCorner3, endCorner4, endCorner2, endCorner1, color);
         }
         break;
     }
   }
 
-  /// 線の端から延長する四角形を描画
-  void _fillRectangleFromLine(img.Image target, Offset center, Offset extended, double halfWidth, img.Color color) {
-    final minX = math.min(center.dx, extended.dx) - halfWidth;
-    final maxX = math.max(center.dx, extended.dx) + halfWidth;
-    final minY = math.min(center.dy, extended.dy) - halfWidth;
-    final maxY = math.max(center.dy, extended.dy) + halfWidth;
+  /// 四角形を塗りつぶす（四つの頂点を指定）
+  void _fillQuadrilateral(img.Image target, Offset p1, Offset p2, Offset p3, Offset p4, img.Color color) {
+    // 四角形の境界を計算
+    final minX = [p1.dx, p2.dx, p3.dx, p4.dx].reduce(math.min).floor();
+    final maxX = [p1.dx, p2.dx, p3.dx, p4.dx].reduce(math.max).ceil();
+    final minY = [p1.dy, p2.dy, p3.dy, p4.dy].reduce(math.min).floor();
+    final maxY = [p1.dy, p2.dy, p3.dy, p4.dy].reduce(math.max).ceil();
     
-    img.fillRect(
-      target,
-      x1: minX.round(),
-      y1: minY.round(),
-      x2: maxX.round(),
-      y2: maxY.round(),
-      color: color,
-    );
+    // 各ピクセルが四角形内にあるかをチェック
+    for (int y = minY; y <= maxY; y++) {
+      for (int x = minX; x <= maxX; x++) {
+        if (x >= 0 && x < target.width && y >= 0 && y < target.height) {
+          final point = Offset(x.toDouble(), y.toDouble());
+          if (_isPointInQuadrilateral(point, p1, p2, p3, p4)) {
+            target.setPixel(x, y, color);
+          }
+        }
+      }
+    }
+  }
+  
+  /// 点が四角形内にあるかを判定
+  bool _isPointInQuadrilateral(Offset point, Offset p1, Offset p2, Offset p3, Offset p4) {
+    // 四つの辺の内側にあるかをチェック
+    final vertices = [p1, p2, p3, p4];
+    
+    // すべての辺に対して点が内側にあるかをチェック
+    for (int i = 0; i < 4; i++) {
+      final current = vertices[i];
+      final next = vertices[(i + 1) % 4];
+      
+      // 外積を使って点が辺の左側にあるかチェック
+      final cross = (next.dx - current.dx) * (point.dy - current.dy) - 
+                   (next.dy - current.dy) * (point.dx - current.dx);
+      
+      if (cross < 0) {
+        return false;
+      }
+    }
+    
+    return true;
   }
 
   void _renderOval(Rect rect, Paint paint) {
