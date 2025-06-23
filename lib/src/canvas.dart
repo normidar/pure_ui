@@ -359,8 +359,9 @@ class Canvas {
         for (int x = (centerX - r - antiAliasRadius).floor();
             x <= (centerX + r + antiAliasRadius).ceil();
             x++) {
-          if (x < 0 || x >= target.width || y < 0 || y >= target.height)
+          if (x < 0 || x >= target.width || y < 0 || y >= target.height) {
             continue;
+          }
 
           // Calculate distance from pixel center
           final dx = x + 0.5 - centerX;
@@ -719,11 +720,13 @@ class Canvas {
     final color = img.ColorRgba8(red, green, blue, alpha);
 
     // Line drawing considering StrokeCap
-    _drawLineWithStrokeCap(target, p1, p2, paint.strokeWidth, paint.strokeCap, color);
+    _drawLineWithStrokeCap(
+        target, p1, p2, paint.strokeWidth, paint.strokeCap, color);
   }
 
   /// Line drawing considering StrokeCapの実装
-  void _drawLineWithStrokeCap(img.Image target, Offset p1, Offset p2, double strokeWidth, StrokeCap strokeCap, img.Color color) {
+  void _drawLineWithStrokeCap(img.Image target, Offset p1, Offset p2,
+      double strokeWidth, StrokeCap strokeCap, img.Color color) {
     // Draw the basic line
     img.drawLine(
       target,
@@ -737,12 +740,12 @@ class Canvas {
 
     // Add shapes to both ends according to StrokeCap
     final halfWidth = strokeWidth / 2;
-    
+
     switch (strokeCap) {
       case StrokeCap.butt:
         // Default flat ends - do nothing
         break;
-        
+
       case StrokeCap.round:
         // Add semicircles to both ends
         img.fillCircle(
@@ -760,22 +763,22 @@ class Canvas {
           color: color,
         );
         break;
-        
+
       case StrokeCap.square:
         // Add rectangular extensions to both ends
         final lineDx = p2.dx - p1.dx;
         final lineDy = p2.dy - p1.dy;
         final length = math.sqrt(lineDx * lineDx + lineDy * lineDy);
-        
+
         if (length > 0) {
           // Normalized direction vector
           final dirX = lineDx / length;
           final dirY = lineDy / length;
-          
+
           // Perpendicular vector
           final perpX = -dirY;
           final perpY = dirX;
-          
+
           // Start point extension rectangle
           final startCorner1 = Offset(
             p1.dx - dirX * halfWidth + perpX * halfWidth,
@@ -793,7 +796,7 @@ class Canvas {
             p1.dx - perpX * halfWidth,
             p1.dy - perpY * halfWidth,
           );
-          
+
           // End point extension rectangle
           final endCorner1 = Offset(
             p2.dx + dirX * halfWidth + perpX * halfWidth,
@@ -811,25 +814,28 @@ class Canvas {
             p2.dx - perpX * halfWidth,
             p2.dy - perpY * halfWidth,
           );
-          
+
           // Start point extension rectangleを描画
-          _fillQuadrilateral(target, startCorner1, startCorner2, startCorner4, startCorner3, color);
-          
+          _fillQuadrilateral(target, startCorner1, startCorner2, startCorner4,
+              startCorner3, color);
+
           // End point extension rectangleを描画
-          _fillQuadrilateral(target, endCorner3, endCorner4, endCorner2, endCorner1, color);
+          _fillQuadrilateral(
+              target, endCorner3, endCorner4, endCorner2, endCorner1, color);
         }
         break;
     }
   }
 
   /// 四角形を塗りつぶす（四つの頂点を指定）
-  void _fillQuadrilateral(img.Image target, Offset p1, Offset p2, Offset p3, Offset p4, img.Color color) {
+  void _fillQuadrilateral(img.Image target, Offset p1, Offset p2, Offset p3,
+      Offset p4, img.Color color) {
     // 四角形の境界を計算
     final minX = [p1.dx, p2.dx, p3.dx, p4.dx].reduce(math.min).floor();
     final maxX = [p1.dx, p2.dx, p3.dx, p4.dx].reduce(math.max).ceil();
     final minY = [p1.dy, p2.dy, p3.dy, p4.dy].reduce(math.min).floor();
     final maxY = [p1.dy, p2.dy, p3.dy, p4.dy].reduce(math.max).ceil();
-    
+
     // 各ピクセルが四角形内にあるかをチェック
     for (int y = minY; y <= maxY; y++) {
       for (int x = minX; x <= maxX; x++) {
@@ -842,26 +848,27 @@ class Canvas {
       }
     }
   }
-  
+
   /// 点が四角形内にあるかを判定
-  bool _isPointInQuadrilateral(Offset point, Offset p1, Offset p2, Offset p3, Offset p4) {
+  bool _isPointInQuadrilateral(
+      Offset point, Offset p1, Offset p2, Offset p3, Offset p4) {
     // 四つの辺の内側にあるかをチェック
     final vertices = [p1, p2, p3, p4];
-    
+
     // すべての辺に対して点が内側にあるかをチェック
     for (int i = 0; i < 4; i++) {
       final current = vertices[i];
       final next = vertices[(i + 1) % 4];
-      
+
       // 外積を使って点が辺の左側にあるかチェック
-      final cross = (next.dx - current.dx) * (point.dy - current.dy) - 
-                   (next.dy - current.dy) * (point.dx - current.dx);
-      
+      final cross = (next.dx - current.dx) * (point.dy - current.dy) -
+          (next.dy - current.dy) * (point.dx - current.dx);
+
       if (cross < 0) {
         return false;
       }
     }
-    
+
     return true;
   }
 

@@ -485,7 +485,8 @@ void main() {
       }
     });
 
-    test('Can draw lines with different StrokeCap using Path and export as PNG', () {
+    test('Can draw lines with different StrokeCap using Path and export as PNG',
+        () {
       // 画像サイズ
       const int width = 400;
       const int height = 200;
