@@ -716,16 +716,100 @@ class Canvas {
     final green = paint.color.green;
     final blue = paint.color.blue;
     final alpha = paint.color.alpha;
+    final color = img.ColorRgba8(red, green, blue, alpha);
 
-    // Use image package to draw a line
+    // StrokeCapを考慮した線描画
+    _drawLineWithStrokeCap(target, p1, p2, paint.strokeWidth, paint.strokeCap, color);
+  }
+
+  /// StrokeCapを考慮した線描画の実装
+  void _drawLineWithStrokeCap(img.Image target, Offset p1, Offset p2, double strokeWidth, StrokeCap strokeCap, img.Color color) {
+    // 基本の線を描画
     img.drawLine(
       target,
       x1: p1.dx.round(),
       y1: p1.dy.round(),
       x2: p2.dx.round(),
       y2: p2.dy.round(),
-      color: img.ColorRgba8(red, green, blue, alpha),
-      thickness: paint.strokeWidth.round(),
+      color: color,
+      thickness: strokeWidth.round(),
+    );
+
+    // StrokeCapに応じて両端に形状を追加
+    final halfWidth = strokeWidth / 2;
+    
+    switch (strokeCap) {
+      case StrokeCap.butt:
+        // デフォルトの平らな端 - 何もしない
+        break;
+        
+      case StrokeCap.round:
+        // 両端に半円を追加
+        img.fillCircle(
+          target,
+          x: p1.dx.round(),
+          y: p1.dy.round(),
+          radius: halfWidth.round(),
+          color: color,
+        );
+        img.fillCircle(
+          target,
+          x: p2.dx.round(),
+          y: p2.dy.round(),
+          radius: halfWidth.round(),
+          color: color,
+        );
+        break;
+        
+      case StrokeCap.square:
+        // 両端に四角形の延長を追加
+        final lineDx = p2.dx - p1.dx;
+        final lineDy = p2.dy - p1.dy;
+        final length = math.sqrt(lineDx * lineDx + lineDy * lineDy);
+        
+        if (length > 0) {
+          // 正規化された方向ベクトル
+          final dirX = lineDx / length;
+          final dirY = lineDy / length;
+          
+          // 垂直ベクトル
+          final perpX = -dirY;
+          final perpY = dirX;
+          
+          // 開始点の四角形延長
+          final startExtended = Offset(
+            p1.dx - dirX * halfWidth,
+            p1.dy - dirY * halfWidth,
+          );
+          
+          // 終了点の四角形延長
+          final endExtended = Offset(
+            p2.dx + dirX * halfWidth,
+            p2.dy + dirY * halfWidth,
+          );
+          
+          // 延長部分の四角形を描画
+          _fillRectangleFromLine(target, p1, startExtended, halfWidth, color);
+          _fillRectangleFromLine(target, p2, endExtended, halfWidth, color);
+        }
+        break;
+    }
+  }
+
+  /// 線の端から延長する四角形を描画
+  void _fillRectangleFromLine(img.Image target, Offset center, Offset extended, double halfWidth, img.Color color) {
+    final minX = math.min(center.dx, extended.dx) - halfWidth;
+    final maxX = math.max(center.dx, extended.dx) + halfWidth;
+    final minY = math.min(center.dy, extended.dy) - halfWidth;
+    final maxY = math.max(center.dy, extended.dy) + halfWidth;
+    
+    img.fillRect(
+      target,
+      x1: minX.round(),
+      y1: minY.round(),
+      x2: maxX.round(),
+      y2: maxY.round(),
+      color: color,
     );
   }
 

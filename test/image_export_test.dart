@@ -484,5 +484,83 @@ void main() {
         print('Error saving image: $e');
       }
     });
+
+    test('Can draw lines with different StrokeCap using Path and export as PNG', () {
+      // 画像サイズ
+      const int width = 400;
+      const int height = 200;
+
+      // PictureRecorderとCanvas作成
+      final recorder = PictureRecorder();
+      final canvas = recorder.canvas;
+
+      // 背景を白で塗りつぶし
+      final bgPaint = Paint()
+        ..color = const Color.fromRGB(255, 255, 255)
+        ..style = PaintingStyle.fill;
+      canvas.drawRect(
+        Rect.fromLTWH(0, 0, width.toDouble(), height.toDouble()),
+        bgPaint,
+      );
+
+      // 直線1: StrokeCap.butt（赤）
+      final paintButt = Paint()
+        ..color = const Color.fromRGB(255, 0, 0)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 20
+        ..strokeCap = StrokeCap.butt;
+      final pathButt = Path()
+        ..moveTo(50, 40)
+        ..lineTo(350, 40);
+      canvas.drawPath(pathButt, paintButt);
+
+      // 直線2: StrokeCap.round（緑）
+      final paintRound = Paint()
+        ..color = const Color.fromRGB(0, 200, 0)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 20
+        ..strokeCap = StrokeCap.round;
+      final pathRound = Path()
+        ..moveTo(50, 100)
+        ..lineTo(350, 100);
+      canvas.drawPath(pathRound, paintRound);
+
+      // 直線3: StrokeCap.square（青）
+      final paintSquare = Paint()
+        ..color = const Color.fromRGB(0, 0, 255)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 20
+        ..strokeCap = StrokeCap.square;
+      final pathSquare = Path()
+        ..moveTo(50, 160)
+        ..lineTo(350, 160);
+      canvas.drawPath(pathSquare, paintSquare);
+
+      // Picture作成
+      final picture = recorder.endRecording();
+      final image = picture.toImage(width, height);
+      expect(image, isNotNull);
+      expect(image.width, width);
+      expect(image.height, height);
+
+      // PNGエンコード
+      final pngData = image.toPng();
+      expect(pngData, isNotNull);
+      expect(pngData.isNotEmpty, isTrue);
+
+      // ファイル保存
+      try {
+        final outputDir = Directory('test_output');
+        if (!outputDir.existsSync()) {
+          outputDir.createSync();
+        }
+        final file = File('test_output/stroke_cap_test.png');
+        file.writeAsBytesSync(pngData);
+        print('PNG image saved to: [32m${file.absolute.path}[0m');
+        expect(file.existsSync(), isTrue);
+      } catch (e) {
+        print('Error saving image: $e');
+      }
+    });
   });
 }
