@@ -1,5 +1,5 @@
 import 'package:meta/meta.dart';
-import 'package:pure_ui/src/canvas.dart';
+import 'package:pure_ui/src/canvas/canvas.dart';
 import 'package:pure_ui/src/offset.dart';
 import 'package:pure_ui/src/rect.dart';
 import 'package:pure_ui/src/text/paragraph/paragraph_style.dart';
@@ -8,18 +8,19 @@ import 'package:pure_ui/src/text/text_style.dart';
 /// A paragraph of text.
 @immutable
 class Paragraph {
-  /// Creates a new paragraph object.
-  const Paragraph(this.text, this._paragraphStyle, this._textStyle);
-
   /// The text of the paragraph.
   final String text;
 
   // ignore: unused_field
   final ParagraphStyle _paragraphStyle;
+
   final TextStyle _textStyle;
 
-  /// The text style of the paragraph.
-  TextStyle get textStyle => _textStyle;
+  /// Creates a new paragraph object.
+  const Paragraph(this.text, this._paragraphStyle, this._textStyle);
+
+  /// The alphabetic baseline of the paragraph.
+  double get alphabeticBaseline => _computeAlphabeticBaseline();
 
   /// The height that the paragraph occupies.
   double get height => _computeHeight();
@@ -27,12 +28,12 @@ class Paragraph {
   /// The maximum width of the paragraph.
   double get maxIntrinsicWidth => _computeMaxIntrinsicWidth();
 
-  /// The alphabetic baseline of the paragraph.
-  double get alphabeticBaseline => _computeAlphabeticBaseline();
+  /// The text style of the paragraph.
+  TextStyle get textStyle => _textStyle;
 
-  /// Lays out the paragraph with the given constraints.
-  void layout(ParagraphConstraints constraints) {
-    // In a real implementation, this would perform text layout
+  /// Releases resources held by this paragraph.
+  void dispose() {
+    // In a real implementation, this would free native resources
     // For this pure implementation, it's a placeholder
   }
 
@@ -72,16 +73,16 @@ class Paragraph {
     return Rect.fromLTWH(x, y, width, lineHeight);
   }
 
+  /// Lays out the paragraph with the given constraints.
+  void layout(ParagraphConstraints constraints) {
+    // In a real implementation, this would perform text layout
+    // For this pure implementation, it's a placeholder
+  }
+
   /// Paints the paragraph at the given offset on the canvas.
   void paint(Canvas canvas, Offset offset) {
     // In a real implementation, this would render the paragraph on the canvas
     // For this pure implementation, the method is a placeholder
-  }
-
-  /// Releases resources held by this paragraph.
-  void dispose() {
-    // In a real implementation, this would free native resources
-    // For this pure implementation, it's a placeholder
   }
 
   double _approximateCharWidth() {
@@ -93,6 +94,13 @@ class Paragraph {
     final fontSize = _textStyle.fontSize ?? 14.0;
     final lineHeight = _textStyle.height ?? 1.0;
     return fontSize * lineHeight;
+  }
+
+  double _computeAlphabeticBaseline() {
+    // In a real implementation, this would compute the alphabetic baseline
+    // For this pure implementation, use a simple approximation (75% of line height)
+    final fontSize = _textStyle.fontSize ?? 14.0;
+    return fontSize * 0.75;
   }
 
   double _computeHeight() {
@@ -116,53 +124,20 @@ class Paragraph {
     }
     return maxWidth;
   }
-
-  double _computeAlphabeticBaseline() {
-    // In a real implementation, this would compute the alphabetic baseline
-    // For this pure implementation, use a simple approximation (75% of line height)
-    final fontSize = _textStyle.fontSize ?? 14.0;
-    return fontSize * 0.75;
-  }
-}
-
-/// Constraints for paragraph layout.
-@immutable
-class ParagraphConstraints {
-  /// Creates constraints for paragraph layout.
-  const ParagraphConstraints({required this.width});
-
-  /// The width the paragraph should use.
-  final double width;
-
-  @override
-  bool operator ==(Object other) {
-    if (identical(this, other)) {
-      return true;
-    }
-    if (other.runtimeType != runtimeType) {
-      return false;
-    }
-    return other is ParagraphConstraints && other.width == width;
-  }
-
-  @override
-  int get hashCode => width.hashCode;
-
-  @override
-  String toString() => 'ParagraphConstraints(width: $width)';
 }
 
 /// A builder for creating paragraph objects.
 class ParagraphBuilder {
+  final ParagraphStyle _paragraphStyle;
+
+  TextStyle _textStyle;
+  final StringBuffer _buffer;
+  final List<TextSpan> _spans = <TextSpan>[];
+
   /// Creates a new paragraph builder.
   ParagraphBuilder(this._paragraphStyle)
       : _textStyle = const TextStyle(),
         _buffer = StringBuffer();
-
-  final ParagraphStyle _paragraphStyle;
-  TextStyle _textStyle;
-  final StringBuffer _buffer;
-  final List<TextSpan> _spans = <TextSpan>[];
 
   /// Adds the given text to the paragraph.
   void addText(String text) {
@@ -187,15 +162,42 @@ class ParagraphBuilder {
   }
 }
 
+/// Constraints for paragraph layout.
+@immutable
+class ParagraphConstraints {
+  /// The width the paragraph should use.
+  final double width;
+
+  /// Creates constraints for paragraph layout.
+  const ParagraphConstraints({required this.width});
+
+  @override
+  int get hashCode => width.hashCode;
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) {
+      return true;
+    }
+    if (other.runtimeType != runtimeType) {
+      return false;
+    }
+    return other is ParagraphConstraints && other.width == width;
+  }
+
+  @override
+  String toString() => 'ParagraphConstraints(width: $width)';
+}
+
 /// A span of text with a single style.
 @immutable
 class TextSpan {
-  /// Creates a new text span.
-  const TextSpan(this.text, this.style);
-
   /// The text contained in the span.
   final String text;
 
   /// The style to apply to the text.
   final TextStyle style;
+
+  /// Creates a new text span.
+  const TextSpan(this.text, this.style);
 }

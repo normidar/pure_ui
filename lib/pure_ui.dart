@@ -1,4 +1,4 @@
-export 'package:pure_ui/src/canvas.dart';
+export 'package:pure_ui/src/canvas/canvas.dart';
 export 'package:pure_ui/src/color.dart';
 export 'package:pure_ui/src/enums.dart';
 export 'package:pure_ui/src/image.dart';
