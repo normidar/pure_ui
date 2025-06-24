@@ -1,4 +1,4 @@
-import 'package:pure_ui/src/canvas.dart';
+import 'package:pure_ui/src/canvas/canvas.dart';
 import 'package:pure_ui/src/image.dart';
 import 'package:pure_ui/src/paint.dart';
 import 'package:pure_ui/src/rect.dart';

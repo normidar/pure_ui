@@ -1,4 +1,4 @@
-import 'package:pure_ui/src/canvas.dart';
+import 'package:pure_ui/src/canvas/canvas.dart';
 import 'package:pure_ui/src/picture.dart';
 
 /// A recorder for graphical operations.
