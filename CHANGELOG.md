@@ -1,3 +1,7 @@
+## 0.0.3
+
+- Update pubspec.yaml file.
+
 ## 0.0.2
 
 - Fix StrokeCap.round cant use issue.
