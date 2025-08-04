@@ -9,6 +9,12 @@ dev_dependencies:
   test: any
 environment:
   sdk: ^3.2.0
+homepage: https://github.com/normidar/pure_ui
 name: pure_ui
-repository: https://github.com/normidar/pure_ui
-version: 0.0.2
+topics:
+  - image
+  - dart-ui
+  - canvas
+  - pure-dart
+  - ui
+version: 0.0.3
