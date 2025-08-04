@@ -1,3 +1,7 @@
+## 0.0.4
+
+- Fix downgrade analysis failed.
+
 ## 0.0.3
 
 - Update pubspec.yaml file.
