@@ -1,27 +1,43 @@
-export 'package:pure_ui/src/canvas/canvas.dart';
-export 'package:pure_ui/src/color.dart';
-export 'package:pure_ui/src/enums.dart';
-export 'package:pure_ui/src/image.dart';
-export 'package:pure_ui/src/local.dart';
-export 'package:pure_ui/src/locale.dart';
-export 'package:pure_ui/src/offset.dart';
-export 'package:pure_ui/src/offset_base.dart';
-export 'package:pure_ui/src/paint.dart';
-export 'package:pure_ui/src/painting/color_filter.dart';
-export 'package:pure_ui/src/painting/gradient.dart';
-export 'package:pure_ui/src/painting/image_shader.dart';
-export 'package:pure_ui/src/painting/shader.dart';
-export 'package:pure_ui/src/painting/tile_mode.dart';
-export 'package:pure_ui/src/path.dart';
-export 'package:pure_ui/src/picture.dart';
-export 'package:pure_ui/src/picture_recorder.dart';
-export 'package:pure_ui/src/platform_dispatcher.dart';
-export 'package:pure_ui/src/rect.dart';
-export 'package:pure_ui/src/size.dart';
-export 'package:pure_ui/src/text/font_weight.dart';
-export 'package:pure_ui/src/text/paragraph/paragraph_builder.dart';
-export 'package:pure_ui/src/text/paragraph/paragraph_style.dart';
-export 'package:pure_ui/src/text/text_decoration.dart';
-export 'package:pure_ui/src/text/text_style.dart';
-export 'package:pure_ui/src/vertices/vertex_mode.dart';
-export 'package:pure_ui/src/vertices/vertices.dart';
+// Copyright 2013 The Flutter Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
+/// Built-in types and core primitives for a Flutter application.
+///
+/// To use, import `dart:ui`.
+///
+/// This library exposes the lowest-level services that Flutter frameworks use
+/// to bootstrap applications, such as classes for driving the input, graphics
+/// text, layout, and rendering subsystems.
+library dart.ui;
+
+import 'dart:async';
+import 'dart:collection' as collection;
+import 'dart:convert';
+import 'dart:developer' as developer;
+import 'dart:ffi';
+import 'dart:io';
+import 'dart:isolate' show Isolate, IsolateSpawnException, RawReceivePort, RemoteError, SendPort;
+import 'dart:math' as math;
+import 'dart:nativewrappers';
+import 'dart:typed_data';
+
+part 'annotations.dart';
+part 'channel_buffers.dart';
+part 'compositing.dart';
+part 'geometry.dart';
+part 'hooks.dart';
+part 'isolate_name_server.dart';
+part 'key.dart';
+part 'lerp.dart';
+part 'math.dart';
+part 'natives.dart';
+part 'painting.dart';
+part 'platform_dispatcher.dart';
+part 'platform_isolate.dart';
+part 'plugins.dart';
+part 'pointer.dart';
+part 'semantics.dart';
+part 'setup_hooks.dart';
+part 'text.dart';
+part 'window.dart';

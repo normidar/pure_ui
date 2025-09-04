@@ -1,11 +1,8 @@
 ---
 dependencies:
-  image: ^4.1.0
   meta: ">=1.16.0 <2.0.0"
 description: "'A pure Dart implementation of Canvas API compatible with dart:ui.'"
 dev_dependencies:
-  auto_exporter: any
-  build_runner: any
   test: any
 environment:
   sdk: ^3.2.0

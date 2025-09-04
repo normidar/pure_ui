@@ -9,7 +9,7 @@ help:
 
 # ci
 .PHONY: ci
-ci: build analyze format
+ci: analyze format
 
 # analyze
 .PHONY: analyze
