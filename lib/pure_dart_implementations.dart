@@ -39,6 +39,40 @@ enum _DrawCommandType {
   drawShadow,
 }
 
+class _PathCommand {
+  final _PathCommandType type;
+  final List<dynamic> args;
+  _PathCommand(this.type, this.args);
+}
+
+enum _PathCommandType {
+  setFillType,
+  moveTo,
+  relativeMoveTo,
+  lineTo,
+  relativeLineTo,
+  quadraticBezierTo,
+  relativeQuadraticBezierTo,
+  cubicTo,
+  relativeCubicTo,
+  conicTo,
+  relativeConicTo,
+  arcTo,
+  arcToPoint,
+  relativeArcToPoint,
+  addRect,
+  addOval,
+  addArc,
+  addPolygon,
+  addRRect,
+  addPath,
+  extendWithPath,
+  close,
+  shift,
+  transform,
+  addRSuperellipse,
+}
+
 /// Pure Dart implementation of Canvas
 class _PureDartCanvas implements Canvas {
   final List<_DrawCommand> _commands = [];
@@ -419,6 +453,237 @@ class _PureDartImage implements Image {
   }
 }
 
+/// Pure Dart implementation of Path
+class _PureDartPath implements Path {
+  final List<_PathCommand> _commands = [];
+
+  _PureDartPath();
+
+  @override
+  PathFillType get fillType => PathFillType.nonZero;
+
+  @override
+  set fillType(PathFillType value) {
+    _commands.add(_PathCommand(_PathCommandType.setFillType, [value]));
+  }
+
+  @override
+  void addArc(Rect oval, double startAngle, double sweepAngle) {
+    _commands.add(
+        _PathCommand(_PathCommandType.addArc, [oval, startAngle, sweepAngle]));
+  }
+
+  @override
+  void addOval(Rect oval) {
+    _commands.add(_PathCommand(_PathCommandType.addOval, [oval]));
+  }
+
+  @override
+  void addPath(Path path, Offset offset, {Float64List? matrix4}) {
+    _commands
+        .add(_PathCommand(_PathCommandType.addPath, [path, offset, matrix4]));
+  }
+
+  @override
+  void addPolygon(List<Offset> points, bool close) {
+    _commands.add(_PathCommand(_PathCommandType.addPolygon, [points, close]));
+  }
+
+  @override
+  void addRect(Rect rect) {
+    _commands.add(_PathCommand(_PathCommandType.addRect, [rect]));
+  }
+
+  @override
+  void addRRect(RRect rrect) {
+    _commands.add(_PathCommand(_PathCommandType.addRRect, [rrect]));
+  }
+
+  @override
+  void addRSuperellipse(RSuperellipse rsuperellipse) {
+    _commands
+        .add(_PathCommand(_PathCommandType.addRSuperellipse, [rsuperellipse]));
+  }
+
+  @override
+  void arcTo(
+      Rect rect, double startAngle, double sweepAngle, bool forceMoveTo) {
+    _commands.add(_PathCommand(
+        _PathCommandType.arcTo, [rect, startAngle, sweepAngle, forceMoveTo]));
+  }
+
+  @override
+  void arcToPoint(Offset arcEnd,
+      {Radius radius = Radius.zero,
+      double rotation = 0.0,
+      bool largeArc = false,
+      bool clockwise = true}) {
+    _commands.add(_PathCommand(_PathCommandType.arcToPoint,
+        [arcEnd, radius, rotation, largeArc, clockwise]));
+  }
+
+  @override
+  void close() {
+    _commands.add(_PathCommand(_PathCommandType.close, []));
+  }
+
+  @override
+  PathMetrics computeMetrics({bool forceClosed = false}) {
+    // Create a simple PathMetrics that returns empty for now
+    return PathMetrics._(this, forceClosed);
+  }
+
+  @override
+  void conicTo(double x1, double y1, double x2, double y2, double w) {
+    _commands.add(_PathCommand(_PathCommandType.conicTo, [x1, y1, x2, y2, w]));
+  }
+
+  @override
+  bool contains(Offset point) {
+    final bounds = getBounds();
+    return bounds.contains(point);
+  }
+
+  @override
+  void cubicTo(
+      double x1, double y1, double x2, double y2, double x3, double y3) {
+    _commands
+        .add(_PathCommand(_PathCommandType.cubicTo, [x1, y1, x2, y2, x3, y3]));
+  }
+
+  @override
+  void extendWithPath(Path path, Offset offset, {Float64List? matrix4}) {
+    _commands.add(
+        _PathCommand(_PathCommandType.extendWithPath, [path, offset, matrix4]));
+  }
+
+  @override
+  Rect getBounds() {
+    double minX = 0, minY = 0, maxX = 0, maxY = 0;
+    bool hasPoints = false;
+
+    for (final command in _commands) {
+      switch (command.type) {
+        case _PathCommandType.moveTo:
+        case _PathCommandType.lineTo:
+          final x = command.args[0] as double;
+          final y = command.args[1] as double;
+          if (!hasPoints) {
+            minX = maxX = x;
+            minY = maxY = y;
+            hasPoints = true;
+          } else {
+            minX = math.min(minX, x);
+            maxX = math.max(maxX, x);
+            minY = math.min(minY, y);
+            maxY = math.max(maxY, y);
+          }
+          break;
+        case _PathCommandType.addRect:
+          final rect = command.args[0] as Rect;
+          if (!hasPoints) {
+            minX = rect.left;
+            maxX = rect.right;
+            minY = rect.top;
+            maxY = rect.bottom;
+            hasPoints = true;
+          } else {
+            minX = math.min(minX, rect.left);
+            maxX = math.max(maxX, rect.right);
+            minY = math.min(minY, rect.top);
+            maxY = math.max(maxY, rect.bottom);
+          }
+          break;
+        default:
+          break;
+      }
+    }
+
+    return hasPoints ? Rect.fromLTRB(minX, minY, maxX, maxY) : Rect.zero;
+  }
+
+  @override
+  void lineTo(double x, double y) {
+    _commands.add(_PathCommand(_PathCommandType.lineTo, [x, y]));
+  }
+
+  @override
+  void moveTo(double x, double y) {
+    _commands.add(_PathCommand(_PathCommandType.moveTo, [x, y]));
+  }
+
+  @override
+  void quadraticBezierTo(double x1, double y1, double x2, double y2) {
+    _commands.add(
+        _PathCommand(_PathCommandType.quadraticBezierTo, [x1, y1, x2, y2]));
+  }
+
+  @override
+  void relativeArcToPoint(Offset arcEndDelta,
+      {Radius radius = Radius.zero,
+      double rotation = 0.0,
+      bool largeArc = false,
+      bool clockwise = true}) {
+    _commands.add(_PathCommand(_PathCommandType.relativeArcToPoint,
+        [arcEndDelta, radius, rotation, largeArc, clockwise]));
+  }
+
+  @override
+  void relativeConicTo(double x1, double y1, double x2, double y2, double w) {
+    _commands.add(
+        _PathCommand(_PathCommandType.relativeConicTo, [x1, y1, x2, y2, w]));
+  }
+
+  @override
+  void relativeCubicTo(
+      double x1, double y1, double x2, double y2, double x3, double y3) {
+    _commands.add(_PathCommand(
+        _PathCommandType.relativeCubicTo, [x1, y1, x2, y2, x3, y3]));
+  }
+
+  @override
+  void relativeLineTo(double dx, double dy) {
+    _commands.add(_PathCommand(_PathCommandType.relativeLineTo, [dx, dy]));
+  }
+
+  @override
+  void relativeMoveTo(double dx, double dy) {
+    _commands.add(_PathCommand(_PathCommandType.relativeMoveTo, [dx, dy]));
+  }
+
+  @override
+  void relativeQuadraticBezierTo(double x1, double y1, double x2, double y2) {
+    _commands.add(_PathCommand(
+        _PathCommandType.relativeQuadraticBezierTo, [x1, y1, x2, y2]));
+  }
+
+  @override
+  void reset() {
+    _commands.clear();
+  }
+
+  @override
+  Path shift(Offset offset) {
+    final newPath = _PureDartPath();
+    newPath._commands.addAll(_commands);
+    newPath._commands.add(_PathCommand(_PathCommandType.shift, [offset]));
+    return newPath;
+  }
+
+  @override
+  Path transform(Float64List matrix4) {
+    final newPath = _PureDartPath();
+    newPath._commands.addAll(_commands);
+    newPath._commands.add(_PathCommand(_PathCommandType.transform, [matrix4]));
+    return newPath;
+  }
+
+  @override
+  static Path combine(PathOperation operation, Path path1, Path path2) {
+    return path1;
+  }
+}
+
 /// Pure Dart implementation of Picture
 class _PureDartPicture implements Picture {
   final List<_DrawCommand> _commands;
@@ -513,6 +778,44 @@ class _PureDartPicture implements Picture {
     }
   }
 
+  void _drawOvalToPixels(
+      Rect rect, Paint paint, Uint8List pixels, int width, int height) {
+    final color = paint.color;
+    final r = (color.r * 255).round() & 0xff;
+    final g = (color.g * 255).round() & 0xff;
+    final b = (color.b * 255).round() & 0xff;
+    final a = (color.a * 255).round() & 0xff;
+
+    final centerX = rect.center.dx;
+    final centerY = rect.center.dy;
+    final radiusX = rect.width / 2;
+    final radiusY = rect.height / 2;
+
+    final left = math.max(0, rect.left.round());
+    final top = math.max(0, rect.top.round());
+    final right = math.min(width, rect.right.round());
+    final bottom = math.min(height, rect.bottom.round());
+
+    for (int y = top; y < bottom; y++) {
+      for (int x = left; x < right; x++) {
+        final dx = x - centerX;
+        final dy = y - centerY;
+        final normalized =
+            (dx * dx) / (radiusX * radiusX) + (dy * dy) / (radiusY * radiusY);
+
+        if (normalized <= 1.0) {
+          final index = (y * width + x) * 4;
+          if (index >= 0 && index < pixels.length - 3) {
+            pixels[index] = r;
+            pixels[index + 1] = g;
+            pixels[index + 2] = b;
+            pixels[index + 3] = a;
+          }
+        }
+      }
+    }
+  }
+
   void _drawRectToPixels(
       Rect rect, Paint paint, Uint8List pixels, int width, int height) {
     final color = paint.color;
@@ -559,6 +862,15 @@ class _PureDartPicture implements Picture {
           command.args[0] as Offset,
           command.args[1] as double,
           command.args[2] as Paint,
+          pixels,
+          width,
+          height,
+        );
+        break;
+      case _DrawCommandType.drawOval:
+        _drawOvalToPixels(
+          command.args[0] as Rect,
+          command.args[1] as Paint,
           pixels,
           width,
           height,
@@ -624,3 +936,5 @@ class _PureDartPictureRecorder implements PictureRecorder {
     return picture;
   }
 }
+
+// PathMetrics and PathMetric classes are handled by the main library

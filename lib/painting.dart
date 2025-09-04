@@ -4740,15 +4740,17 @@ enum PaintingStyle {
 abstract class Path {
   // TODO(matanlurey): have original authors document; see https://github.com/flutter/flutter/issues/151917.
   // ignore: public_member_api_docs
-  factory Path() = _NativePath;
+  factory Path() = _PureDartPath;
 
   /// Creates a copy of another [Path].
   ///
   /// This copy is fast and does not require additional memory unless either
   /// the `source` path or the path returned by this constructor are modified.
   factory Path.from(Path source) {
-    final _NativePath clonedPath = _NativePath._();
-    (source as _NativePath)._clone(clonedPath);
+    final _PureDartPath clonedPath = _PureDartPath();
+    if (source is _PureDartPath) {
+      clonedPath._commands.addAll(source._commands);
+    }
     return clonedPath;
   }
 
@@ -5187,8 +5189,10 @@ class PathMetrics extends collection.IterableBase<PathMetric> {
   final Iterator<PathMetric> _iterator;
 
   PathMetrics._(Path path, bool forceClosed)
-      : _iterator = PathMetricIterator._(
-            _PathMeasure(path as _NativePath, forceClosed));
+      : _iterator = path is _PureDartPath
+            ? <PathMetric>[].iterator
+            : PathMetricIterator._(
+                _PathMeasure(path as _NativePath, forceClosed));
 
   @override
   Iterator<PathMetric> get iterator => _iterator;
