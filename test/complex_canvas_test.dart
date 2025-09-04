@@ -247,12 +247,14 @@ void main() {
       final canvas =
           ui.Canvas(recorder, const ui.Rect.fromLTWH(0, 0, 400, 400));
 
-      // Create mathematical pattern
-      for (int x = 0; x < 400; x += 2) {
-        for (int y = 0; y < 400; y += 2) {
-          // Map coordinates to complex plane
-          final cx = (x - 200) / 100.0;
-          final cy = (y - 200) / 100.0;
+      // Create mathematical pattern with improved color mapping
+      // Use larger blocks for better visibility
+      final blockSize = 4;
+      for (int x = 0; x < 400; x += blockSize) {
+        for (int y = 0; y < 400; y += blockSize) {
+          // Map coordinates to a more interesting region of the complex plane
+          final cx = (x - 200) / 150.0; // Slightly zoomed in
+          final cy = (y - 200) / 150.0;
 
           // Simple iteration count for coloring
           int iterations = 0;
@@ -265,27 +267,44 @@ void main() {
             iterations++;
           }
 
-          // Color based on iterations
-          final color = iterations == 50
-              ? const ui.Color(0xFF000000)
-              : ui.Color.fromARGB(255, (iterations * 5) % 255,
-                  (iterations * 7) % 255, (iterations * 11) % 255);
+          // Improved color mapping with better contrast
+          ui.Color color;
+          if (iterations == 50) {
+            color = const ui.Color(0xFF000000); // Black for points in the set
+          } else if (iterations < 10) {
+            // Very fast escape - bright colors
+            color = ui.Color.fromARGB(255, 255, (iterations * 25) % 255, 0);
+          } else if (iterations < 20) {
+            // Medium escape - green tones
+            color = ui.Color.fromARGB(255, 0, 255, (iterations * 12) % 255);
+          } else {
+            // Slow escape - blue tones
+            color = ui.Color.fromARGB(255, (iterations * 5) % 255, 0, 255);
+          }
 
           final paint = ui.Paint()
             ..color = color
             ..style = ui.PaintingStyle.fill;
 
           canvas.drawRect(
-              ui.Rect.fromLTWH(x.toDouble(), y.toDouble(), 2, 2), paint);
+              ui.Rect.fromLTWH(x.toDouble(), y.toDouble(), blockSize.toDouble(),
+                  blockSize.toDouble()),
+              paint);
         }
       }
 
-      // Add frame
+      // Add frame - use fill instead of stroke for better visibility
       final framePaint = ui.Paint()
         ..color = const ui.Color(0xFFFFFFFF)
-        ..style = ui.PaintingStyle.stroke
-        ..strokeWidth = 3.0;
-      canvas.drawRect(const ui.Rect.fromLTWH(5, 5, 390, 390), framePaint);
+        ..style = ui.PaintingStyle.fill;
+
+      // Draw frame as separate rectangles
+      canvas.drawRect(const ui.Rect.fromLTWH(0, 0, 400, 5), framePaint); // Top
+      canvas.drawRect(
+          const ui.Rect.fromLTWH(0, 395, 400, 5), framePaint); // Bottom
+      canvas.drawRect(const ui.Rect.fromLTWH(0, 0, 5, 400), framePaint); // Left
+      canvas.drawRect(
+          const ui.Rect.fromLTWH(395, 0, 5, 400), framePaint); // Right
 
       final picture = recorder.endRecording();
       final image = await picture.toImage(400, 400);
@@ -298,6 +317,41 @@ void main() {
       await file.writeAsBytes(byteData!.buffer.asUint8List());
 
       print('Mandelbrot pattern saved: ${file.path}');
+    });
+
+    test('Debug - Simple color test', () async {
+      final recorder = ui.PictureRecorder();
+      final canvas =
+          ui.Canvas(recorder, const ui.Rect.fromLTWH(0, 0, 400, 400));
+
+      // Draw simple colored rectangles to test basic functionality
+      final colors = [
+        const ui.Color(0xFFFF0000), // Red
+        const ui.Color(0xFF00FF00), // Green
+        const ui.Color(0xFF0000FF), // Blue
+        const ui.Color(0xFFFFFF00), // Yellow
+        const ui.Color(0xFFFF00FF), // Magenta
+        const ui.Color(0xFF00FFFF), // Cyan
+      ];
+
+      for (int i = 0; i < colors.length; i++) {
+        final paint = ui.Paint()
+          ..color = colors[i]
+          ..style = ui.PaintingStyle.fill;
+
+        final x = (i % 3) * 133.0;
+        final y = (i ~/ 3) * 200.0;
+        canvas.drawRect(ui.Rect.fromLTWH(x, y, 133, 200), paint);
+      }
+
+      final picture = recorder.endRecording();
+      final image = await picture.toImage(400, 400);
+
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      final file = File('test_output/debug_color_test.png');
+      await file.writeAsBytes(byteData!.buffer.asUint8List());
+
+      print('Debug color test saved: ${file.path}');
     });
 
     test('Performance test - Many small elements', () async {
