@@ -7993,8 +7993,8 @@ base class _NativePath extends NativeFieldWrapperClass1 implements Path {
     bool clockwise,
   );
 
-  @Native<Void Function(Pointer<Void>, Handle)>(symbol: 'Path::clone')
-  external void _clone(Path outPath);
+  // @Native<Void Function(Pointer<Void>, Handle)>(symbol: 'Path::clone')
+  // external void _clone(Path outPath);
 
   @Native<Void Function(Handle)>(symbol: 'Path::Create')
   external void _constructor();

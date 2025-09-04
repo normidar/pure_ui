@@ -9,7 +9,7 @@ description: "'A pure Dart implementation of Canvas API compatible with dart:ui.
 dev_dependencies:
   test: any
 environment:
-  sdk: ^3.2.0
+  sdk: ^3.3.0
 homepage: https://github.com/normidar/pure_ui
 name: pure_ui
 topics:

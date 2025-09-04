@@ -423,7 +423,6 @@ class _PureDartImage implements Image {
     }
   }
 
-  @override
   ByteData? toByteDataSync({ImageByteFormat format = ImageByteFormat.rawRgba}) {
     if (_disposed) return null;
     return ByteData.sublistView(_pixels);
@@ -677,20 +676,14 @@ class _PureDartPath implements Path {
     newPath._commands.add(_PathCommand(_PathCommandType.transform, [matrix4]));
     return newPath;
   }
-
-  @override
-  static Path combine(PathOperation operation, Path path1, Path path2) {
-    return path1;
-  }
 }
 
 /// Pure Dart implementation of Picture
 class _PureDartPicture implements Picture {
   final List<_DrawCommand> _commands;
-  final Rect _cullRect;
   bool _disposed = false;
 
-  _PureDartPicture(this._commands, this._cullRect);
+  _PureDartPicture(this._commands, Rect _cullRect);
 
   @override
   int get approximateBytesUsed => _commands.length * 100; // Rough estimate
