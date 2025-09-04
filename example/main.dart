@@ -2,47 +2,57 @@ import 'dart:io';
 
 import 'package:pure_ui/pure_ui.dart';
 
-void main() {
-  // Create a new image
-  final image = Image(400, 300);
+void main() async {
+  print(
+      'Pure UI Example - Demonstrating dart:ui functionality without Flutter Engine');
 
-  // Create a canvas
-  final canvas = Canvas.forImage(image);
+  // Create a picture recorder
+  final recorder = PictureRecorder();
+  print(
+      '✓ PictureRecorder created successfully (isRecording: ${recorder.isRecording})');
 
-  // Fill the background
-  final bgPaint = Paint()
-    ..color = const Color.fromRGB(240, 240, 255)
+  // Create a canvas for drawing
+  final canvas = Canvas(recorder, const Rect.fromLTWH(0, 0, 200, 200));
+  print('✓ Canvas created successfully');
+
+  // Create paint for drawing
+  final paint = Paint()
+    ..color = const Color(0xFFFF0000)
     ..style = PaintingStyle.fill;
-  canvas.drawRect(const Rect.fromLTWH(0, 0, 400, 300), bgPaint);
+  print('✓ Paint created successfully');
 
-  // Draw a circle
-  final circlePaint = Paint()
-    ..color = const Color.fromRGB(255, 0, 0)
-    ..style = PaintingStyle.fill;
-  canvas.drawCircle(const Offset(200, 150), 80, circlePaint);
+  // Draw some shapes
+  canvas.drawRect(const Rect.fromLTWH(50, 50, 100, 100), paint);
+  canvas.drawCircle(const Offset(100, 100), 30, paint);
+  print('✓ Drawing operations completed');
 
-  // Draw a rectangle
-  final rectPaint = Paint()
-    ..color = const Color.fromRGB(0, 0, 255)
-    ..style = PaintingStyle.stroke
-    ..strokeWidth = 4;
-  canvas.drawRect(const Rect.fromLTRB(50, 50, 350, 250), rectPaint);
+  // End recording and get the picture
+  final picture = recorder.endRecording();
+  print(
+      '✓ Picture recording ended (recorder.isRecording: ${recorder.isRecording})');
 
-  // Draw a path
-  final pathPaint = Paint()
-    ..color = const Color.fromRGB(0, 180, 0)
-    ..style = PaintingStyle.stroke
-    ..strokeWidth = 3;
+  // Convert picture to image
+  final image = await picture.toImage(200, 200);
+  print('✓ Picture converted to Image (${image.width}x${image.height})');
 
-  final path = Path()
-    ..moveTo(50, 150)
-    ..lineTo(150, 250)
-    ..lineTo(250, 50)
-    ..lineTo(350, 150);
+  // Get image data
+  final byteData = await image.toByteData();
+  if (byteData != null) {
+    print(
+        '✓ Image data extracted successfully (${byteData.lengthInBytes} bytes)');
 
-  canvas.drawPath(path, pathPaint);
+    // Save as a simple file for demonstration
+    final file = File('example_output.rgba');
+    await file.writeAsBytes(byteData.buffer.asUint8List());
+    print('✓ Image data saved to example_output.rgba');
+  }
 
-  // Save the image as PNG
-  final pngData = image.toPng();
-  File('output.png').writeAsBytesSync(pngData);
+  // Clean up
+  image.dispose();
+  picture.dispose();
+  print('✓ Resources disposed');
+
+  print('\n🎉 Pure Dart implementation of dart:ui is working successfully!');
+  print(
+      '   This demonstrates that @Native FFI calls have been replaced with pure Dart implementations.');
 }

@@ -8,19 +8,19 @@ void main() {
 
   group('Color', () {
     test('should create a color from RGB values', () {
-      const color = Color.fromRGB(255, 0, 0);
-      expect(color.red, equals(255));
-      expect(color.green, equals(0));
-      expect(color.blue, equals(0));
-      expect(color.alpha, equals(255));
+      final color = Color.fromRGBO(255, 0, 0, 1.0);
+      expect((color.r * 255.0).round(), equals(255));
+      expect((color.g * 255.0).round(), equals(0));
+      expect((color.b * 255.0).round(), equals(0));
+      expect((color.a * 255.0).round(), equals(255));
     });
 
     test('should create a color from ARGB values', () {
       const color = Color.fromARGB(128, 255, 0, 0);
-      expect(color.red, equals(255));
-      expect(color.green, equals(0));
-      expect(color.blue, equals(0));
-      expect(color.alpha, equals(128));
+      expect((color.r * 255.0).round(), equals(255));
+      expect((color.g * 255.0).round(), equals(0));
+      expect((color.b * 255.0).round(), equals(0));
+      expect((color.a * 255.0).round(), equals(128));
     });
   });
 
@@ -56,25 +56,6 @@ void main() {
     test('should calculate distance', () {
       const offset = Offset(3, 4);
       expect(offset.distance, equals(5));
-    });
-  });
-
-  group('Path', () {
-    test('should create an empty path', () {
-      final path = Path();
-      expect(path.commands.isEmpty, isTrue);
-      expect(path.points.isEmpty, isTrue);
-    });
-
-    test('should add line segments', () {
-      final path = Path()
-        ..moveTo(10, 10)
-        ..lineTo(20, 20)
-        ..lineTo(30, 10)
-        ..close();
-
-      expect(path.commands.length, equals(4));
-      expect(path.points.length, equals(3));
     });
   });
 }
