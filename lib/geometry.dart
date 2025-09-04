@@ -2048,7 +2048,7 @@ class RSuperellipse extends _RRectLike<RSuperellipse> {
   }
 }
 
-class _NativeRSuperellipse extends NativeFieldWrapperClass1 {
+base class _NativeRSuperellipse extends NativeFieldWrapperClass1 {
   _NativeRSuperellipse(RSuperellipse rsuperellipse) {
     _constructor(
       rsuperellipse.left,

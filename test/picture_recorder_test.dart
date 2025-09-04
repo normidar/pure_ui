@@ -8,11 +8,6 @@ void main() {
       expect(recorder.isRecording, true);
     });
 
-    test('can access canvas', () {
-      final recorder = PictureRecorder();
-      expect(recorder.canvas, isA<Canvas>());
-    });
-
     test('returns Picture on endRecording', () {
       final recorder = PictureRecorder();
       final picture = recorder.endRecording();
@@ -20,30 +15,25 @@ void main() {
       expect(recorder.isRecording, false);
     });
 
-    test('throws error when accessing canvas after endRecording', () {
-      final recorder = PictureRecorder()..endRecording();
-      expect(() => recorder.canvas, throwsException);
-    });
-
     test('throws error when calling endRecording twice', () {
       final recorder = PictureRecorder()..endRecording();
       expect(recorder.endRecording, throwsException);
     });
 
-    test('can save drawing operations to Picture', () {
+    test('can save drawing operations to Picture', () async {
       final recorder = PictureRecorder();
-      final canvas = recorder.canvas;
+      final canvas = Canvas(recorder);
 
       // Draw circle
       final paint = Paint()
-        ..color = const Color.fromRGB(255, 0, 0)
+        ..color = const Color.fromRGBO(255, 0, 0, 1.0)
         ..style = PaintingStyle.fill;
       canvas.drawCircle(const Offset(100, 100), 50, paint);
 
       final picture = recorder.endRecording();
 
       // Convert to image
-      final image = picture.toImage(200, 200);
+      final image = await picture.toImage(200, 200);
       expect(image, isA<Image>());
       expect(image.width, 200);
       expect(image.height, 200);

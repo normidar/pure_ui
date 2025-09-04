@@ -1065,7 +1065,7 @@ class SemanticsFlag {
 ///
 /// For example, These flags can indicate if an element is
 /// checkable, currently checked, selectable, or functions as a button.
-class SemanticsFlags extends NativeFieldWrapperClass1 {
+base class SemanticsFlags extends NativeFieldWrapperClass1 {
   /// Creates a set of semantics flags that describe various states of a widget.
   /// All flags default to `false` unless specified.
   SemanticsFlags({
