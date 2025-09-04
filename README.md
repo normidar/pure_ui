@@ -44,12 +44,6 @@ void drawWithPureUI() async { // Add async
 }
 ```
 
-**Key differences:**
-
-- Canvas constructor requires bounds: `Canvas(recorder, bounds)`
-- `picture.toImage()` is async: `await picture.toImage(width, height)`
-- `image.toByteData()` is async: `await image.toByteData(format: ImageByteFormat.png)`
-
 ## Quick Start
 
 ```dart
