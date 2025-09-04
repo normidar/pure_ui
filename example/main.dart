@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:pure_ui/pure_ui.dart';
 
 void main() {
@@ -41,8 +39,4 @@ void main() {
     ..lineTo(350, 150);
 
   canvas.drawPath(path, pathPaint);
-
-  // Save the image as PNG
-  final pngData = image.toPng();
-  File('output.png').writeAsBytesSync(pngData);
 }

@@ -58,9 +58,4 @@ class Image {
     final resized = img.copyResize(_image, width: width, height: height);
     return Image.fromImage(resized);
   }
-
-  /// Encodes this image as a PNG.
-  Uint8List toPng() {
-    return Uint8List.fromList(img.encodePng(_image));
-  }
 }
