@@ -1,3 +1,7 @@
+## 0.1.0
+
+- Use Flutter dart:ui source code to implement the Pure UI.
+
 ## 0.0.4
 
 - Fix downgrade analysis failed.
