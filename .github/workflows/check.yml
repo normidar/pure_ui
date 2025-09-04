@@ -40,9 +40,9 @@ jobs:
         run: |
           dart pub get
 
-      - name: Run format
-        run: |
-          dart format .
+      # - name: Run format
+      #   run: |
+      #     dart format .
 
       - name: Run analyze
         run: |
