@@ -293,18 +293,12 @@ void main() {
         }
       }
 
-      // Add frame - use fill instead of stroke for better visibility
+      // Add frame - test the improved stroke implementation
       final framePaint = ui.Paint()
         ..color = const ui.Color(0xFFFFFFFF)
-        ..style = ui.PaintingStyle.fill;
-
-      // Draw frame as separate rectangles
-      canvas.drawRect(const ui.Rect.fromLTWH(0, 0, 400, 5), framePaint); // Top
-      canvas.drawRect(
-          const ui.Rect.fromLTWH(0, 395, 400, 5), framePaint); // Bottom
-      canvas.drawRect(const ui.Rect.fromLTWH(0, 0, 5, 400), framePaint); // Left
-      canvas.drawRect(
-          const ui.Rect.fromLTWH(395, 0, 5, 400), framePaint); // Right
+        ..style = ui.PaintingStyle.stroke
+        ..strokeWidth = 3.0;
+      canvas.drawRect(const ui.Rect.fromLTWH(5, 5, 390, 390), framePaint);
 
       final picture = recorder.endRecording();
       final image = await picture.toImage(400, 400);
@@ -352,6 +346,48 @@ void main() {
       await file.writeAsBytes(byteData!.buffer.asUint8List());
 
       print('Debug color test saved: ${file.path}');
+    });
+
+    test('Debug - 1x1 pixel test', () async {
+      final recorder = ui.PictureRecorder();
+      final canvas =
+          ui.Canvas(recorder, const ui.Rect.fromLTWH(0, 0, 100, 100));
+
+      // Fill background with black
+      final bgPaint = ui.Paint()
+        ..color = const ui.Color(0xFF000000)
+        ..style = ui.PaintingStyle.fill;
+      canvas.drawRect(const ui.Rect.fromLTWH(0, 0, 100, 100), bgPaint);
+
+      // Draw individual 1x1 pixel dots in different colors
+      final colors = [
+        const ui.Color(0xFFFF0000), // Red
+        const ui.Color(0xFF00FF00), // Green
+        const ui.Color(0xFF0000FF), // Blue
+        const ui.Color(0xFFFFFFFF), // White
+      ];
+
+      for (int i = 0; i < colors.length; i++) {
+        final paint = ui.Paint()
+          ..color = colors[i]
+          ..style = ui.PaintingStyle.fill;
+
+        // Draw 1x1 pixel rectangles
+        for (int j = 0; j < 20; j++) {
+          final x = 10 + (i * 20) + (j % 5) * 2.0;
+          final y = 10 + (j ~/ 5) * 2.0;
+          canvas.drawRect(ui.Rect.fromLTWH(x, y, 1, 1), paint);
+        }
+      }
+
+      final picture = recorder.endRecording();
+      final image = await picture.toImage(100, 100);
+
+      final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      final file = File('test_output/pixel_test.png');
+      await file.writeAsBytes(byteData!.buffer.asUint8List());
+
+      print('1x1 pixel test saved: ${file.path}');
     });
 
     test('Performance test - Many small elements', () async {

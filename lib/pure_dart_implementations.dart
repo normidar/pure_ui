@@ -744,19 +744,47 @@ class _PureDartPicture implements Picture {
     final right = math.min(width, (centerX + radius).round());
     final bottom = math.min(height, (centerY + radius).round());
 
-    for (int y = top; y < bottom; y++) {
-      for (int x = left; x < right; x++) {
-        final dx = x - centerX;
-        final dy = y - centerY;
-        final distanceSquared = dx * dx + dy * dy;
+    if (paint.style == PaintingStyle.fill) {
+      // Fill the entire circle
+      for (int y = top; y < bottom; y++) {
+        for (int x = left; x < right; x++) {
+          final dx = x - centerX;
+          final dy = y - centerY;
+          final distanceSquared = dx * dx + dy * dy;
 
-        if (distanceSquared <= radiusSquared) {
-          final index = (y * width + x) * 4;
-          if (index >= 0 && index < pixels.length - 3) {
-            pixels[index] = r;
-            pixels[index + 1] = g;
-            pixels[index + 2] = b;
-            pixels[index + 3] = a;
+          if (distanceSquared <= radiusSquared) {
+            final index = (y * width + x) * 4;
+            if (index >= 0 && index < pixels.length - 3) {
+              pixels[index] = r;
+              pixels[index + 1] = g;
+              pixels[index + 2] = b;
+              pixels[index + 3] = a;
+            }
+          }
+        }
+      }
+    } else if (paint.style == PaintingStyle.stroke) {
+      // Draw only the circle border
+      final strokeWidth = math.max(1, paint.strokeWidth.round());
+      final innerRadiusSquared =
+          math.max(0, (radius - strokeWidth) * (radius - strokeWidth));
+
+      for (int y = top; y < bottom; y++) {
+        for (int x = left; x < right; x++) {
+          final dx = x - centerX;
+          final dy = y - centerY;
+          final distanceSquared = dx * dx + dy * dy;
+
+          // Point is in the stroke area if it's within the outer circle but outside the inner circle
+          if (distanceSquared <= radiusSquared &&
+              distanceSquared >= innerRadiusSquared) {
+            final index = (y * width + x) * 4;
+            if (index >= 0 && index < pixels.length - 3) {
+              pixels[index] = r;
+              pixels[index + 1] = g;
+              pixels[index + 2] = b;
+              pixels[index + 3] = a;
+            }
           }
         }
       }
@@ -829,14 +857,72 @@ class _PureDartPicture implements Picture {
     final right = math.min(width, rect.right.round());
     final bottom = math.min(height, rect.bottom.round());
 
-    for (int y = top; y < bottom; y++) {
-      for (int x = left; x < right; x++) {
-        final index = (y * width + x) * 4;
-        if (index >= 0 && index < pixels.length - 3) {
-          pixels[index] = r;
-          pixels[index + 1] = g;
-          pixels[index + 2] = b;
-          pixels[index + 3] = a;
+    if (paint.style == PaintingStyle.fill) {
+      // Fill the entire rectangle
+      for (int y = top; y < bottom; y++) {
+        for (int x = left; x < right; x++) {
+          final index = (y * width + x) * 4;
+          if (index >= 0 && index < pixels.length - 3) {
+            pixels[index] = r;
+            pixels[index + 1] = g;
+            pixels[index + 2] = b;
+            pixels[index + 3] = a;
+          }
+        }
+      }
+    } else if (paint.style == PaintingStyle.stroke) {
+      // Draw only the border
+      final strokeWidth = math.max(1, paint.strokeWidth.round());
+
+      // Top border
+      for (int y = top; y < math.min(top + strokeWidth, bottom); y++) {
+        for (int x = left; x < right; x++) {
+          final index = (y * width + x) * 4;
+          if (index >= 0 && index < pixels.length - 3) {
+            pixels[index] = r;
+            pixels[index + 1] = g;
+            pixels[index + 2] = b;
+            pixels[index + 3] = a;
+          }
+        }
+      }
+
+      // Bottom border
+      for (int y = math.max(bottom - strokeWidth, top); y < bottom; y++) {
+        for (int x = left; x < right; x++) {
+          final index = (y * width + x) * 4;
+          if (index >= 0 && index < pixels.length - 3) {
+            pixels[index] = r;
+            pixels[index + 1] = g;
+            pixels[index + 2] = b;
+            pixels[index + 3] = a;
+          }
+        }
+      }
+
+      // Left border
+      for (int y = top; y < bottom; y++) {
+        for (int x = left; x < math.min(left + strokeWidth, right); x++) {
+          final index = (y * width + x) * 4;
+          if (index >= 0 && index < pixels.length - 3) {
+            pixels[index] = r;
+            pixels[index + 1] = g;
+            pixels[index + 2] = b;
+            pixels[index + 3] = a;
+          }
+        }
+      }
+
+      // Right border
+      for (int y = top; y < bottom; y++) {
+        for (int x = math.max(right - strokeWidth, left); x < right; x++) {
+          final index = (y * width + x) * 4;
+          if (index >= 0 && index < pixels.length - 3) {
+            pixels[index] = r;
+            pixels[index + 1] = g;
+            pixels[index + 2] = b;
+            pixels[index + 3] = a;
+          }
         }
       }
     }
