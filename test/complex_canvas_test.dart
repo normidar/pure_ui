@@ -31,7 +31,7 @@ void main() {
 
       for (int i = 0; i < colors.length; i++) {
         final paint = ui.Paint()
-          ..color = colors[i].withOpacity(0.7)
+          ..color = colors[i].withValues(alpha: 0.7)
           ..style = ui.PaintingStyle.fill;
 
         final centerX = 100 + (i * 50).toDouble();

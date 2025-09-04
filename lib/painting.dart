@@ -280,7 +280,7 @@ Int32List _encodeColorList(List<Color> colors) {
   final int colorCount = colors.length;
   final Int32List result = Int32List(colorCount);
   for (int i = 0; i < colorCount; i++) {
-    result[i] = colors[i].value;
+    result[i] = colors[i].toARGB32();
   }
   return result;
 }
@@ -6279,7 +6279,7 @@ base class _ColorFilter extends NativeFieldWrapperClass1 {
   _ColorFilter.mode(this.creator)
       : assert(creator._type == ColorFilter._kTypeMode) {
     _constructor();
-    _initMode(creator._color!.value, creator._blendMode!.index);
+    _initMode(creator._color!.toARGB32(), creator._blendMode!.index);
   }
 
   _ColorFilter.srgbToLinearGamma(this.creator)

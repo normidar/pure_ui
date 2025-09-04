@@ -9,18 +9,18 @@ void main() {
   group('Color', () {
     test('should create a color from RGB values', () {
       final color = Color.fromRGBO(255, 0, 0, 1.0);
-      expect(color.red, equals(255));
-      expect(color.green, equals(0));
-      expect(color.blue, equals(0));
-      expect(color.alpha, equals(255));
+      expect((color.r * 255.0).round(), equals(255));
+      expect((color.g * 255.0).round(), equals(0));
+      expect((color.b * 255.0).round(), equals(0));
+      expect((color.a * 255.0).round(), equals(255));
     });
 
     test('should create a color from ARGB values', () {
       const color = Color.fromARGB(128, 255, 0, 0);
-      expect(color.red, equals(255));
-      expect(color.green, equals(0));
-      expect(color.blue, equals(0));
-      expect(color.alpha, equals(128));
+      expect((color.r * 255.0).round(), equals(255));
+      expect((color.g * 255.0).round(), equals(0));
+      expect((color.b * 255.0).round(), equals(0));
+      expect((color.a * 255.0).round(), equals(128));
     });
   });
 
