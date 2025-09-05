@@ -37,6 +37,7 @@ enum _DrawCommandType {
   drawParagraph,
   drawVertices,
   drawShadow,
+  drawPicture,
 }
 
 class _PathCommand {
@@ -208,7 +209,7 @@ class _PureDartCanvas implements Canvas {
 
   @override
   void drawPicture(Picture picture) {
-    // For simplicity, ignore nested pictures
+    _commands.add(_DrawCommand(_DrawCommandType.drawPicture, [picture]));
   }
 
   @override
@@ -396,6 +397,22 @@ class _PureDartImage implements Image {
   void dispose() {
     _disposed = true;
     Image.onDispose?.call(this);
+  }
+
+  @override
+  Color getPixel(int x, int y) {
+    if (_disposed) throw StateError('Image is disposed');
+    if (x < 0 || x >= _width || y < 0 || y >= _height) {
+      throw RangeError('Pixel coordinates ($x, $y) are out of bounds');
+    }
+
+    final pixelIndex = (y * _width + x) * 4;
+    final r = _pixels[pixelIndex];
+    final g = _pixels[pixelIndex + 1];
+    final b = _pixels[pixelIndex + 2];
+    final a = _pixels[pixelIndex + 3];
+
+    return Color.fromARGB(a, r, g, b);
   }
 
   @override
@@ -837,6 +854,19 @@ class _PureDartPicture implements Picture {
     }
   }
 
+  void _drawPictureToPixels(
+      Picture picture, Uint8List pixels, int width, int height) {
+    if (picture is _PureDartPicture) {
+      // Recursively process the commands from the nested picture
+      for (final command in picture._commands) {
+        _processCommand(command, pixels, width, height);
+      }
+    }
+    // For other picture implementations, we can't access their internal commands
+    // so we would need to rasterize them differently, but for now we'll just
+    // handle our own _PureDartPicture implementation
+  }
+
   void _drawRectToPixels(
       Rect rect, Paint paint, Uint8List pixels, int width, int height) {
     final color = paint.color;
@@ -950,6 +980,14 @@ class _PureDartPicture implements Picture {
         _drawOvalToPixels(
           command.args[0] as Rect,
           command.args[1] as Paint,
+          pixels,
+          width,
+          height,
+        );
+        break;
+      case _DrawCommandType.drawPicture:
+        _drawPictureToPixels(
+          command.args[0] as Picture,
           pixels,
           width,
           height,
