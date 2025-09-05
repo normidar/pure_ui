@@ -3335,24 +3335,11 @@ base class Gradient extends Shader {
     );
   }
 
-  @Native<Void Function(Handle)>(symbol: 'Gradient::Create')
-  external void _constructor();
+  void _constructor() {
+    // Pure Dart implementation - no-op since we handle gradient data directly
+  }
 
-  @Native<
-      Void Function(
-        Pointer<Void>,
-        Double,
-        Double,
-        Double,
-        Double,
-        Double,
-        Double,
-        Handle,
-        Handle,
-        Int32,
-        Handle,
-      )>(symbol: 'Gradient::initTwoPointConical')
-  external void _initConical(
+  void _initConical(
     double startX,
     double startY,
     double startRadius,
@@ -3363,25 +3350,21 @@ base class Gradient extends Shader {
     Float32List? colorStops,
     int tileMode,
     Float64List? matrix4,
-  );
+  ) {
+    // Pure Dart implementation - data is already set in constructor
+  }
 
-  @Native<Void Function(Pointer<Void>, Handle, Handle, Handle, Int32, Handle)>(
-    symbol: 'Gradient::initLinear',
-  )
-  external void _initLinear(
+  void _initLinear(
     Float32List endPoints,
     Float32List colors,
     Float32List? colorStops,
     int tileMode,
     Float64List? matrix4,
-  );
+  ) {
+    // Pure Dart implementation - data is already set in constructor
+  }
 
-  @Native<
-      Void Function(Pointer<Void>, Double, Double, Double, Handle, Handle,
-          Int32, Handle)>(
-    symbol: 'Gradient::initRadial',
-  )
-  external void _initRadial(
+  void _initRadial(
     double centerX,
     double centerY,
     double radius,
@@ -3389,12 +3372,11 @@ base class Gradient extends Shader {
     Float32List? colorStops,
     int tileMode,
     Float64List? matrix4,
-  );
+  ) {
+    // Pure Dart implementation - data is already set in constructor
+  }
 
-  @Native<
-      Void Function(Pointer<Void>, Double, Double, Handle, Handle, Int32,
-          Double, Double, Handle)>(symbol: 'Gradient::initSweep')
-  external void _initSweep(
+  void _initSweep(
     double centerX,
     double centerY,
     Float32List colors,
@@ -3403,7 +3385,9 @@ base class Gradient extends Shader {
     double startAngle,
     double endAngle,
     Float64List? matrix,
-  );
+  ) {
+    // Pure Dart implementation - data is already set in constructor
+  }
 
   static void _validateColorStops(
       List<Color> colors, List<double>? colorStops) {
