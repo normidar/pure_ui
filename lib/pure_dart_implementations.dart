@@ -38,6 +38,8 @@ enum _DrawCommandType {
   drawVertices,
   drawShadow,
   drawPicture,
+  drawAtlas,
+  drawRawAtlas,
 }
 
 class _PathCommand {
@@ -139,7 +141,8 @@ class _PureDartCanvas implements Canvas {
   @override
   void drawAtlas(Image atlas, List<RSTransform> transforms, List<Rect> rects,
       List<Color>? colors, BlendMode? blendMode, Rect? cullRect, Paint paint) {
-    // For simplicity, ignore atlas drawing
+    _commands.add(_DrawCommand(_DrawCommandType.drawAtlas,
+        [atlas, transforms, rects, colors, blendMode, cullRect, paint]));
   }
 
   @override
@@ -221,7 +224,8 @@ class _PureDartCanvas implements Canvas {
   @override
   void drawRawAtlas(Image atlas, Float32List rstTransforms, Float32List rects,
       Int32List? colors, BlendMode? blendMode, Rect? cullRect, Paint paint) {
-    // For simplicity, ignore atlas drawing
+    _commands.add(_DrawCommand(_DrawCommandType.drawRawAtlas,
+        [atlas, rstTransforms, rects, colors, blendMode, cullRect, paint]));
   }
 
   @override
@@ -399,7 +403,6 @@ class _PureDartImage implements Image {
     Image.onDispose?.call(this);
   }
 
-  @override
   Color getPixel(int x, int y) {
     if (_disposed) throw StateError('Image is disposed');
     if (x < 0 || x >= _width || y < 0 || y >= _height) {
@@ -466,6 +469,11 @@ class _PureDartImage implements Image {
     // Encode to PNG
     final pngBytes = img.encodePng(image);
     return ByteData.sublistView(Uint8List.fromList(pngBytes));
+  }
+
+  /// Factory method to create a PureDartImage from pixel data
+  static _PureDartImage fromPixels(Uint8List pixels, int width, int height) {
+    return _PureDartImage(pixels, width, height);
   }
 }
 
@@ -737,6 +745,108 @@ class _PureDartPicture implements Picture {
     return _PureDartImage(pixels, width, height);
   }
 
+  void _drawAtlasToPixels(
+      Image atlas,
+      List<RSTransform> transforms,
+      List<Rect> rects,
+      List<Color>? colors,
+      BlendMode? blendMode,
+      Rect? cullRect,
+      Paint paint,
+      Uint8List pixels,
+      int width,
+      int height) {
+    if (atlas is! _PureDartImage) return;
+
+    final atlasPixels = atlas._pixels;
+    final atlasWidth = atlas._width;
+    final atlasHeight = atlas._height;
+
+    // Draw each sprite from the atlas
+    for (int i = 0; i < math.min(transforms.length, rects.length); i++) {
+      final transform = transforms[i];
+      final srcRect = rects[i];
+      final color = colors != null && i < colors.length ? colors[i] : null;
+
+      // Skip if source rect is outside atlas bounds
+      if (srcRect.left < 0 ||
+          srcRect.top < 0 ||
+          srcRect.right > atlasWidth ||
+          srcRect.bottom > atlasHeight) continue;
+
+      // RSTransform contains: scos, ssin, tx, ty
+      // where scos = cos(rotation) * scale, ssin = sin(rotation) * scale
+      final scos = transform.scos;
+      final ssin = transform.ssin;
+      final tx = transform.tx;
+      final ty = transform.ty;
+
+      // Calculate destination bounds using scale factor from scos/ssin
+      final scale = math.sqrt(scos * scos + ssin * ssin);
+      final srcWidth = srcRect.width.round();
+      final srcHeight = srcRect.height.round();
+      final dstWidth = (srcWidth * scale).round();
+      final dstHeight = (srcHeight * scale).round();
+
+      // Draw the sprite
+      for (int dy = -dstHeight ~/ 2; dy < dstHeight ~/ 2; dy++) {
+        for (int dx = -dstWidth ~/ 2; dx < dstWidth ~/ 2; dx++) {
+          // Apply transform using RSTransform matrix
+          // The actual coordinate after transformation
+          final transformedX = (dx * scos - dy * ssin + tx).round();
+          final transformedY = (dx * ssin + dy * scos + ty).round();
+
+          // Check bounds
+          if (transformedX < 0 ||
+              transformedX >= width ||
+              transformedY < 0 ||
+              transformedY >= height) continue;
+
+          // Map back to source coordinates
+          // dx and dy range from -dstWidth/2 to +dstWidth/2, we need to map to srcRect
+          final normalizedX = (dx + dstWidth ~/ 2) / dstWidth; // 0 to 1
+          final normalizedY = (dy + dstHeight ~/ 2) / dstHeight; // 0 to 1
+          final srcX = (srcRect.left + normalizedX * srcRect.width).round();
+          final srcY = (srcRect.top + normalizedY * srcRect.height).round();
+
+          if (srcX >= srcRect.left &&
+              srcX < srcRect.right &&
+              srcY >= srcRect.top &&
+              srcY < srcRect.bottom) {
+            final srcIndex = (srcY * atlasWidth + srcX) * 4;
+            final dstIndex = (transformedY * width + transformedX) * 4;
+
+            if (srcIndex >= 0 &&
+                srcIndex < atlasPixels.length - 3 &&
+                dstIndex >= 0 &&
+                dstIndex < pixels.length - 3) {
+              int r = atlasPixels[srcIndex];
+              int g = atlasPixels[srcIndex + 1];
+              int b = atlasPixels[srcIndex + 2];
+              int a = atlasPixels[srcIndex + 3];
+
+              // Apply color tint if provided
+              if (color != null) {
+                r = ((r * color.r) * 255).round() & 0xff;
+                g = ((g * color.g) * 255).round() & 0xff;
+                b = ((b * color.b) * 255).round() & 0xff;
+                a = ((a * color.a) * 255).round() & 0xff;
+              }
+
+              // Simple alpha blending
+              if (a > 0) {
+                pixels[dstIndex] = r;
+                pixels[dstIndex + 1] = g;
+                pixels[dstIndex + 2] = b;
+                pixels[dstIndex + 3] = a;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
   void _drawCircleToPixels(Offset center, double radius, Paint paint,
       Uint8List pixels, int width, int height) {
     final color = paint.color;
@@ -867,6 +977,60 @@ class _PureDartPicture implements Picture {
     // handle our own _PureDartPicture implementation
   }
 
+  void _drawRawAtlasToPixels(
+      Image atlas,
+      Float32List rstTransforms,
+      Float32List rects,
+      Int32List? colors,
+      BlendMode? blendMode,
+      Rect? cullRect,
+      Paint paint,
+      Uint8List pixels,
+      int width,
+      int height) {
+    if (atlas is! _PureDartImage) return;
+
+    // Convert raw data to structured data and delegate to drawAtlas
+    final transforms = <RSTransform>[];
+    final rectList = <Rect>[];
+    final colorList = colors != null ? <Color>[] : null;
+
+    // Parse RSTransform data (4 floats per transform: scos, ssin, tx, ty)
+    for (int i = 0; i < rstTransforms.length; i += 4) {
+      if (i + 3 < rstTransforms.length) {
+        transforms.add(RSTransform(
+          rstTransforms[i], // scos
+          rstTransforms[i + 1], // ssin
+          rstTransforms[i + 2], // tx
+          rstTransforms[i + 3], // ty
+        ));
+      }
+    }
+
+    // Parse rect data (4 floats per rect: left, top, right, bottom)
+    for (int i = 0; i < rects.length; i += 4) {
+      if (i + 3 < rects.length) {
+        rectList.add(Rect.fromLTRB(
+          rects[i], // left
+          rects[i + 1], // top
+          rects[i + 2], // right
+          rects[i + 3], // bottom
+        ));
+      }
+    }
+
+    // Parse color data if provided
+    if (colors != null && colorList != null) {
+      for (int colorValue in colors) {
+        colorList.add(Color(colorValue));
+      }
+    }
+
+    // Delegate to the main atlas drawing method
+    _drawAtlasToPixels(atlas, transforms, rectList, colorList, blendMode,
+        cullRect, paint, pixels, width, height);
+  }
+
   void _drawRectToPixels(
       Rect rect, Paint paint, Uint8List pixels, int width, int height) {
     final color = paint.color;
@@ -988,6 +1152,34 @@ class _PureDartPicture implements Picture {
       case _DrawCommandType.drawPicture:
         _drawPictureToPixels(
           command.args[0] as Picture,
+          pixels,
+          width,
+          height,
+        );
+        break;
+      case _DrawCommandType.drawAtlas:
+        _drawAtlasToPixels(
+          command.args[0] as Image,
+          command.args[1] as List<RSTransform>,
+          command.args[2] as List<Rect>,
+          command.args[3] as List<Color>?,
+          command.args[4] as BlendMode?,
+          command.args[5] as Rect?,
+          command.args[6] as Paint,
+          pixels,
+          width,
+          height,
+        );
+        break;
+      case _DrawCommandType.drawRawAtlas:
+        _drawRawAtlasToPixels(
+          command.args[0] as Image,
+          command.args[1] as Float32List,
+          command.args[2] as Float32List,
+          command.args[3] as Int32List?,
+          command.args[4] as BlendMode?,
+          command.args[5] as Rect?,
+          command.args[6] as Paint,
           pixels,
           width,
           height,
