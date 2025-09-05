@@ -329,7 +329,7 @@ class _PureDartCanvas implements Canvas {
   void scale(double sx, [double? sy]) {
     sy ??= sx;
     _commands.add(_DrawCommand(_DrawCommandType.scale, [sx, sy]));
-    _currentTransform.scale(sx, sy);
+    _currentTransform.scaleByVector3(Vector3(sx, sy, 1.0));
   }
 
   @override
@@ -351,7 +351,7 @@ class _PureDartCanvas implements Canvas {
   @override
   void translate(double dx, double dy) {
     _commands.add(_DrawCommand(_DrawCommandType.translate, [dx, dy]));
-    _currentTransform.translate(dx, dy);
+    _currentTransform.translateByVector3(Vector3(dx, dy, 0.0));
   }
 
   Rect _transformRect(Rect rect, Matrix4 transform) {
