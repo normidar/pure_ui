@@ -58,4 +58,48 @@ void main() {
       expect(offset.distance, equals(5));
     });
   });
+
+  group('Canvas drawPicture', () {
+    test('should record and render nested pictures', () {
+      // Create a nested picture
+      final nestedRecorder = PictureRecorder();
+      final nestedCanvas =
+          Canvas(nestedRecorder, const Rect.fromLTWH(0, 0, 100, 100));
+
+      // Draw something in the nested picture
+      nestedCanvas.drawRect(
+        const Rect.fromLTWH(10, 10, 20, 20),
+        Paint()..color = const Color(0xFF0000FF), // Blue
+      );
+
+      final nestedPicture = nestedRecorder.endRecording();
+
+      // Create main picture that draws the nested picture
+      final mainRecorder = PictureRecorder();
+      final mainCanvas =
+          Canvas(mainRecorder, const Rect.fromLTWH(0, 0, 200, 200));
+
+      // Draw the nested picture
+      mainCanvas.drawPicture(nestedPicture);
+
+      // Add something else to the main canvas
+      mainCanvas.drawCircle(
+        const Offset(50, 50),
+        15,
+        Paint()..color = const Color(0xFFFF0000), // Red
+      );
+
+      final mainPicture = mainRecorder.endRecording();
+
+      // Convert to image to verify it works
+      final image = mainPicture.toImageSync(200, 200);
+      expect(image.width, equals(200));
+      expect(image.height, equals(200));
+
+
+      // Clean up
+      nestedPicture.dispose();
+      mainPicture.dispose();
+    });
+  });
 }

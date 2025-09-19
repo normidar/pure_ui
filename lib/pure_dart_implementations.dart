@@ -37,6 +37,9 @@ enum _DrawCommandType {
   drawParagraph,
   drawVertices,
   drawShadow,
+  drawPicture,
+  drawAtlas,
+  drawRawAtlas,
 }
 
 class _PathCommand {
@@ -138,7 +141,8 @@ class _PureDartCanvas implements Canvas {
   @override
   void drawAtlas(Image atlas, List<RSTransform> transforms, List<Rect> rects,
       List<Color>? colors, BlendMode? blendMode, Rect? cullRect, Paint paint) {
-    // For simplicity, ignore atlas drawing
+    _commands.add(_DrawCommand(_DrawCommandType.drawAtlas,
+        [atlas, transforms, rects, colors, blendMode, cullRect, paint]));
   }
 
   @override
@@ -208,7 +212,7 @@ class _PureDartCanvas implements Canvas {
 
   @override
   void drawPicture(Picture picture) {
-    // For simplicity, ignore nested pictures
+    _commands.add(_DrawCommand(_DrawCommandType.drawPicture, [picture]));
   }
 
   @override
@@ -220,7 +224,8 @@ class _PureDartCanvas implements Canvas {
   @override
   void drawRawAtlas(Image atlas, Float32List rstTransforms, Float32List rects,
       Int32List? colors, BlendMode? blendMode, Rect? cullRect, Paint paint) {
-    // For simplicity, ignore atlas drawing
+    _commands.add(_DrawCommand(_DrawCommandType.drawRawAtlas,
+        [atlas, rstTransforms, rects, colors, blendMode, cullRect, paint]));
   }
 
   @override
@@ -324,7 +329,7 @@ class _PureDartCanvas implements Canvas {
   void scale(double sx, [double? sy]) {
     sy ??= sx;
     _commands.add(_DrawCommand(_DrawCommandType.scale, [sx, sy]));
-    _currentTransform.scale(sx, sy);
+    _currentTransform.scaleByVector3(Vector3(sx, sy, 1.0));
   }
 
   @override
@@ -346,7 +351,7 @@ class _PureDartCanvas implements Canvas {
   @override
   void translate(double dx, double dy) {
     _commands.add(_DrawCommand(_DrawCommandType.translate, [dx, dy]));
-    _currentTransform.translate(dx, dy);
+    _currentTransform.translateByVector3(Vector3(dx, dy, 0.0));
   }
 
   Rect _transformRect(Rect rect, Matrix4 transform) {
@@ -396,6 +401,21 @@ class _PureDartImage implements Image {
   void dispose() {
     _disposed = true;
     Image.onDispose?.call(this);
+  }
+
+  Color getPixel(int x, int y) {
+    if (_disposed) throw StateError('Image is disposed');
+    if (x < 0 || x >= _width || y < 0 || y >= _height) {
+      throw RangeError('Pixel coordinates ($x, $y) are out of bounds');
+    }
+
+    final pixelIndex = (y * _width + x) * 4;
+    final r = _pixels[pixelIndex];
+    final g = _pixels[pixelIndex + 1];
+    final b = _pixels[pixelIndex + 2];
+    final a = _pixels[pixelIndex + 3];
+
+    return Color.fromARGB(a, r, g, b);
   }
 
   @override
@@ -449,6 +469,11 @@ class _PureDartImage implements Image {
     // Encode to PNG
     final pngBytes = img.encodePng(image);
     return ByteData.sublistView(Uint8List.fromList(pngBytes));
+  }
+
+  /// Factory method to create a PureDartImage from pixel data
+  static _PureDartImage fromPixels(Uint8List pixels, int width, int height) {
+    return _PureDartImage(pixels, width, height);
   }
 }
 
@@ -720,6 +745,133 @@ class _PureDartPicture implements Picture {
     return _PureDartImage(pixels, width, height);
   }
 
+  void _drawAtlasToPixels(
+      Image atlas,
+      List<RSTransform> transforms,
+      List<Rect> rects,
+      List<Color>? colors,
+      BlendMode? blendMode,
+      Rect? cullRect,
+      Paint paint,
+      Uint8List pixels,
+      int width,
+      int height) {
+    if (atlas is! _PureDartImage) return;
+
+    final atlasPixels = atlas._pixels;
+    final atlasWidth = atlas._width;
+    final atlasHeight = atlas._height;
+
+    // Draw each sprite from the atlas
+    for (int i = 0; i < math.min(transforms.length, rects.length); i++) {
+      final transform = transforms[i];
+      final srcRect = rects[i];
+      final color = colors != null && i < colors.length ? colors[i] : null;
+
+      // Skip if source rect is outside atlas bounds
+      if (srcRect.left < 0 ||
+          srcRect.top < 0 ||
+          srcRect.right > atlasWidth ||
+          srcRect.bottom > atlasHeight) continue;
+
+      // RSTransform contains: scos, ssin, tx, ty
+      // where scos = cos(rotation) * scale, ssin = sin(rotation) * scale
+      final scos = transform.scos;
+      final ssin = transform.ssin;
+      final tx = transform.tx;
+      final ty = transform.ty;
+
+      // Calculate destination bounds using scale factor from scos/ssin
+      final scale = math.sqrt(scos * scos + ssin * ssin);
+      final srcWidth = srcRect.width.round();
+      final srcHeight = srcRect.height.round();
+      final dstWidth = (srcWidth * scale).round();
+      final dstHeight = (srcHeight * scale).round();
+
+      // Draw the sprite
+      for (int dy = -dstHeight ~/ 2; dy < dstHeight ~/ 2; dy++) {
+        for (int dx = -dstWidth ~/ 2; dx < dstWidth ~/ 2; dx++) {
+          // Apply transform using RSTransform matrix
+          // The actual coordinate after transformation
+          final transformedX = (dx * scos - dy * ssin + tx).round();
+          final transformedY = (dx * ssin + dy * scos + ty).round();
+
+          // Check bounds
+          if (transformedX < 0 ||
+              transformedX >= width ||
+              transformedY < 0 ||
+              transformedY >= height) continue;
+
+          // Map back to source coordinates
+          // dx and dy range from -dstWidth/2 to +dstWidth/2, we need to map to srcRect
+          final normalizedX = (dx + dstWidth ~/ 2) / dstWidth; // 0 to 1
+          final normalizedY = (dy + dstHeight ~/ 2) / dstHeight; // 0 to 1
+          final srcX = (srcRect.left + normalizedX * srcRect.width).round();
+          final srcY = (srcRect.top + normalizedY * srcRect.height).round();
+
+          if (srcX >= srcRect.left &&
+              srcX < srcRect.right &&
+              srcY >= srcRect.top &&
+              srcY < srcRect.bottom) {
+            final srcIndex = (srcY * atlasWidth + srcX) * 4;
+            final dstIndex = (transformedY * width + transformedX) * 4;
+
+            if (srcIndex >= 0 &&
+                srcIndex < atlasPixels.length - 3 &&
+                dstIndex >= 0 &&
+                dstIndex < pixels.length - 3) {
+              int r = atlasPixels[srcIndex];
+              int g = atlasPixels[srcIndex + 1];
+              int b = atlasPixels[srcIndex + 2];
+              int a = atlasPixels[srcIndex + 3];
+
+              // Apply color tint if provided
+              if (color != null) {
+                r = ((r * color.r) * 255).round() & 0xff;
+                g = ((g * color.g) * 255).round() & 0xff;
+                b = ((b * color.b) * 255).round() & 0xff;
+                a = ((a * color.a) * 255).round() & 0xff;
+              }
+
+              // Simple alpha blending
+              if (a > 0) {
+                pixels[dstIndex] = r;
+                pixels[dstIndex + 1] = g;
+                pixels[dstIndex + 2] = b;
+                pixels[dstIndex + 3] = a;
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  void _drawCircleAt(int centerX, int centerY, int radius, Uint8List pixels,
+      int width, int height, int r, int g, int b, int a) {
+    final radiusSquared = radius * radius;
+
+    for (int y = centerY - radius; y <= centerY + radius; y++) {
+      for (int x = centerX - radius; x <= centerX + radius; x++) {
+        if (x >= 0 && x < width && y >= 0 && y < height) {
+          final dx = x - centerX;
+          final dy = y - centerY;
+          final distanceSquared = dx * dx + dy * dy;
+
+          if (distanceSquared <= radiusSquared) {
+            final index = (y * width + x) * 4;
+            if (index >= 0 && index < pixels.length - 3) {
+              pixels[index] = r;
+              pixels[index + 1] = g;
+              pixels[index + 2] = b;
+              pixels[index + 3] = a;
+            }
+          }
+        }
+      }
+    }
+  }
+
   void _drawCircleToPixels(Offset center, double radius, Paint paint,
       Uint8List pixels, int width, int height) {
     final color = paint.color;
@@ -799,6 +951,51 @@ class _PureDartPicture implements Picture {
     }
   }
 
+  void _drawLine(Offset p1, Offset p2, double strokeWidth, Uint8List pixels,
+      int width, int height, int r, int g, int b, int a) {
+    // Bresenham's line algorithm with stroke width support
+    int x0 = p1.dx.round();
+    int y0 = p1.dy.round();
+    int x1 = p2.dx.round();
+    int y1 = p2.dy.round();
+
+    final strokeRadius = math.max(1, (strokeWidth / 2).round());
+
+    final dx = (x1 - x0).abs();
+    final dy = (y1 - y0).abs();
+    final sx = x0 < x1 ? 1 : -1;
+    final sy = y0 < y1 ? 1 : -1;
+    int err = dx - dy;
+
+    while (true) {
+      // Draw a circle at current position to simulate stroke width
+      _drawCircleAt(x0, y0, strokeRadius, pixels, width, height, r, g, b, a);
+
+      if (x0 == x1 && y0 == y1) break;
+
+      final e2 = 2 * err;
+      if (e2 > -dy) {
+        err -= dy;
+        x0 += sx;
+      }
+      if (e2 < dx) {
+        err += dx;
+        y0 += sy;
+      }
+    }
+  }
+
+  void _drawLineToPixels(Offset p1, Offset p2, Paint paint, Uint8List pixels,
+      int width, int height) {
+    final color = paint.color;
+    final r = (color.r * 255).round() & 0xff;
+    final g = (color.g * 255).round() & 0xff;
+    final b = (color.b * 255).round() & 0xff;
+    final a = (color.a * 255).round() & 0xff;
+
+    _drawLine(p1, p2, paint.strokeWidth, pixels, width, height, r, g, b, a);
+  }
+
   void _drawOvalToPixels(
       Rect rect, Paint paint, Uint8List pixels, int width, int height) {
     final color = paint.color;
@@ -835,6 +1032,144 @@ class _PureDartPicture implements Picture {
         }
       }
     }
+  }
+
+  void _drawPaintToPixels(
+      Paint paint, Uint8List pixels, int width, int height) {
+    final color = paint.color;
+    final r = (color.r * 255).round() & 0xff;
+    final g = (color.g * 255).round() & 0xff;
+    final b = (color.b * 255).round() & 0xff;
+    final a = (color.a * 255).round() & 0xff;
+
+    // Fill entire canvas with the paint color
+    for (int i = 0; i < pixels.length; i += 4) {
+      pixels[i] = r;
+      pixels[i + 1] = g;
+      pixels[i + 2] = b;
+      pixels[i + 3] = a;
+    }
+  }
+
+  void _drawPathToPixels(
+      Path path, Paint paint, Uint8List pixels, int width, int height) {
+    if (path is! _PureDartPath) return;
+
+    final color = paint.color;
+    final r = (color.r * 255).round() & 0xff;
+    final g = (color.g * 255).round() & 0xff;
+    final b = (color.b * 255).round() & 0xff;
+    final a = (color.a * 255).round() & 0xff;
+
+    // For now, implement a simple path renderer that handles basic shapes
+    // This is a simplified implementation that focuses on the most common path operations
+    _renderPath(path, paint, pixels, width, height, r, g, b, a);
+  }
+
+  void _drawPictureToPixels(
+      Picture picture, Uint8List pixels, int width, int height) {
+    if (picture is _PureDartPicture) {
+      // Recursively process the commands from the nested picture
+      for (final command in picture._commands) {
+        _processCommand(command, pixels, width, height);
+      }
+    }
+    // For other picture implementations, we can't access their internal commands
+    // so we would need to rasterize them differently, but for now we'll just
+    // handle our own _PureDartPicture implementation
+  }
+
+  void _drawPoint(Offset point, double strokeWidth, Uint8List pixels, int width,
+      int height, int r, int g, int b, int a) {
+    final radius = math.max(1, (strokeWidth / 2).round());
+    _drawCircleAt(point.dx.round(), point.dy.round(), radius, pixels, width,
+        height, r, g, b, a);
+  }
+
+  void _drawPointsToPixels(PointMode pointMode, List<Offset> points,
+      Paint paint, Uint8List pixels, int width, int height) {
+    final color = paint.color;
+    final r = (color.r * 255).round() & 0xff;
+    final g = (color.g * 255).round() & 0xff;
+    final b = (color.b * 255).round() & 0xff;
+    final a = (color.a * 255).round() & 0xff;
+
+    switch (pointMode) {
+      case PointMode.points:
+        for (final point in points) {
+          _drawPoint(
+              point, paint.strokeWidth, pixels, width, height, r, g, b, a);
+        }
+        break;
+      case PointMode.lines:
+        for (int i = 0; i < points.length - 1; i += 2) {
+          if (i + 1 < points.length) {
+            _drawLine(points[i], points[i + 1], paint.strokeWidth, pixels,
+                width, height, r, g, b, a);
+          }
+        }
+        break;
+      case PointMode.polygon:
+        for (int i = 0; i < points.length - 1; i++) {
+          _drawLine(points[i], points[i + 1], paint.strokeWidth, pixels, width,
+              height, r, g, b, a);
+        }
+        break;
+    }
+  }
+
+  void _drawRawAtlasToPixels(
+      Image atlas,
+      Float32List rstTransforms,
+      Float32List rects,
+      Int32List? colors,
+      BlendMode? blendMode,
+      Rect? cullRect,
+      Paint paint,
+      Uint8List pixels,
+      int width,
+      int height) {
+    if (atlas is! _PureDartImage) return;
+
+    // Convert raw data to structured data and delegate to drawAtlas
+    final transforms = <RSTransform>[];
+    final rectList = <Rect>[];
+    final colorList = colors != null ? <Color>[] : null;
+
+    // Parse RSTransform data (4 floats per transform: scos, ssin, tx, ty)
+    for (int i = 0; i < rstTransforms.length; i += 4) {
+      if (i + 3 < rstTransforms.length) {
+        transforms.add(RSTransform(
+          rstTransforms[i], // scos
+          rstTransforms[i + 1], // ssin
+          rstTransforms[i + 2], // tx
+          rstTransforms[i + 3], // ty
+        ));
+      }
+    }
+
+    // Parse rect data (4 floats per rect: left, top, right, bottom)
+    for (int i = 0; i < rects.length; i += 4) {
+      if (i + 3 < rects.length) {
+        rectList.add(Rect.fromLTRB(
+          rects[i], // left
+          rects[i + 1], // top
+          rects[i + 2], // right
+          rects[i + 3], // bottom
+        ));
+      }
+    }
+
+    // Parse color data if provided
+    if (colors != null && colorList != null) {
+      for (int colorValue in colors) {
+        colorList.add(Color(colorValue));
+      }
+    }
+
+    // Delegate to the main atlas drawing method
+    _drawAtlasToPixels(atlas, transforms, rectList, colorList, blendMode,
+        cullRect, paint, pixels, width, height);
   }
 
   void _drawRectToPixels(
@@ -921,6 +1256,88 @@ class _PureDartPicture implements Picture {
     }
   }
 
+  void _fillPolygon(List<Offset> points, Uint8List pixels, int width,
+      int height, int r, int g, int b, int a) {
+    // Simple polygon fill using scanline algorithm
+    if (points.length < 3) return;
+
+    // Find bounding box
+    double minY = points.first.dy;
+    double maxY = points.first.dy;
+    for (final point in points) {
+      minY = math.min(minY, point.dy);
+      maxY = math.max(maxY, point.dy);
+    }
+
+    final startY = math.max(0, minY.floor());
+    final endY = math.min(height, maxY.ceil());
+
+    // For each scanline
+    for (int y = startY; y < endY; y++) {
+      final intersections = <double>[];
+
+      // Find intersections with polygon edges
+      for (int i = 0; i < points.length - 1; i++) {
+        final p1 = points[i];
+        final p2 = points[i + 1];
+
+        if ((p1.dy <= y && p2.dy > y) || (p2.dy <= y && p1.dy > y)) {
+          // Edge crosses the scanline
+          final x = p1.dx + (y - p1.dy) * (p2.dx - p1.dx) / (p2.dy - p1.dy);
+          intersections.add(x);
+        }
+      }
+
+      // Sort intersections
+      intersections.sort();
+
+      // Fill between pairs of intersections
+      for (int i = 0; i < intersections.length - 1; i += 2) {
+        final startX = math.max(0, intersections[i].round());
+        final endX = math.min(width, intersections[i + 1].round());
+
+        for (int x = startX; x < endX; x++) {
+          final index = (y * width + x) * 4;
+          if (index >= 0 && index < pixels.length - 3) {
+            pixels[index] = r;
+            pixels[index + 1] = g;
+            pixels[index + 2] = b;
+            pixels[index + 3] = a;
+          }
+        }
+      }
+    }
+  }
+
+  void _fillRect(Rect rect, Uint8List pixels, int width, int height, int r,
+      int g, int b, int a) {
+    final left = math.max(0, rect.left.round());
+    final top = math.max(0, rect.top.round());
+    final right = math.min(width, rect.right.round());
+    final bottom = math.min(height, rect.bottom.round());
+
+    for (int y = top; y < bottom; y++) {
+      for (int x = left; x < right; x++) {
+        final index = (y * width + x) * 4;
+        if (index >= 0 && index < pixels.length - 3) {
+          pixels[index] = r;
+          pixels[index + 1] = g;
+          pixels[index + 2] = b;
+          pixels[index + 3] = a;
+        }
+      }
+    }
+  }
+
+  bool _isSimpleRectanglePath(_PureDartPath path) {
+    // Check if the path consists of a single addRect command
+    if (path._commands.length == 1) {
+      final command = path._commands[0];
+      return command.type == _PathCommandType.addRect;
+    }
+    return false;
+  }
+
   void _processCommand(
       _DrawCommand command, Uint8List pixels, int width, int height) {
     switch (command.type) {
@@ -955,6 +1372,79 @@ class _PureDartPicture implements Picture {
           height,
         );
         break;
+      case _DrawCommandType.drawPicture:
+        _drawPictureToPixels(
+          command.args[0] as Picture,
+          pixels,
+          width,
+          height,
+        );
+        break;
+      case _DrawCommandType.drawAtlas:
+        _drawAtlasToPixels(
+          command.args[0] as Image,
+          command.args[1] as List<RSTransform>,
+          command.args[2] as List<Rect>,
+          command.args[3] as List<Color>?,
+          command.args[4] as BlendMode?,
+          command.args[5] as Rect?,
+          command.args[6] as Paint,
+          pixels,
+          width,
+          height,
+        );
+        break;
+      case _DrawCommandType.drawRawAtlas:
+        _drawRawAtlasToPixels(
+          command.args[0] as Image,
+          command.args[1] as Float32List,
+          command.args[2] as Float32List,
+          command.args[3] as Int32List?,
+          command.args[4] as BlendMode?,
+          command.args[5] as Rect?,
+          command.args[6] as Paint,
+          pixels,
+          width,
+          height,
+        );
+        break;
+      case _DrawCommandType.drawPath:
+        _drawPathToPixels(
+          command.args[0] as Path,
+          command.args[1] as Paint,
+          pixels,
+          width,
+          height,
+        );
+        break;
+      case _DrawCommandType.drawLine:
+        _drawLineToPixels(
+          command.args[0] as Offset,
+          command.args[1] as Offset,
+          command.args[2] as Paint,
+          pixels,
+          width,
+          height,
+        );
+        break;
+      case _DrawCommandType.drawPoints:
+        _drawPointsToPixels(
+          command.args[0] as PointMode,
+          command.args[1] as List<Offset>,
+          command.args[2] as Paint,
+          pixels,
+          width,
+          height,
+        );
+        break;
+      case _DrawCommandType.drawPaint:
+        _drawPaintToPixels(
+          command.args[0] as Paint,
+          pixels,
+          width,
+          height,
+        );
+        break;
       // Add more command processing as needed
       default:
         // Ignore unsupported commands for now
@@ -980,6 +1470,143 @@ class _PureDartPicture implements Picture {
     }
 
     return pixels;
+  }
+
+  void _rasterizeComplexPath(_PureDartPath path, Paint paint, Uint8List pixels,
+      int width, int height, int r, int g, int b, int a) {
+    // For now, implement a basic path rasterizer that handles common path operations
+    // This is a simplified version that will handle basic shapes and can be extended
+
+    double currentX = 0;
+    double currentY = 0;
+    final pathPoints = <Offset>[];
+
+    // Process path commands to build a list of points
+    for (final command in path._commands) {
+      switch (command.type) {
+        case _PathCommandType.moveTo:
+          currentX = command.args[0] as double;
+          currentY = command.args[1] as double;
+          pathPoints.clear();
+          pathPoints.add(Offset(currentX, currentY));
+          break;
+        case _PathCommandType.lineTo:
+          currentX = command.args[0] as double;
+          currentY = command.args[1] as double;
+          pathPoints.add(Offset(currentX, currentY));
+          break;
+        case _PathCommandType.addRect:
+          final rect = command.args[0] as Rect;
+          if (paint.style == PaintingStyle.fill) {
+            _fillRect(rect, pixels, width, height, r, g, b, a);
+          } else if (paint.style == PaintingStyle.stroke) {
+            _strokeRect(
+                rect, paint.strokeWidth, pixels, width, height, r, g, b, a);
+          }
+          break;
+        case _PathCommandType.close:
+          if (pathPoints.isNotEmpty) {
+            // Close the path by adding the first point
+            pathPoints.add(pathPoints.first);
+          }
+          break;
+        // Add more path command handling as needed
+        default:
+          // Skip unsupported commands for now
+          break;
+      }
+    }
+
+    // If we have points, render them as a simple polygon
+    if (pathPoints.length >= 3 && paint.style == PaintingStyle.fill) {
+      _fillPolygon(pathPoints, pixels, width, height, r, g, b, a);
+    }
+  }
+
+  void _renderPath(_PureDartPath path, Paint paint, Uint8List pixels, int width,
+      int height, int r, int g, int b, int a) {
+    // Process path commands to render the path
+    // For this initial implementation, we'll handle the most common path operations
+
+    // Start with a simple approach: check if this is a simple rectangular path
+    // and handle more complex paths in future iterations
+    final bounds = path.getBounds();
+
+    // Check if this path is a simple rectangle (very common case)
+    if (_isSimpleRectanglePath(path)) {
+      // Render as a rectangle for now
+      if (paint.style == PaintingStyle.fill) {
+        _fillRect(bounds, pixels, width, height, r, g, b, a);
+      } else if (paint.style == PaintingStyle.stroke) {
+        _strokeRect(
+            bounds, paint.strokeWidth, pixels, width, height, r, g, b, a);
+      }
+    } else {
+      // For more complex paths, we'll implement a basic scanline rasterizer
+      // For now, let's handle simple paths that are composed of basic operations
+      _rasterizeComplexPath(path, paint, pixels, width, height, r, g, b, a);
+    }
+  }
+
+  void _strokeRect(Rect rect, double strokeWidth, Uint8List pixels, int width,
+      int height, int r, int g, int b, int a) {
+    final left = math.max(0, rect.left.round());
+    final top = math.max(0, rect.top.round());
+    final right = math.min(width, rect.right.round());
+    final bottom = math.min(height, rect.bottom.round());
+    final stroke = math.max(1, strokeWidth.round());
+
+    // Top border
+    for (int y = top; y < math.min(top + stroke, bottom); y++) {
+      for (int x = left; x < right; x++) {
+        final index = (y * width + x) * 4;
+        if (index >= 0 && index < pixels.length - 3) {
+          pixels[index] = r;
+          pixels[index + 1] = g;
+          pixels[index + 2] = b;
+          pixels[index + 3] = a;
+        }
+      }
+    }
+
+    // Bottom border
+    for (int y = math.max(bottom - stroke, top); y < bottom; y++) {
+      for (int x = left; x < right; x++) {
+        final index = (y * width + x) * 4;
+        if (index >= 0 && index < pixels.length - 3) {
+          pixels[index] = r;
+          pixels[index + 1] = g;
+          pixels[index + 2] = b;
+          pixels[index + 3] = a;
+        }
+      }
+    }
+
+    // Left border
+    for (int y = top; y < bottom; y++) {
+      for (int x = left; x < math.min(left + stroke, right); x++) {
+        final index = (y * width + x) * 4;
+        if (index >= 0 && index < pixels.length - 3) {
+          pixels[index] = r;
+          pixels[index + 1] = g;
+          pixels[index + 2] = b;
+          pixels[index + 3] = a;
+        }
+      }
+    }
+
+    // Right border
+    for (int y = top; y < bottom; y++) {
+      for (int x = math.max(right - stroke, left); x < right; x++) {
+        final index = (y * width + x) * 4;
+        if (index >= 0 && index < pixels.length - 3) {
+          pixels[index] = r;
+          pixels[index + 1] = g;
+          pixels[index + 2] = b;
+          pixels[index + 3] = a;
+        }
+      }
+    }
   }
 }
 

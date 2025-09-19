@@ -1477,7 +1477,7 @@ abstract class Canvas {
   /// tuple being ([Rect.left], [Rect.top], [Rect.right], [Rect.bottom]).
   ///
   /// The [colors] argument, which can be null, is interpreted as a list of
-  /// 32-bit colors, with the same packing as [Color.value]. If the [colors]
+  /// 32-bit colors, with the same packing as [Color.toARGB32]. If the [colors]
   /// argument is not null then the [blendMode] argument must also not be null.
   ///
   /// An example usage to render many sprites from a single sprite atlas with no rotations
@@ -2190,9 +2190,9 @@ class Color {
   ///
   /// * `a` is the alpha value, with 0 being transparent and 255 being fully
   ///   opaque.
-  /// * `r` is [red], from 0 to 255.
-  /// * `g` is [green], from 0 to 255.
-  /// * `b` is [blue], from 0 to 255.
+  /// * `r` is red component, from 0 to 255.
+  /// * `g` is green component, from 0 to 255.
+  /// * `b` is blue component, from 0 to 255.
   ///
   /// Out of range values are brought into range using modulo 255.
   ///
@@ -2206,9 +2206,9 @@ class Color {
   /// Create an sRGB color from red, green, blue, and opacity, similar to
   /// `rgba()` in CSS.
   ///
-  /// * `r` is [red], from 0 to 255.
-  /// * `g` is [green], from 0 to 255.
-  /// * `b` is [blue], from 0 to 255.
+  /// * `r` is red component, from 0 to 255.
+  /// * `g` is green component, from 0 to 255.
+  /// * `b` is blue component, from 0 to 255.
   /// * `opacity` is alpha channel of this color as a double, with 0.0 being
   ///   transparent and 1.0 being fully opaque.
   ///
@@ -2235,15 +2235,15 @@ class Color {
   /// A value of 0 means this color is fully transparent. A value of 255 means
   /// this color is fully opaque.
   @Deprecated('Use (*.a * 255.0).round() & 0xff')
-  int get alpha => (0xff000000 & value) >> 24;
+  int get alpha => (a * 255.0).round() & 0xff;
 
   /// The blue channel of this color in an 8 bit value.
   @Deprecated('Use (*.b * 255.0).round() & 0xff')
-  int get blue => (0x000000ff & value) >> 0;
+  int get blue => (b * 255.0).round() & 0xff;
 
   /// The green channel of this color in an 8 bit value.
   @Deprecated('Use (*.g * 255.0).round() & 0xff')
-  int get green => (0x0000ff00 & value) >> 8;
+  int get green => (g * 255.0).round() & 0xff;
 
   @override
   int get hashCode => Object.hash(a, r, g, b, colorSpace);
@@ -2257,7 +2257,7 @@ class Color {
 
   /// The red channel of this color in an 8 bit value.
   @Deprecated('Use (*.r * 255.0).round() & 0xff')
-  int get red => (0x00ff0000 & value) >> 16;
+  int get red => (r * 255.0).round() & 0xff;
 
   /// A 32 bit value representing this color.
   ///
@@ -2341,7 +2341,8 @@ class Color {
   ///
   /// Out of range values will have unexpected effects.
   Color withAlpha(int a) {
-    return Color.fromARGB(a, red, green, blue);
+    return Color.fromARGB(a, (r * 255.0).round() & 0xff,
+        (g * 255.0).round() & 0xff, (b * 255.0).round() & 0xff);
   }
 
   /// Returns a new color that matches this color with the blue channel replaced
@@ -2349,7 +2350,8 @@ class Color {
   ///
   /// Out of range values will have unexpected effects.
   Color withBlue(int b) {
-    return Color.fromARGB(alpha, red, green, b);
+    return Color.fromARGB((a * 255.0).round() & 0xff,
+        (r * 255.0).round() & 0xff, (g * 255.0).round() & 0xff, b);
   }
 
   /// Returns a new color that matches this color with the green channel
@@ -2357,7 +2359,8 @@ class Color {
   ///
   /// Out of range values will have unexpected effects.
   Color withGreen(int g) {
-    return Color.fromARGB(alpha, red, g, blue);
+    return Color.fromARGB((a * 255.0).round() & 0xff,
+        (r * 255.0).round() & 0xff, g, (b * 255.0).round() & 0xff);
   }
 
   /// Returns a new color that matches this color with the alpha channel
@@ -2375,7 +2378,8 @@ class Color {
   ///
   /// Out of range values will have unexpected effects.
   Color withRed(int r) {
-    return Color.fromARGB(alpha, r, green, blue);
+    return Color.fromARGB((a * 255.0).round() & 0xff, r,
+        (g * 255.0).round() & 0xff, (b * 255.0).round() & 0xff);
   }
 
   /// Returns a new color with the provided components updated.
@@ -3335,24 +3339,11 @@ base class Gradient extends Shader {
     );
   }
 
-  @Native<Void Function(Handle)>(symbol: 'Gradient::Create')
-  external void _constructor();
+  void _constructor() {
+    // Pure Dart implementation - no-op since we handle gradient data directly
+  }
 
-  @Native<
-      Void Function(
-        Pointer<Void>,
-        Double,
-        Double,
-        Double,
-        Double,
-        Double,
-        Double,
-        Handle,
-        Handle,
-        Int32,
-        Handle,
-      )>(symbol: 'Gradient::initTwoPointConical')
-  external void _initConical(
+  void _initConical(
     double startX,
     double startY,
     double startRadius,
@@ -3363,25 +3354,21 @@ base class Gradient extends Shader {
     Float32List? colorStops,
     int tileMode,
     Float64List? matrix4,
-  );
+  ) {
+    // Pure Dart implementation - data is already set in constructor
+  }
 
-  @Native<Void Function(Pointer<Void>, Handle, Handle, Handle, Int32, Handle)>(
-    symbol: 'Gradient::initLinear',
-  )
-  external void _initLinear(
+  void _initLinear(
     Float32List endPoints,
     Float32List colors,
     Float32List? colorStops,
     int tileMode,
     Float64List? matrix4,
-  );
+  ) {
+    // Pure Dart implementation - data is already set in constructor
+  }
 
-  @Native<
-      Void Function(Pointer<Void>, Double, Double, Double, Handle, Handle,
-          Int32, Handle)>(
-    symbol: 'Gradient::initRadial',
-  )
-  external void _initRadial(
+  void _initRadial(
     double centerX,
     double centerY,
     double radius,
@@ -3389,12 +3376,11 @@ base class Gradient extends Shader {
     Float32List? colorStops,
     int tileMode,
     Float64List? matrix4,
-  );
+  ) {
+    // Pure Dart implementation - data is already set in constructor
+  }
 
-  @Native<
-      Void Function(Pointer<Void>, Double, Double, Handle, Handle, Int32,
-          Double, Double, Handle)>(symbol: 'Gradient::initSweep')
-  external void _initSweep(
+  void _initSweep(
     double centerX,
     double centerY,
     Float32List colors,
@@ -3403,7 +3389,9 @@ base class Gradient extends Shader {
     double startAngle,
     double endAngle,
     Float64List? matrix,
-  );
+  ) {
+    // Pure Dart implementation - data is already set in constructor
+  }
 
   static void _validateColorStops(
       List<Color> colors, List<double>? colorStops) {
@@ -3644,6 +3632,17 @@ class Image {
     if (_image._handles.isEmpty) {
       _image.dispose();
     }
+  }
+
+  Color getPixel(int x, int y) {
+    if (x < 0 || x >= width || y < 0 || y >= height) {
+      throw RangeError('Pixel coordinates ($x, $y) are out of bounds');
+    }
+
+    // Note: This method is synchronous but may be slow for large images
+    // Consider using toByteData() for better performance when accessing many pixels
+    throw UnsupportedError('getPixel is not supported on native images. '
+        'Use toByteData() to access pixel data asynchronously.');
   }
 
   /// Returns true if `other` is a [clone] of this and thus shares the same
@@ -5664,7 +5663,7 @@ class Shadow {
 
       shadowsData.setInt32(
         _kColorOffset + shadowOffset,
-        shadow.color.value ^ Shadow._kColorDefault,
+        shadow.color.toARGB32() ^ Shadow._kColorDefault,
         _kFakeHostEndian,
       );
 
@@ -6129,7 +6128,7 @@ base class Vertices extends NativeFieldWrapperClass1 {
   ///
   /// The `colors` parameter, if specified, provides the color for each point in
   /// `positions`. Each color is represented as ARGB with 8 bit color channels
-  /// (like [Color.value]'s internal representation), and the list, if
+  /// (like [Color.toARGB32]'s result), and the list, if
   /// specified, must therefore be half the length of `positions`. Each triangle
   /// is painted as a gradient that blends between the three colors at the three
   /// points of that triangle. (These colors are then blended with the [Paint]
@@ -6857,7 +6856,7 @@ base class _NativeCanvas extends NativeFieldWrapperClass1 implements Canvas {
 
   @override
   void drawColor(Color color, BlendMode blendMode) {
-    _drawColor(color.value, blendMode.index);
+    _drawColor(color.toARGB32(), blendMode.index);
   }
 
   @override
@@ -7059,7 +7058,7 @@ base class _NativeCanvas extends NativeFieldWrapperClass1 implements Canvas {
   void drawShadow(
       Path path, Color color, double elevation, bool transparentOccluder) {
     _drawShadow(
-        path as _NativePath, color.value, elevation, transparentOccluder);
+        path as _NativePath, color.toARGB32(), elevation, transparentOccluder);
   }
 
   @override
