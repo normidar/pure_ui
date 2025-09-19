@@ -964,6 +964,21 @@ class _PureDartPicture implements Picture {
     }
   }
 
+  void _drawPathToPixels(
+      Path path, Paint paint, Uint8List pixels, int width, int height) {
+    if (path is! _PureDartPath) return;
+
+    final color = paint.color;
+    final r = (color.r * 255).round() & 0xff;
+    final g = (color.g * 255).round() & 0xff;
+    final b = (color.b * 255).round() & 0xff;
+    final a = (color.a * 255).round() & 0xff;
+
+    // For now, implement a simple path renderer that handles basic shapes
+    // This is a simplified implementation that focuses on the most common path operations
+    _renderPath(path, paint, pixels, width, height, r, g, b, a);
+  }
+
   void _drawPictureToPixels(
       Picture picture, Uint8List pixels, int width, int height) {
     if (picture is _PureDartPicture) {
@@ -1115,6 +1130,88 @@ class _PureDartPicture implements Picture {
     }
   }
 
+  void _fillPolygon(List<Offset> points, Uint8List pixels, int width,
+      int height, int r, int g, int b, int a) {
+    // Simple polygon fill using scanline algorithm
+    if (points.length < 3) return;
+
+    // Find bounding box
+    double minY = points.first.dy;
+    double maxY = points.first.dy;
+    for (final point in points) {
+      minY = math.min(minY, point.dy);
+      maxY = math.max(maxY, point.dy);
+    }
+
+    final startY = math.max(0, minY.floor());
+    final endY = math.min(height, maxY.ceil());
+
+    // For each scanline
+    for (int y = startY; y < endY; y++) {
+      final intersections = <double>[];
+
+      // Find intersections with polygon edges
+      for (int i = 0; i < points.length - 1; i++) {
+        final p1 = points[i];
+        final p2 = points[i + 1];
+
+        if ((p1.dy <= y && p2.dy > y) || (p2.dy <= y && p1.dy > y)) {
+          // Edge crosses the scanline
+          final x = p1.dx + (y - p1.dy) * (p2.dx - p1.dx) / (p2.dy - p1.dy);
+          intersections.add(x);
+        }
+      }
+
+      // Sort intersections
+      intersections.sort();
+
+      // Fill between pairs of intersections
+      for (int i = 0; i < intersections.length - 1; i += 2) {
+        final startX = math.max(0, intersections[i].round());
+        final endX = math.min(width, intersections[i + 1].round());
+
+        for (int x = startX; x < endX; x++) {
+          final index = (y * width + x) * 4;
+          if (index >= 0 && index < pixels.length - 3) {
+            pixels[index] = r;
+            pixels[index + 1] = g;
+            pixels[index + 2] = b;
+            pixels[index + 3] = a;
+          }
+        }
+      }
+    }
+  }
+
+  void _fillRect(Rect rect, Uint8List pixels, int width, int height, int r,
+      int g, int b, int a) {
+    final left = math.max(0, rect.left.round());
+    final top = math.max(0, rect.top.round());
+    final right = math.min(width, rect.right.round());
+    final bottom = math.min(height, rect.bottom.round());
+
+    for (int y = top; y < bottom; y++) {
+      for (int x = left; x < right; x++) {
+        final index = (y * width + x) * 4;
+        if (index >= 0 && index < pixels.length - 3) {
+          pixels[index] = r;
+          pixels[index + 1] = g;
+          pixels[index + 2] = b;
+          pixels[index + 3] = a;
+        }
+      }
+    }
+  }
+
+  bool _isSimpleRectanglePath(_PureDartPath path) {
+    // Check if the path consists of a single addRect command
+    if (path._commands.length == 1) {
+      final command = path._commands[0];
+      return command.type == _PathCommandType.addRect;
+    }
+    return false;
+  }
+
   void _processCommand(
       _DrawCommand command, Uint8List pixels, int width, int height) {
     switch (command.type) {
@@ -1185,6 +1282,15 @@ class _PureDartPicture implements Picture {
           height,
         );
         break;
+      case _DrawCommandType.drawPath:
+        _drawPathToPixels(
+          command.args[0] as Path,
+          command.args[1] as Paint,
+          pixels,
+          width,
+          height,
+        );
+        break;
       // Add more command processing as needed
       default:
         // Ignore unsupported commands for now
@@ -1210,6 +1316,143 @@ class _PureDartPicture implements Picture {
     }
 
     return pixels;
+  }
+
+  void _rasterizeComplexPath(_PureDartPath path, Paint paint, Uint8List pixels,
+      int width, int height, int r, int g, int b, int a) {
+    // For now, implement a basic path rasterizer that handles common path operations
+    // This is a simplified version that will handle basic shapes and can be extended
+
+    double currentX = 0;
+    double currentY = 0;
+    final pathPoints = <Offset>[];
+
+    // Process path commands to build a list of points
+    for (final command in path._commands) {
+      switch (command.type) {
+        case _PathCommandType.moveTo:
+          currentX = command.args[0] as double;
+          currentY = command.args[1] as double;
+          pathPoints.clear();
+          pathPoints.add(Offset(currentX, currentY));
+          break;
+        case _PathCommandType.lineTo:
+          currentX = command.args[0] as double;
+          currentY = command.args[1] as double;
+          pathPoints.add(Offset(currentX, currentY));
+          break;
+        case _PathCommandType.addRect:
+          final rect = command.args[0] as Rect;
+          if (paint.style == PaintingStyle.fill) {
+            _fillRect(rect, pixels, width, height, r, g, b, a);
+          } else if (paint.style == PaintingStyle.stroke) {
+            _strokeRect(
+                rect, paint.strokeWidth, pixels, width, height, r, g, b, a);
+          }
+          break;
+        case _PathCommandType.close:
+          if (pathPoints.isNotEmpty) {
+            // Close the path by adding the first point
+            pathPoints.add(pathPoints.first);
+          }
+          break;
+        // Add more path command handling as needed
+        default:
+          // Skip unsupported commands for now
+          break;
+      }
+    }
+
+    // If we have points, render them as a simple polygon
+    if (pathPoints.length >= 3 && paint.style == PaintingStyle.fill) {
+      _fillPolygon(pathPoints, pixels, width, height, r, g, b, a);
+    }
+  }
+
+  void _renderPath(_PureDartPath path, Paint paint, Uint8List pixels, int width,
+      int height, int r, int g, int b, int a) {
+    // Process path commands to render the path
+    // For this initial implementation, we'll handle the most common path operations
+
+    // Start with a simple approach: check if this is a simple rectangular path
+    // and handle more complex paths in future iterations
+    final bounds = path.getBounds();
+
+    // Check if this path is a simple rectangle (very common case)
+    if (_isSimpleRectanglePath(path)) {
+      // Render as a rectangle for now
+      if (paint.style == PaintingStyle.fill) {
+        _fillRect(bounds, pixels, width, height, r, g, b, a);
+      } else if (paint.style == PaintingStyle.stroke) {
+        _strokeRect(
+            bounds, paint.strokeWidth, pixels, width, height, r, g, b, a);
+      }
+    } else {
+      // For more complex paths, we'll implement a basic scanline rasterizer
+      // For now, let's handle simple paths that are composed of basic operations
+      _rasterizeComplexPath(path, paint, pixels, width, height, r, g, b, a);
+    }
+  }
+
+  void _strokeRect(Rect rect, double strokeWidth, Uint8List pixels, int width,
+      int height, int r, int g, int b, int a) {
+    final left = math.max(0, rect.left.round());
+    final top = math.max(0, rect.top.round());
+    final right = math.min(width, rect.right.round());
+    final bottom = math.min(height, rect.bottom.round());
+    final stroke = math.max(1, strokeWidth.round());
+
+    // Top border
+    for (int y = top; y < math.min(top + stroke, bottom); y++) {
+      for (int x = left; x < right; x++) {
+        final index = (y * width + x) * 4;
+        if (index >= 0 && index < pixels.length - 3) {
+          pixels[index] = r;
+          pixels[index + 1] = g;
+          pixels[index + 2] = b;
+          pixels[index + 3] = a;
+        }
+      }
+    }
+
+    // Bottom border
+    for (int y = math.max(bottom - stroke, top); y < bottom; y++) {
+      for (int x = left; x < right; x++) {
+        final index = (y * width + x) * 4;
+        if (index >= 0 && index < pixels.length - 3) {
+          pixels[index] = r;
+          pixels[index + 1] = g;
+          pixels[index + 2] = b;
+          pixels[index + 3] = a;
+        }
+      }
+    }
+
+    // Left border
+    for (int y = top; y < bottom; y++) {
+      for (int x = left; x < math.min(left + stroke, right); x++) {
+        final index = (y * width + x) * 4;
+        if (index >= 0 && index < pixels.length - 3) {
+          pixels[index] = r;
+          pixels[index + 1] = g;
+          pixels[index + 2] = b;
+          pixels[index + 3] = a;
+        }
+      }
+    }
+
+    // Right border
+    for (int y = top; y < bottom; y++) {
+      for (int x = math.max(right - stroke, left); x < right; x++) {
+        final index = (y * width + x) * 4;
+        if (index >= 0 && index < pixels.length - 3) {
+          pixels[index] = r;
+          pixels[index + 1] = g;
+          pixels[index + 2] = b;
+          pixels[index + 3] = a;
+        }
+      }
+    }
   }
 }
 
