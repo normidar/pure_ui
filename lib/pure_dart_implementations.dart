@@ -847,6 +847,31 @@ class _PureDartPicture implements Picture {
     }
   }
 
+  void _drawCircleAt(int centerX, int centerY, int radius, Uint8List pixels,
+      int width, int height, int r, int g, int b, int a) {
+    final radiusSquared = radius * radius;
+
+    for (int y = centerY - radius; y <= centerY + radius; y++) {
+      for (int x = centerX - radius; x <= centerX + radius; x++) {
+        if (x >= 0 && x < width && y >= 0 && y < height) {
+          final dx = x - centerX;
+          final dy = y - centerY;
+          final distanceSquared = dx * dx + dy * dy;
+
+          if (distanceSquared <= radiusSquared) {
+            final index = (y * width + x) * 4;
+            if (index >= 0 && index < pixels.length - 3) {
+              pixels[index] = r;
+              pixels[index + 1] = g;
+              pixels[index + 2] = b;
+              pixels[index + 3] = a;
+            }
+          }
+        }
+      }
+    }
+  }
+
   void _drawCircleToPixels(Offset center, double radius, Paint paint,
       Uint8List pixels, int width, int height) {
     final color = paint.color;
@@ -926,6 +951,51 @@ class _PureDartPicture implements Picture {
     }
   }
 
+  void _drawLine(Offset p1, Offset p2, double strokeWidth, Uint8List pixels,
+      int width, int height, int r, int g, int b, int a) {
+    // Bresenham's line algorithm with stroke width support
+    int x0 = p1.dx.round();
+    int y0 = p1.dy.round();
+    int x1 = p2.dx.round();
+    int y1 = p2.dy.round();
+
+    final strokeRadius = math.max(1, (strokeWidth / 2).round());
+
+    final dx = (x1 - x0).abs();
+    final dy = (y1 - y0).abs();
+    final sx = x0 < x1 ? 1 : -1;
+    final sy = y0 < y1 ? 1 : -1;
+    int err = dx - dy;
+
+    while (true) {
+      // Draw a circle at current position to simulate stroke width
+      _drawCircleAt(x0, y0, strokeRadius, pixels, width, height, r, g, b, a);
+
+      if (x0 == x1 && y0 == y1) break;
+
+      final e2 = 2 * err;
+      if (e2 > -dy) {
+        err -= dy;
+        x0 += sx;
+      }
+      if (e2 < dx) {
+        err += dx;
+        y0 += sy;
+      }
+    }
+  }
+
+  void _drawLineToPixels(Offset p1, Offset p2, Paint paint, Uint8List pixels,
+      int width, int height) {
+    final color = paint.color;
+    final r = (color.r * 255).round() & 0xff;
+    final g = (color.g * 255).round() & 0xff;
+    final b = (color.b * 255).round() & 0xff;
+    final a = (color.a * 255).round() & 0xff;
+
+    _drawLine(p1, p2, paint.strokeWidth, pixels, width, height, r, g, b, a);
+  }
+
   void _drawOvalToPixels(
       Rect rect, Paint paint, Uint8List pixels, int width, int height) {
     final color = paint.color;
@@ -964,6 +1034,23 @@ class _PureDartPicture implements Picture {
     }
   }
 
+  void _drawPaintToPixels(
+      Paint paint, Uint8List pixels, int width, int height) {
+    final color = paint.color;
+    final r = (color.r * 255).round() & 0xff;
+    final g = (color.g * 255).round() & 0xff;
+    final b = (color.b * 255).round() & 0xff;
+    final a = (color.a * 255).round() & 0xff;
+
+    // Fill entire canvas with the paint color
+    for (int i = 0; i < pixels.length; i += 4) {
+      pixels[i] = r;
+      pixels[i + 1] = g;
+      pixels[i + 2] = b;
+      pixels[i + 3] = a;
+    }
+  }
+
   void _drawPathToPixels(
       Path path, Paint paint, Uint8List pixels, int width, int height) {
     if (path is! _PureDartPath) return;
@@ -990,6 +1077,45 @@ class _PureDartPicture implements Picture {
     // For other picture implementations, we can't access their internal commands
     // so we would need to rasterize them differently, but for now we'll just
     // handle our own _PureDartPicture implementation
+  }
+
+  void _drawPoint(Offset point, double strokeWidth, Uint8List pixels, int width,
+      int height, int r, int g, int b, int a) {
+    final radius = math.max(1, (strokeWidth / 2).round());
+    _drawCircleAt(point.dx.round(), point.dy.round(), radius, pixels, width,
+        height, r, g, b, a);
+  }
+
+  void _drawPointsToPixels(PointMode pointMode, List<Offset> points,
+      Paint paint, Uint8List pixels, int width, int height) {
+    final color = paint.color;
+    final r = (color.r * 255).round() & 0xff;
+    final g = (color.g * 255).round() & 0xff;
+    final b = (color.b * 255).round() & 0xff;
+    final a = (color.a * 255).round() & 0xff;
+
+    switch (pointMode) {
+      case PointMode.points:
+        for (final point in points) {
+          _drawPoint(
+              point, paint.strokeWidth, pixels, width, height, r, g, b, a);
+        }
+        break;
+      case PointMode.lines:
+        for (int i = 0; i < points.length - 1; i += 2) {
+          if (i + 1 < points.length) {
+            _drawLine(points[i], points[i + 1], paint.strokeWidth, pixels,
+                width, height, r, g, b, a);
+          }
+        }
+        break;
+      case PointMode.polygon:
+        for (int i = 0; i < points.length - 1; i++) {
+          _drawLine(points[i], points[i + 1], paint.strokeWidth, pixels, width,
+              height, r, g, b, a);
+        }
+        break;
+    }
   }
 
   void _drawRawAtlasToPixels(
@@ -1286,6 +1412,34 @@ class _PureDartPicture implements Picture {
         _drawPathToPixels(
           command.args[0] as Path,
           command.args[1] as Paint,
+          pixels,
+          width,
+          height,
+        );
+        break;
+      case _DrawCommandType.drawLine:
+        _drawLineToPixels(
+          command.args[0] as Offset,
+          command.args[1] as Offset,
+          command.args[2] as Paint,
+          pixels,
+          width,
+          height,
+        );
+        break;
+      case _DrawCommandType.drawPoints:
+        _drawPointsToPixels(
+          command.args[0] as PointMode,
+          command.args[1] as List<Offset>,
+          command.args[2] as Paint,
+          pixels,
+          width,
+          height,
+        );
+        break;
+      case _DrawCommandType.drawPaint:
+        _drawPaintToPixels(
+          command.args[0] as Paint,
           pixels,
           width,
           height,
