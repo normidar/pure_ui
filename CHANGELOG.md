@@ -1,3 +1,7 @@
+## 0.1.1
+
+- Fix drawPath color bug.
+
 ## 0.1.0
 
 - Use Flutter dart:ui source code to implement the Pure UI.
