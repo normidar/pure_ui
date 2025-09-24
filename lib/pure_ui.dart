@@ -46,3 +46,8 @@ part 'semantics.dart';
 part 'setup_hooks.dart';
 part 'text.dart';
 part 'window.dart';
+
+/// Helper function to create an Image from pixel data for testing
+Image createPureDartImage(Uint8List pixels, int width, int height) {
+  return _PureDartImage.fromPixels(pixels, width, height);
+}
