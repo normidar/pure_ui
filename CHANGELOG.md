@@ -1,3 +1,7 @@
+## 0.1.2
+
+- Add exportImage function.
+
 ## 0.1.1
 
 - Fix drawPath color bug.

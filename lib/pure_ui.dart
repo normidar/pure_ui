@@ -31,6 +31,7 @@ part 'channel_buffers.dart';
 part 'compositing.dart';
 part 'geometry.dart';
 part 'hooks.dart';
+part 'image_exporter.dart';
 part 'isolate_name_server.dart';
 part 'key.dart';
 part 'lerp.dart';
