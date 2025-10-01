@@ -265,6 +265,47 @@ void main() async {
 }
 ```
 
+## Simplified Image Export with exportImage
+
+For quick image generation, Pure UI provides the `exportImage` helper function that simplifies the process of creating and saving images:
+
+```dart
+import 'dart:io';
+import 'package:pure_ui/pure_ui.dart';
+
+void main() async {
+  await exportImage(
+    canvasFunction: (canvas) {
+      // Draw background
+      final backgroundPaint = Paint()..color = const Color(0xFFFFFFFF);
+      canvas.drawRect(const Rect.fromLTWH(0, 0, 300, 200), backgroundPaint);
+
+      // Draw a red circle
+      final paint = Paint()
+        ..color = const Color(0xFFFF0000)
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(const Offset(150, 100), 50, paint);
+
+      // Draw a blue rectangle outline
+      final rectPaint = Paint()
+        ..color = const Color(0xFF0000FF)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3;
+      canvas.drawRect(const Rect.fromLTWH(50, 50, 200, 100), rectPaint);
+    },
+    size: const Size(300, 200),
+    exportFile: File('simple_drawing.png'),
+  );
+}
+```
+
+### exportImage Parameters
+
+- **`canvasFunction`**: A callback function that receives a `Canvas` object for drawing operations
+- **`size`**: The dimensions of the output image as a `Size` object
+- **`exportFile`**: The `File` object where the image will be saved
+- **`imageByteFormat`** (optional): The output format, defaults to `ImageByteFormat.png`
+
 ## dart:ui Compatible Classes
 
 Pure UI provides complete reimplementations of Flutter's dart:ui core classes:
