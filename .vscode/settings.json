@@ -7,5 +7,6 @@
   },
   "dart.renameFilesWithClasses": "always",
   "editor.formatOnSaveMode": "file",
-  "editor.formatOnSave": true
+  "editor.formatOnSave": true,
+  "makefile.configureOnOpen": false
 }
