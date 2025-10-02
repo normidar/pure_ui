@@ -1,3 +1,7 @@
+## 0.1.3
+
+- Fix cubicTo feature.
+
 ## 0.1.2
 
 - Add exportImage function.
