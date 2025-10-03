@@ -745,6 +745,28 @@ class _PureDartPicture implements Picture {
     return _PureDartImage(pixels, width, height);
   }
 
+  Offset _cubicBezierPoint(
+      Offset start, Offset control1, Offset control2, Offset end, double t) {
+    // Cubic Bézier curve formula: B(t) = (1-t)³P₀ + 3(1-t)²tP₁ + 3(1-t)t²P₂ + t³P₃
+    final oneMinusT = 1.0 - t;
+    final oneMinusTSquared = oneMinusT * oneMinusT;
+    final oneMinusTCubed = oneMinusTSquared * oneMinusT;
+    final tSquared = t * t;
+    final tCubed = tSquared * t;
+
+    final x = oneMinusTCubed * start.dx +
+        3 * oneMinusTSquared * t * control1.dx +
+        3 * oneMinusT * tSquared * control2.dx +
+        tCubed * end.dx;
+
+    final y = oneMinusTCubed * start.dy +
+        3 * oneMinusTSquared * t * control1.dy +
+        3 * oneMinusT * tSquared * control2.dy +
+        tCubed * end.dy;
+
+    return Offset(x, y);
+  }
+
   void _drawAtlasToPixels(
       Image atlas,
       List<RSTransform> transforms,
@@ -982,6 +1004,28 @@ class _PureDartPicture implements Picture {
         err += dx;
         y0 += sy;
       }
+    }
+  }
+
+  void _drawLineSegment(Offset start, Offset end, int strokeWidth,
+      Uint8List pixels, int width, int height, int r, int g, int b, int a) {
+    final dx = end.dx - start.dx;
+    final dy = end.dy - start.dy;
+    final distance = math.sqrt(dx * dx + dy * dy);
+
+    if (distance == 0) return;
+
+    final steps = math.max(1, distance.round());
+    final stepX = dx / steps;
+    final stepY = dy / steps;
+
+    for (int i = 0; i <= steps; i++) {
+      final x = start.dx + stepX * i;
+      final y = start.dy + stepY * i;
+
+      // Draw a circle at each point to create the stroke
+      _drawCircleAt(
+          x.round(), y.round(), strokeWidth, pixels, width, height, r, g, b, a);
     }
   }
 
@@ -1329,6 +1373,20 @@ class _PureDartPicture implements Picture {
     }
   }
 
+  List<Offset> _generateCubicBezierPoints(
+      Offset start, Offset control1, Offset control2, Offset end) {
+    final points = <Offset>[];
+    const int segments = 20; // Number of line segments to approximate the curve
+
+    for (int i = 0; i <= segments; i++) {
+      final t = i / segments;
+      final point = _cubicBezierPoint(start, control1, control2, end, t);
+      points.add(point);
+    }
+
+    return points;
+  }
+
   bool _isSimpleRectanglePath(_PureDartPath path) {
     // Check if the path consists of a single addRect command
     if (path._commands.length == 1) {
@@ -1504,6 +1562,26 @@ class _PureDartPicture implements Picture {
                 rect, paint.strokeWidth, pixels, width, height, r, g, b, a);
           }
           break;
+        case _PathCommandType.cubicTo:
+          // Convert cubic bezier curve to line segments for rendering
+          final x1 = command.args[0] as double;
+          final y1 = command.args[1] as double;
+          final x2 = command.args[2] as double;
+          final y2 = command.args[3] as double;
+          final x3 = command.args[4] as double;
+          final y3 = command.args[5] as double;
+
+          // Generate points along the cubic bezier curve
+          final curvePoints = _generateCubicBezierPoints(
+            Offset(currentX, currentY),
+            Offset(x1, y1),
+            Offset(x2, y2),
+            Offset(x3, y3),
+          );
+          pathPoints.addAll(curvePoints);
+          currentX = x3;
+          currentY = y3;
+          break;
         case _PathCommandType.close:
           if (pathPoints.isNotEmpty) {
             // Close the path by adding the first point
@@ -1517,9 +1595,16 @@ class _PureDartPicture implements Picture {
       }
     }
 
-    // If we have points, render them as a simple polygon
-    if (pathPoints.length >= 3 && paint.style == PaintingStyle.fill) {
-      _fillPolygon(pathPoints, pixels, width, height, r, g, b, a);
+    // Render the path based on the paint style
+    if (pathPoints.length >= 2) {
+      if (paint.style == PaintingStyle.fill) {
+        if (pathPoints.length >= 3) {
+          _fillPolygon(pathPoints, pixels, width, height, r, g, b, a);
+        }
+      } else if (paint.style == PaintingStyle.stroke) {
+        _strokePolyline(
+            pathPoints, paint.strokeWidth, pixels, width, height, r, g, b, a);
+      }
     }
   }
 
@@ -1545,6 +1630,19 @@ class _PureDartPicture implements Picture {
       // For more complex paths, we'll implement a basic scanline rasterizer
       // For now, let's handle simple paths that are composed of basic operations
       _rasterizeComplexPath(path, paint, pixels, width, height, r, g, b, a);
+    }
+  }
+
+  void _strokePolyline(List<Offset> points, double strokeWidth,
+      Uint8List pixels, int width, int height, int r, int g, int b, int a) {
+    if (points.length < 2) return;
+
+    final stroke = math.max(1, strokeWidth.round());
+
+    for (int i = 0; i < points.length - 1; i++) {
+      final start = points[i];
+      final end = points[i + 1];
+      _drawLineSegment(start, end, stroke, pixels, width, height, r, g, b, a);
     }
   }
 
