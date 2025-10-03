@@ -3148,6 +3148,15 @@ class FrameInfo {
 ///  * [Gradient](https://api.flutter.dev/flutter/painting/Gradient-class.html), the class in the [painting] library.
 ///
 base class Gradient extends Shader {
+  // Pure Dart implementation - store gradient data for rendering
+  GradientType? _type;
+  Offset? _from;
+  Offset? _to;
+  Offset? _center;
+  double? _radius;
+  List<Color>? _colors;
+  List<double>? _colorStops;
+
   /// Creates a linear gradient from `from` to `to`.
   ///
   /// If `colorStops` is provided, `colorStops[i]` is a number from 0.0 to 1.0
@@ -3186,6 +3195,13 @@ base class Gradient extends Shader {
         assert(matrix4 == null || _matrix4IsValid(matrix4)),
         super._() {
     _validateColorStops(colors, colorStops);
+    // Store gradient data for pure Dart implementation
+    _type = GradientType.linear;
+    _from = from;
+    _to = to;
+    _colors = colors;
+    _colorStops = colorStops ?? [0.0, 1.0];
+
     final Float32List endPointsBuffer = _encodeTwoPoints(from, to);
     final Float32List colorsBuffer = _encodeWideColorList(colors);
     final Float32List? colorStopsBuffer =
@@ -3242,6 +3258,13 @@ base class Gradient extends Shader {
         assert(matrix4 == null || _matrix4IsValid(matrix4)),
         super._() {
     _validateColorStops(colors, colorStops);
+    // Store gradient data for pure Dart implementation
+    _type = GradientType.radial;
+    _center = center;
+    _radius = radius;
+    _colors = colors;
+    _colorStops = colorStops ?? [0.0, 1.0];
+
     final Float32List? colorStopsBuffer =
         colorStops == null ? null : Float32List.fromList(colorStops);
     final Float32List colorsBuffer = _encodeWideColorList(colors);
@@ -3407,6 +3430,18 @@ base class Gradient extends Shader {
       }
     }
   }
+}
+
+/// Types of gradients supported by the [Gradient] class.
+enum GradientType {
+  /// Linear gradient
+  linear,
+
+  /// Radial gradient
+  radial,
+
+  /// Sweep gradient
+  sweep,
 }
 
 /// Opaque handle to raw decoded image data (pixels).
