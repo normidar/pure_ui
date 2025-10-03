@@ -896,12 +896,6 @@ class _PureDartPicture implements Picture {
 
   void _drawCircleToPixels(Offset center, double radius, Paint paint,
       Uint8List pixels, int width, int height) {
-    final color = paint.color;
-    final r = (color.r * 255).round() & 0xff;
-    final g = (color.g * 255).round() & 0xff;
-    final b = (color.b * 255).round() & 0xff;
-    final a = (color.a * 255).round() & 0xff;
-
     final centerX = center.dx.round();
     final centerY = center.dy.round();
     final radiusSquared = radius * radius;
@@ -910,6 +904,10 @@ class _PureDartPicture implements Picture {
     final top = math.max(0, (centerY - radius).round());
     final right = math.min(width, (centerX + radius).round());
     final bottom = math.min(height, (centerY + radius).round());
+
+    // Check if we have a shader (gradient)
+    final shader = paint.shader;
+    final useShader = shader != null && shader is Gradient;
 
     if (paint.style == PaintingStyle.fill) {
       // Fill the entire circle
@@ -922,6 +920,17 @@ class _PureDartPicture implements Picture {
           if (distanceSquared <= radiusSquared) {
             final index = (y * width + x) * 4;
             if (index >= 0 && index < pixels.length - 3) {
+              Color color;
+              if (useShader) {
+                color = _getGradientColor(shader, x.toDouble(), y.toDouble());
+              } else {
+                color = paint.color;
+              }
+              final r = (color.r * 255).round() & 0xff;
+              final g = (color.g * 255).round() & 0xff;
+              final b = (color.b * 255).round() & 0xff;
+              final a = (color.a * 255).round() & 0xff;
+
               pixels[index] = r;
               pixels[index + 1] = g;
               pixels[index + 2] = b;
@@ -947,6 +956,17 @@ class _PureDartPicture implements Picture {
               distanceSquared >= innerRadiusSquared) {
             final index = (y * width + x) * 4;
             if (index >= 0 && index < pixels.length - 3) {
+              Color color;
+              if (useShader) {
+                color = _getGradientColor(shader, x.toDouble(), y.toDouble());
+              } else {
+                color = paint.color;
+              }
+              final r = (color.r * 255).round() & 0xff;
+              final g = (color.g * 255).round() & 0xff;
+              final b = (color.b * 255).round() & 0xff;
+              final a = (color.a * 255).round() & 0xff;
+
               pixels[index] = r;
               pixels[index + 1] = g;
               pixels[index + 2] = b;
@@ -1218,16 +1238,14 @@ class _PureDartPicture implements Picture {
 
   void _drawRectToPixels(
       Rect rect, Paint paint, Uint8List pixels, int width, int height) {
-    final color = paint.color;
-    final r = (color.r * 255).round() & 0xff;
-    final g = (color.g * 255).round() & 0xff;
-    final b = (color.b * 255).round() & 0xff;
-    final a = (color.a * 255).round() & 0xff;
-
     final left = math.max(0, rect.left.round());
     final top = math.max(0, rect.top.round());
     final right = math.min(width, rect.right.round());
     final bottom = math.min(height, rect.bottom.round());
+
+    // Check if we have a shader (gradient)
+    final shader = paint.shader;
+    final useShader = shader != null && shader is Gradient;
 
     if (paint.style == PaintingStyle.fill) {
       // Fill the entire rectangle
@@ -1235,6 +1253,17 @@ class _PureDartPicture implements Picture {
         for (int x = left; x < right; x++) {
           final index = (y * width + x) * 4;
           if (index >= 0 && index < pixels.length - 3) {
+            Color color;
+            if (useShader) {
+              color = _getGradientColor(shader, x.toDouble(), y.toDouble());
+            } else {
+              color = paint.color;
+            }
+            final r = (color.r * 255).round() & 0xff;
+            final g = (color.g * 255).round() & 0xff;
+            final b = (color.b * 255).round() & 0xff;
+            final a = (color.a * 255).round() & 0xff;
+
             pixels[index] = r;
             pixels[index + 1] = g;
             pixels[index + 2] = b;
@@ -1251,6 +1280,17 @@ class _PureDartPicture implements Picture {
         for (int x = left; x < right; x++) {
           final index = (y * width + x) * 4;
           if (index >= 0 && index < pixels.length - 3) {
+            Color color;
+            if (useShader) {
+              color = _getGradientColor(shader, x.toDouble(), y.toDouble());
+            } else {
+              color = paint.color;
+            }
+            final r = (color.r * 255).round() & 0xff;
+            final g = (color.g * 255).round() & 0xff;
+            final b = (color.b * 255).round() & 0xff;
+            final a = (color.a * 255).round() & 0xff;
+
             pixels[index] = r;
             pixels[index + 1] = g;
             pixels[index + 2] = b;
@@ -1264,6 +1304,17 @@ class _PureDartPicture implements Picture {
         for (int x = left; x < right; x++) {
           final index = (y * width + x) * 4;
           if (index >= 0 && index < pixels.length - 3) {
+            Color color;
+            if (useShader) {
+              color = _getGradientColor(shader, x.toDouble(), y.toDouble());
+            } else {
+              color = paint.color;
+            }
+            final r = (color.r * 255).round() & 0xff;
+            final g = (color.g * 255).round() & 0xff;
+            final b = (color.b * 255).round() & 0xff;
+            final a = (color.a * 255).round() & 0xff;
+
             pixels[index] = r;
             pixels[index + 1] = g;
             pixels[index + 2] = b;
@@ -1277,6 +1328,17 @@ class _PureDartPicture implements Picture {
         for (int x = left; x < math.min(left + strokeWidth, right); x++) {
           final index = (y * width + x) * 4;
           if (index >= 0 && index < pixels.length - 3) {
+            Color color;
+            if (useShader) {
+              color = _getGradientColor(shader, x.toDouble(), y.toDouble());
+            } else {
+              color = paint.color;
+            }
+            final r = (color.r * 255).round() & 0xff;
+            final g = (color.g * 255).round() & 0xff;
+            final b = (color.b * 255).round() & 0xff;
+            final a = (color.a * 255).round() & 0xff;
+
             pixels[index] = r;
             pixels[index + 1] = g;
             pixels[index + 2] = b;
@@ -1290,6 +1352,17 @@ class _PureDartPicture implements Picture {
         for (int x = math.max(right - strokeWidth, left); x < right; x++) {
           final index = (y * width + x) * 4;
           if (index >= 0 && index < pixels.length - 3) {
+            Color color;
+            if (useShader) {
+              color = _getGradientColor(shader, x.toDouble(), y.toDouble());
+            } else {
+              color = paint.color;
+            }
+            final r = (color.r * 255).round() & 0xff;
+            final g = (color.g * 255).round() & 0xff;
+            final b = (color.b * 255).round() & 0xff;
+            final a = (color.a * 255).round() & 0xff;
+
             pixels[index] = r;
             pixels[index + 1] = g;
             pixels[index + 2] = b;
@@ -1385,6 +1458,74 @@ class _PureDartPicture implements Picture {
     }
 
     return points;
+  }
+
+  /// Helper method to get color from a gradient shader at a specific pixel position
+  Color _getGradientColor(Gradient gradient, double x, double y) {
+    if (gradient._type == GradientType.linear) {
+      // Linear gradient
+      final from = gradient._from!;
+      final to = gradient._to!;
+      final colors = gradient._colors!;
+      final colorStops = gradient._colorStops!;
+
+      // Calculate the projection of the point onto the gradient line
+      final dx = to.dx - from.dx;
+      final dy = to.dy - from.dy;
+      final lineLength = math.sqrt(dx * dx + dy * dy);
+
+      if (lineLength == 0) return colors.first;
+
+      // Vector from start to current point
+      final px = x - from.dx;
+      final py = y - from.dy;
+
+      // Project onto gradient line and normalize
+      final projection = (px * dx + py * dy) / (lineLength * lineLength);
+      final t = projection.clamp(0.0, 1.0);
+
+      return _interpolateColor(colors, colorStops, t);
+    } else if (gradient._type == GradientType.radial) {
+      // Radial gradient
+      final center = gradient._center!;
+      final radius = gradient._radius!;
+      final colors = gradient._colors!;
+      final colorStops = gradient._colorStops!;
+
+      // Calculate distance from center
+      final dx = x - center.dx;
+      final dy = y - center.dy;
+      final distance = math.sqrt(dx * dx + dy * dy);
+
+      // Normalize by radius
+      final t = (distance / radius).clamp(0.0, 1.0);
+
+      return _interpolateColor(colors, colorStops, t);
+    }
+
+    // Fallback to first color if gradient type is not supported
+    return gradient._colors?.first ?? const Color(0xFF000000);
+  }
+
+  /// Interpolate between colors based on color stops
+  Color _interpolateColor(
+      List<Color> colors, List<double> colorStops, double t) {
+    // Find the two color stops that surround t
+    for (int i = 0; i < colorStops.length - 1; i++) {
+      if (t >= colorStops[i] && t <= colorStops[i + 1]) {
+        final start = colorStops[i];
+        final end = colorStops[i + 1];
+        final localT = (t - start) / (end - start);
+
+        return Color.lerp(colors[i], colors[i + 1], localT)!;
+      }
+    }
+
+    // If t is beyond all stops, return the last color
+    if (t >= colorStops.last) return colors.last;
+
+    // If t is before all stops, return the first color
+    return colors.first;
   }
 
   bool _isSimpleRectanglePath(_PureDartPath path) {

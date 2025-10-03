@@ -1,3 +1,7 @@
+## 0.1.4
+
+- Fix GradientPaint feature.
+
 ## 0.1.3
 
 - Fix cubicTo feature.
