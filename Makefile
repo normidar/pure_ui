@@ -64,6 +64,10 @@ git_create_tag: ## Create a tag: `make git_create_tag <tag_name>`
 git_my_tasks: ## Display my tasks: `make git_my_tasks`
 	gh issue ls --assignee @me
 
+.PHONY: pub_get
+pub_get: ## Run pub get: `make pub_get`
+	fvm dart pub get
+
 .PHONY: pub_publish_dry_run
 pub_publish_dry_run: ## Dry run for pub publish: `make pub_publish_dry_run`
 	fvm dart pub publish --dry-run
