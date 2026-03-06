@@ -1644,6 +1644,27 @@ class _PureDartPicture implements Picture {
           height,
         );
         break;
+      case _DrawCommandType.drawImage:
+        _drawImageToPixels(
+          command.args[0] as Image,
+          command.args[1] as Offset,
+          command.args[2] as Paint,
+          pixels,
+          width,
+          height,
+        );
+        break;
+      case _DrawCommandType.drawImageRect:
+        _drawImageRectToPixels(
+          command.args[0] as Image,
+          command.args[1] as Rect,
+          command.args[2] as Rect,
+          command.args[3] as Paint,
+          pixels,
+          width,
+          height,
+        );
+        break;
       // Add more command processing as needed
       default:
         // Ignore unsupported commands for now
@@ -1787,6 +1808,90 @@ class _PureDartPicture implements Picture {
     }
   }
 
+  void _drawImageToPixels(Image image, Offset offset, Paint paint,
+      Uint8List pixels, int width, int height) {
+    if (image is! _PureDartImage) return;
+
+    final srcPixels = image._pixels;
+    final srcWidth = image._width;
+    final srcHeight = image._height;
+    final dstX = offset.dx.round();
+    final dstY = offset.dy.round();
+
+    for (int y = 0; y < srcHeight; y++) {
+      for (int x = 0; x < srcWidth; x++) {
+        final px = dstX + x;
+        final py = dstY + y;
+        if (px < 0 || px >= width || py < 0 || py >= height) continue;
+
+        final srcIndex = (y * srcWidth + x) * 4;
+        final dstIndex = (py * width + px) * 4;
+
+        if (srcIndex + 3 >= srcPixels.length ||
+            dstIndex + 3 >= pixels.length) continue;
+
+        final srcA = srcPixels[srcIndex + 3];
+        if (srcA > 0) {
+          pixels[dstIndex] = srcPixels[srcIndex];
+          pixels[dstIndex + 1] = srcPixels[srcIndex + 1];
+          pixels[dstIndex + 2] = srcPixels[srcIndex + 2];
+          pixels[dstIndex + 3] = srcA;
+        }
+      }
+    }
+  }
+
+  void _drawImageRectToPixels(Image image, Rect src, Rect dst, Paint paint,
+      Uint8List pixels, int width, int height) {
+    if (image is! _PureDartImage) return;
+
+    final srcPixels = image._pixels;
+    final srcWidth = image._width;
+    final srcHeight = image._height;
+
+    final srcLeft = src.left;
+    final srcTop = src.top;
+    final srcW = src.width;
+    final srcH = src.height;
+
+    final dstLeft = dst.left.round();
+    final dstTop = dst.top.round();
+    final dstRight = dst.right.round();
+    final dstBottom = dst.bottom.round();
+
+    if (dstRight <= dstLeft || dstBottom <= dstTop) return;
+
+    final scaleX = srcW / (dstRight - dstLeft);
+    final scaleY = srcH / (dstBottom - dstTop);
+
+    for (int dstY = dstTop; dstY < dstBottom; dstY++) {
+      for (int dstX = dstLeft; dstX < dstRight; dstX++) {
+        if (dstX < 0 || dstX >= width || dstY < 0 || dstY >= height) continue;
+
+        final srcX = (srcLeft + (dstX - dstLeft) * scaleX).round();
+        final srcY = (srcTop + (dstY - dstTop) * scaleY).round();
+
+        if (srcX < 0 || srcX >= srcWidth || srcY < 0 || srcY >= srcHeight) {
+          continue;
+        }
+
+        final srcIndex = (srcY * srcWidth + srcX) * 4;
+        final dstIndex = (dstY * width + dstX) * 4;
+
+        if (srcIndex + 3 >= srcPixels.length ||
+            dstIndex + 3 >= pixels.length) continue;
+
+        final srcA = srcPixels[srcIndex + 3];
+        if (srcA > 0) {
+          pixels[dstIndex] = srcPixels[srcIndex];
+          pixels[dstIndex + 1] = srcPixels[srcIndex + 1];
+          pixels[dstIndex + 2] = srcPixels[srcIndex + 2];
+          pixels[dstIndex + 3] = srcA;
+        }
+      }
+    }
+  }
+
   void _strokeRect(Rect rect, double strokeWidth, Uint8List pixels, int width,
       int height, int r, int g, int b, int a) {
     final left = math.max(0, rect.left.round());
@@ -1883,3 +1988,168 @@ class _PureDartPictureRecorder implements PictureRecorder {
 }
 
 // PathMetrics and PathMetric classes are handled by the main library
+
+/// Pure Dart implementation of ImmutableBuffer that stores data in Dart memory
+/// without requiring native FFI calls.
+class _PureDartImmutableBuffer extends ImmutableBuffer {
+  final Uint8List _data;
+
+  _PureDartImmutableBuffer(Uint8List data)
+      : _data = data,
+        super._(data.length);
+
+  @override
+  void dispose() {
+    assert(() {
+      assert(!_debugDisposed);
+      _debugDisposed = true;
+      return true;
+    }());
+    // No native disposal needed for pure Dart implementation
+  }
+}
+
+/// Pure Dart implementation of ImageDescriptor that avoids native FFI calls.
+class _PureDartImageDescriptor implements ImageDescriptor {
+  final Uint8List _data;
+  final int _width;
+  final int _height;
+  final bool _isEncoded;
+  final PixelFormat? _pixelFormat;
+
+  _PureDartImageDescriptor._raw(
+    _PureDartImmutableBuffer buffer, {
+    required int width,
+    required int height,
+    required PixelFormat pixelFormat,
+  })  : _data = buffer._data,
+        _width = width,
+        _height = height,
+        _isEncoded = false,
+        _pixelFormat = pixelFormat;
+
+  _PureDartImageDescriptor._encoded(
+    Uint8List data,
+    int width,
+    int height,
+  )   : _data = data,
+        _width = width,
+        _height = height,
+        _isEncoded = true,
+        _pixelFormat = null;
+
+  static Future<_PureDartImageDescriptor> fromEncodedBuffer(
+      _PureDartImmutableBuffer buffer) async {
+    final decoded = img.decodeImage(buffer._data);
+    if (decoded == null) throw Exception('Failed to decode image');
+    return _PureDartImageDescriptor._encoded(
+        buffer._data, decoded.width, decoded.height);
+  }
+
+  @override
+  int get bytesPerPixel => 4;
+
+  @override
+  int get height => _height;
+
+  @override
+  int get width => _width;
+
+  @override
+  void dispose() {
+    // No native resources to free
+  }
+
+  @override
+  Future<Codec> instantiateCodec(
+      {int? targetWidth, int? targetHeight}) async {
+    return _PureDartCodec(
+      _data,
+      _width,
+      _height,
+      _isEncoded,
+      _pixelFormat,
+      targetWidth: targetWidth,
+      targetHeight: targetHeight,
+    );
+  }
+}
+
+/// Pure Dart implementation of Codec that decodes images using the image package.
+class _PureDartCodec implements Codec {
+  final Uint8List _data;
+  final int _srcWidth;
+  final int _srcHeight;
+  final bool _isEncoded;
+  final PixelFormat? _pixelFormat;
+  final int? _targetWidth;
+  final int? _targetHeight;
+
+  _PureDartCodec(
+    this._data,
+    this._srcWidth,
+    this._srcHeight,
+    this._isEncoded,
+    this._pixelFormat, {
+    int? targetWidth,
+    int? targetHeight,
+  })  : _targetWidth = targetWidth,
+        _targetHeight = targetHeight;
+
+  @override
+  int get frameCount => 1;
+
+  @override
+  int get repetitionCount => 0;
+
+  @override
+  void dispose() {
+    // No native resources to free
+  }
+
+  @override
+  Future<FrameInfo> getNextFrame() async {
+    Uint8List pixels;
+    int width;
+    int height;
+
+    if (_isEncoded) {
+      final decoded = img.decodeImage(_data);
+      if (decoded == null) throw Exception('Failed to decode image');
+
+      final targetW = (_targetWidth != null && _targetWidth! > 0)
+          ? _targetWidth!
+          : decoded.width;
+      final targetH = (_targetHeight != null && _targetHeight! > 0)
+          ? _targetHeight!
+          : decoded.height;
+
+      final resized =
+          (targetW != decoded.width || targetH != decoded.height)
+              ? img.copyResize(decoded, width: targetW, height: targetH)
+              : decoded;
+
+      width = resized.width;
+      height = resized.height;
+      pixels = resized.getBytes(order: img.ChannelOrder.rgba);
+    } else {
+      // Raw pixel data — convert format if needed
+      width = _srcWidth;
+      height = _srcHeight;
+      if (_pixelFormat == PixelFormat.bgra8888) {
+        // Swap R and B channels to convert BGRA → RGBA
+        pixels = Uint8List.fromList(_data);
+        for (int i = 0; i < pixels.length; i += 4) {
+          final b = pixels[i];
+          pixels[i] = pixels[i + 2];
+          pixels[i + 2] = b;
+        }
+      } else {
+        pixels = _data;
+      }
+    }
+
+    final image = _PureDartImage(pixels, width, height);
+    return FrameInfo._(duration: Duration.zero, image: image);
+  }
+}
