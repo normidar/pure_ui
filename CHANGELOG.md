@@ -1,3 +1,7 @@
+## 0.1.5
+
+- Fix #20 issue.
+
 ## 0.1.4
 
 - Fix GradientPaint feature.
