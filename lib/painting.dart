@@ -3990,7 +3990,7 @@ abstract class ImageFilter {
   }
 
   // This class is not meant to be extended; this constructor prevents extension.
-  ImageFilter._(); // ignore: unused_element
+  ImageFilter._();
 
   // The description text to show when the filter is part of a composite
   // [ImageFilter] created using [ImageFilter.compose].
