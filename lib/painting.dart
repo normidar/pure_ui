@@ -1,6 +1,8 @@
 // Copyright 2013 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
+// ignore_for_file: unused_element
+
 part of dart.ui;
 
 /// Loads a single image frame from a byte array into an [Image] object.
@@ -3803,7 +3805,23 @@ abstract class ImageDescriptor {
     required int height,
     int? rowBytes,
     required PixelFormat pixelFormat,
-  }) = _NativeImageDescriptor.raw;
+  }) {
+    if (buffer is _PureDartImmutableBuffer) {
+      return _PureDartImageDescriptor._raw(
+        buffer,
+        width: width,
+        height: height,
+        pixelFormat: pixelFormat,
+      );
+    }
+    return _NativeImageDescriptor.raw(
+      buffer,
+      width: width,
+      height: height,
+      rowBytes: rowBytes,
+      pixelFormat: pixelFormat,
+    );
+  }
 
   /// The number of bytes per pixel in the image.
   ///
@@ -3840,6 +3858,9 @@ abstract class ImageDescriptor {
 
   /// Creates an image descriptor from encoded data in a supported format.
   static Future<ImageDescriptor> encoded(ImmutableBuffer buffer) {
+    if (buffer is _PureDartImmutableBuffer) {
+      return _PureDartImageDescriptor.fromEncodedBuffer(buffer);
+    }
     final _NativeImageDescriptor descriptor = _NativeImageDescriptor._();
     return _futurize((_Callback<void> callback) {
       return descriptor._initEncoded(buffer, callback);
@@ -4151,11 +4172,8 @@ base class ImmutableBuffer extends NativeFieldWrapperClass1 {
 
   /// Creates a copy of the data from a [Uint8List] suitable for internal use
   /// in the engine.
-  static Future<ImmutableBuffer> fromUint8List(Uint8List list) {
-    final ImmutableBuffer instance = ImmutableBuffer._(list.length);
-    return _futurize((_Callback<void> callback) {
-      return instance._init(list, callback);
-    }).then((_) => instance);
+  static Future<ImmutableBuffer> fromUint8List(Uint8List list) async {
+    return _PureDartImmutableBuffer(list);
   }
 }
 
