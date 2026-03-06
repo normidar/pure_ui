@@ -58,6 +58,55 @@ void main() {
       expect(frame.image.width, equals(2));
       expect(frame.image.height, equals(2));
 
+      // Verify pixel values are preserved correctly
+      final image = frame.image;
+      final redPixel = image.getPixel(0, 0);
+      final greenPixel = image.getPixel(1, 0);
+      final bluePixel = image.getPixel(0, 1);
+      final whitePixel = image.getPixel(1, 1);
+
+      expect((redPixel.r * 255).round(), equals(255));
+      expect((redPixel.g * 255).round(), equals(0));
+      expect((redPixel.b * 255).round(), equals(0));
+
+      expect((greenPixel.r * 255).round(), equals(0));
+      expect((greenPixel.g * 255).round(), equals(255));
+      expect((greenPixel.b * 255).round(), equals(0));
+
+      expect((bluePixel.r * 255).round(), equals(0));
+      expect((bluePixel.g * 255).round(), equals(0));
+      expect((bluePixel.b * 255).round(), equals(255));
+
+      expect((whitePixel.r * 255).round(), equals(255));
+      expect((whitePixel.g * 255).round(), equals(255));
+      expect((whitePixel.b * 255).round(), equals(255));
+
+      frame.image.dispose();
+      codec.dispose();
+      descriptor.dispose();
+      buffer.dispose();
+    });
+
+    test('BGRA pixel format is correctly converted to RGBA', () async {
+      // 1x1 BGRA pixel: blue=255, green=0, red=0 → should be read as red
+      final bgraPixels = Uint8List.fromList([255, 0, 0, 255]); // BGRA: blue
+      final buffer = await ui.ImmutableBuffer.fromUint8List(bgraPixels);
+      final descriptor = ui.ImageDescriptor.raw(
+        buffer,
+        width: 1,
+        height: 1,
+        pixelFormat: ui.PixelFormat.bgra8888,
+      );
+      final codec = await descriptor.instantiateCodec();
+      final frame = await codec.getNextFrame();
+      final pixel = frame.image.getPixel(0, 0);
+
+      // BGRA [255,0,0,255] → RGBA should be [0,0,255,255] (blue)
+      expect((pixel.r * 255).round(), equals(0));
+      expect((pixel.g * 255).round(), equals(0));
+      expect((pixel.b * 255).round(), equals(255));
+      expect((pixel.a * 255).round(), equals(255));
+
       frame.image.dispose();
       codec.dispose();
       descriptor.dispose();
@@ -97,6 +146,16 @@ void main() {
 
       expect(output.width, equals(100));
       expect(output.height, equals(100));
+
+      // Verify the red image was drawn at offset (5,5)
+      final drawnPixel = output.getPixel(5, 5);
+      expect((drawnPixel.r * 255).round(), equals(255));
+      expect((drawnPixel.g * 255).round(), equals(0));
+      expect((drawnPixel.b * 255).round(), equals(0));
+
+      // Verify area outside image is empty (transparent)
+      final emptyPixel = output.getPixel(0, 0);
+      expect((emptyPixel.a * 255).round(), equals(0));
 
       srcImage.dispose();
       output.dispose();
@@ -145,6 +204,16 @@ void main() {
 
       expect(output.width, equals(200));
       expect(output.height, equals(200));
+
+      // Verify the blue image was drawn inside the destination rect (10,10)-(60,60)
+      final drawnPixel = output.getPixel(30, 30);
+      expect((drawnPixel.r * 255).round(), equals(0));
+      expect((drawnPixel.g * 255).round(), equals(0));
+      expect((drawnPixel.b * 255).round(), equals(255));
+
+      // Verify area outside destination rect is empty (transparent)
+      final emptyPixel = output.getPixel(0, 0);
+      expect((emptyPixel.a * 255).round(), equals(0));
 
       srcImage.dispose();
       output.dispose();
