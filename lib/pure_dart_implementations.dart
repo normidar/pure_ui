@@ -2031,65 +2031,28 @@ class _PureDartPicture implements Picture {
   /// scanline fill on the TrueType quadratic Bézier outlines.
   void _drawParagraphToPixels(_PureDartParagraph paragraph, Offset offset,
       Uint8List pixels, int width, int height) {
-    final paraStyle = paragraph._paragraphStyle;
-    double penX = offset.dx;
+    // Use pre-computed layout lines from paragraph.layout().
+    // If layout() has not been called, _lines is empty and nothing is drawn.
+    for (final line in paragraph._lines) {
+      final double screenBaseline = offset.dy + line.baseline;
 
-    for (final span in paragraph._spans) {
-      final style = span.style;
+      for (int i = 0; i < line.glyphs.length; i++) {
+        final glyph = line.glyphs[i];
+        final double screenX = offset.dx + line.left + line.xOffsets[i];
 
-      // Resolve font family: span style → paragraph style → skip.
-      final String? spanFont =
-          style != null && style._fontFamily.isNotEmpty
-              ? style._fontFamily
-              : null;
-      final String? fontFamily = spanFont ??
-          (paraStyle._fontFamily?.isNotEmpty == true
-              ? paraStyle._fontFamily
-              : null);
-      if (fontFamily == null) continue;
+        final outline = glyph.font.getGlyphOutline(glyph.glyphId);
+        if (outline == null || outline.isEmpty) continue;
 
-      // Load font bytes from FontLoader registry.
-      final fontBytes = FontLoader.getFont(fontFamily);
-      if (fontBytes == null) continue;
+        final double scale = glyph.fontSize / glyph.font.metrics.unitsPerEm;
+        final color = glyph.color;
+        final r = (color.r * 255).round() & 0xff;
+        final g = (color.g * 255).round() & 0xff;
+        final b = (color.b * 255).round() & 0xff;
+        final a = (color.a * 255).round() & 0xff;
 
-      // Parse / retrieve cached TtfFont.
-      final font = _pureDartFontCache.putIfAbsent(
-          fontFamily, () => TtfFont.load(fontBytes));
-
-      // Build an effective TextStyle: inherit missing values from paragraphStyle.
-      final double fontSize =
-          style?._fontSize ?? paraStyle._fontSize ?? 14.0;
-      final effectiveStyle = style ??
-          TextStyle(
-            fontSize: fontSize,
-            fontFamily: fontFamily,
-          );
-
-      // Shape text: resolves glyph IDs, advance widths, kerning,
-      // letterSpacing, wordSpacing, and colour.
-      final shaped = shapeText(span.text, effectiveStyle, font);
-
-      final double scale = fontSize / font.metrics.unitsPerEm;
-      final double baseline = offset.dy + font.metrics.ascender * scale;
-
-      for (final glyph in shaped) {
-        // Skip newline (Phase 5 will handle multi-line layout).
-        // Newline has no outline, so we just skip advancing.
-        final outline = font.getGlyphOutline(glyph.glyphId);
-
-        if (outline != null && !outline.isEmpty) {
-          final color = glyph.color;
-          final r = (color.r * 255).round() & 0xff;
-          final g = (color.g * 255).round() & 0xff;
-          final b = (color.b * 255).round() & 0xff;
-          final a = (color.a * 255).round() & 0xff;
-
-          final glyphPath =
-              _glyphOutlineToPath(outline, penX, baseline, scale);
-          _rasterizeGlyphPath(glyphPath, pixels, width, height, r, g, b, a);
-        }
-
-        penX += glyph.advance;
+        final glyphPath =
+            _glyphOutlineToPath(outline, screenX, screenBaseline, scale);
+        _rasterizeGlyphPath(glyphPath, pixels, width, height, r, g, b, a);
       }
     }
   }
@@ -2470,16 +2433,13 @@ class _PureDartParagraph implements Paragraph {
   bool _disposed = false;
   double _layoutWidth = 0.0;
 
+  // Layout results (populated by layout()).
+  List<LayoutLine> _lines = [];
+  bool _didExceedMaxLines = false;
+
   _PureDartParagraph(this._spans, this._paragraphStyle);
 
-  /// The text spans that make up this paragraph.
-  ///
-  /// Used by the rendering pipeline (Phase 5+) to iterate over styled text.
   List<_TextSpan> get spans => _spans;
-
-  /// The paragraph-level style (alignment, maxLines, etc.).
-  ///
-  /// Used by the layout engine (Phase 5+).
   ParagraphStyle get style => _paragraphStyle;
 
   // ── Paragraph API ──────────────────────────────────────────────────────────
@@ -2488,71 +2448,85 @@ class _PureDartParagraph implements Paragraph {
   bool get debugDisposed => _disposed;
 
   @override
-  void dispose() {
-    _disposed = true;
-  }
+  void dispose() => _disposed = true;
 
-  /// The width of the paragraph after [layout], equal to the constraint width.
   @override
   double get width => _layoutWidth;
 
-  /// The vertical extent of the paragraph.
-  ///
-  /// Returns 0 until Phase 5 (text layout engine) is implemented.
   @override
-  double get height => 0.0;
+  double get height {
+    if (_lines.isEmpty) return 0.0;
+    final last = _lines.last;
+    return last.baseline + last.descent;
+  }
 
-  /// The width of the longest line.
-  ///
-  /// Returns 0 until Phase 5 is implemented.
   @override
-  double get longestLine => 0.0;
+  double get longestLine =>
+      _lines.isEmpty ? 0.0 : _lines.map((l) => l.width).reduce(math.max);
 
-  /// Minimum width that avoids clipping content.
-  ///
-  /// Returns 0 until Phase 5 is implemented.
   @override
-  double get minIntrinsicWidth => 0.0;
+  double get minIntrinsicWidth {
+    // Minimum width needed to avoid clipping: longest single word.
+    double maxWordWidth = 0.0;
+    for (final span in _spans) {
+      double wordWidth = 0.0;
+      for (final g in (span.style != null
+          ? _glyphsForSpan(span)
+          : <ShapedGlyph>[])) {
+        if (g.isSpace || g.isNewline) {
+          if (wordWidth > maxWordWidth) maxWordWidth = wordWidth;
+          wordWidth = 0.0;
+        } else {
+          wordWidth += g.advance;
+        }
+      }
+      if (wordWidth > maxWordWidth) maxWordWidth = wordWidth;
+    }
+    return maxWordWidth;
+  }
 
-  /// Width beyond which increasing the constraint never decreases the height.
-  ///
-  /// Returns 0 until Phase 5 is implemented.
   @override
-  double get maxIntrinsicWidth => 0.0;
+  double get maxIntrinsicWidth {
+    // Width needed to lay out the paragraph on one line (no wrapping).
+    final result = layoutText(_spans, _paragraphStyle, double.infinity);
+    return result.lines.isEmpty
+        ? 0.0
+        : result.lines.map((l) => l.width).reduce(math.max);
+  }
 
-  /// Distance from the top of the paragraph to the alphabetic baseline of the
-  /// first line.
-  ///
-  /// Returns 0 until Phase 5 is implemented.
   @override
-  double get alphabeticBaseline => 0.0;
+  double get alphabeticBaseline =>
+      _lines.isEmpty ? 0.0 : _lines.first.baseline;
 
-  /// Distance from the top of the paragraph to the ideographic baseline of the
-  /// first line.
-  ///
-  /// Returns 0 until Phase 5 is implemented.
   @override
-  double get ideographicBaseline => 0.0;
+  double get ideographicBaseline => alphabeticBaseline;
 
-  /// Whether the paragraph was truncated due to [ParagraphStyle.maxLines].
-  ///
-  /// Always false until Phase 5 is implemented.
   @override
-  bool get didExceedMaxLines => false;
+  bool get didExceedMaxLines => _didExceedMaxLines;
 
-  /// Total number of visible lines.
-  ///
-  /// Returns 0 until Phase 5 is implemented.
   @override
-  int get numberOfLines => 0;
+  int get numberOfLines => _lines.length;
 
-  /// Records the layout constraint width and prepares for rendering.
-  ///
-  /// Must be called before passing this paragraph to [Canvas.drawParagraph].
-  /// The actual text layout is computed in Phase 5.
   @override
   void layout(ParagraphConstraints constraints) {
     _layoutWidth = constraints.width;
+    final result = layoutText(_spans, _paragraphStyle, constraints.width);
+    _lines = result.lines;
+    _didExceedMaxLines = result.didExceedMaxLines;
+  }
+
+  // Helper: shape a span's text to get its glyphs (used for minIntrinsicWidth).
+  List<ShapedGlyph> _glyphsForSpan(_TextSpan span) {
+    final style = span.style!;
+    final String fontFamily = style._fontFamily.isNotEmpty
+        ? style._fontFamily
+        : (_paragraphStyle._fontFamily ?? '');
+    if (fontFamily.isEmpty) return [];
+    final fontBytes = FontLoader.getFont(fontFamily);
+    if (fontBytes == null) return [];
+    final font =
+        _pureDartFontCache.putIfAbsent(fontFamily, () => TtfFont.load(fontBytes));
+    return shapeText(span.text, style, font);
   }
 
   @override
@@ -2586,10 +2560,28 @@ class _PureDartParagraph implements Paragraph {
       const TextRange(start: 0, end: 0);
 
   @override
-  List<LineMetrics> computeLineMetrics() => [];
+  List<LineMetrics> computeLineMetrics() {
+    return [
+      for (int i = 0; i < _lines.length; i++)
+        LineMetrics(
+          hardBreak: _lines[i].hardBreak,
+          ascent: _lines[i].ascent,
+          descent: _lines[i].descent,
+          unscaledAscent: _lines[i].ascent,
+          height: _lines[i].height,
+          width: _lines[i].width,
+          left: _lines[i].left,
+          baseline: _lines[i].baseline,
+          lineNumber: i,
+        ),
+    ];
+  }
 
   @override
-  LineMetrics? getLineMetricsAt(int lineNumber) => null;
+  LineMetrics? getLineMetricsAt(int lineNumber) {
+    if (lineNumber < 0 || lineNumber >= _lines.length) return null;
+    return computeLineMetrics()[lineNumber];
+  }
 
   @override
   int? getLineNumberAt(int codeUnitOffset) => null;

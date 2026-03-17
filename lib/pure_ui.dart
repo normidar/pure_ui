@@ -36,6 +36,7 @@ part 'src/text/glyph_outline.dart';
 part 'src/text/ttf_parser.dart';
 part 'src/text/ttf_font.dart';
 part 'src/text/text_shaper.dart';
+part 'src/text/text_layout.dart';
 part 'hooks.dart';
 part 'image_exporter.dart';
 part 'isolate_name_server.dart';
