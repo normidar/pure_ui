@@ -97,7 +97,8 @@ _LayoutResult layoutText(
     final effectiveStyle =
         style ?? TextStyle(fontSize: fontSize, fontFamily: fontFamily);
 
-    allGlyphs.addAll(shapeText(span.text, effectiveStyle, font));
+    allGlyphs.addAll(
+        shapeText(span.text, effectiveStyle, font, fontKey: cacheKey));
   }
 
   if (allGlyphs.isEmpty) return const _LayoutResult([], false);

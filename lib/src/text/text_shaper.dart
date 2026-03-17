@@ -32,6 +32,10 @@ class ShapedGlyph {
   /// Text shadows to render behind this glyph, or null if none.
   final List<Shadow>? shadows;
 
+  /// Font cache key (from [_fontCacheKey]) used to look up tessellated glyph
+  /// polygon data in [_glyphPolyCache].
+  final String fontKey;
+
   const ShapedGlyph({
     required this.codePoint,
     required this.glyphId,
@@ -42,6 +46,7 @@ class ShapedGlyph {
     this.decorationMask = 0,
     this.decorationColor,
     this.shadows,
+    this.fontKey = '',
   });
 
   /// True if this glyph represents a newline character (U+000A).
@@ -61,7 +66,8 @@ class ShapedGlyph {
 ///
 /// Glyphs for unmapped code points are represented by the font's `.notdef`
 /// glyph (ID 0) so the advance width is still accounted for.
-List<ShapedGlyph> shapeText(String text, TextStyle style, TtfFont font) {
+List<ShapedGlyph> shapeText(String text, TextStyle style, TtfFont font,
+    {String fontKey = ''}) {
   final double fontSize = style._fontSize ?? 14.0;
   final double letterSpacing = style._letterSpacing ?? 0.0;
   final double wordSpacing = style._wordSpacing ?? 0.0;
@@ -102,6 +108,7 @@ List<ShapedGlyph> shapeText(String text, TextStyle style, TtfFont font) {
         decorationMask: decorationMask,
         decorationColor: decorationColor,
         shadows: shadows,
+        fontKey: fontKey,
       ));
       continue;
     }
@@ -135,6 +142,7 @@ List<ShapedGlyph> shapeText(String text, TextStyle style, TtfFont font) {
       decorationMask: decorationMask,
       decorationColor: decorationColor,
       shadows: shadows,
+      fontKey: fontKey,
     ));
   }
 

@@ -2075,9 +2075,12 @@ class _PureDartPicture implements Picture {
         final b = (color.b * 255).round() & 0xff;
         final a = (color.a * 255).round() & 0xff;
 
-        final glyphPath =
-            _glyphOutlineToPath(outline, screenX, screenBaseline, scale);
-        _rasterizeGlyphPath(glyphPath, pixels, width, height, r, g, b, a);
+        final polyKey =
+            _glyphPolyCacheKey(glyph.fontKey, glyph.glyphId, glyph.fontSize);
+        final polys = _glyphPolyCache.putIfAbsent(
+            polyKey, () => _buildGlyphPolys(outline, scale));
+        _rasterizePolys(
+            polys, screenX, screenBaseline, pixels, width, height, r, g, b, a);
       }
 
       // ── Pass 3: decorations ───────────────────────────────────────────────
@@ -2107,9 +2110,94 @@ class _PureDartPicture implements Picture {
     final b = (shadowColor.b * 255).round() & 0xff;
     final a = (shadowColor.a * 255).round() & 0xff;
 
-    final glyphPath =
-        _glyphOutlineToPath(outline, shadowX, shadowBaseline, scale);
-    _rasterizeGlyphPath(glyphPath, pixels, imgWidth, imgHeight, r, g, b, a);
+    final polyKey =
+        _glyphPolyCacheKey(glyph.fontKey, glyph.glyphId, glyph.fontSize);
+    final polys = _glyphPolyCache.putIfAbsent(
+        polyKey, () => _buildGlyphPolys(outline, scale));
+    _rasterizePolys(
+        polys, shadowX, shadowBaseline, pixels, imgWidth, imgHeight, r, g, b, a);
+  }
+
+  /// Rasterises pre-tessellated [polys] into [pixels] at screen offset
+  /// ([dx], [dy]).
+  ///
+  /// [polys] are in normalized glyph space (see [_buildGlyphPolys]).  The
+  /// scanline even-odd fill is identical to [_rasterizeGlyphPath] but operates
+  /// on the already-computed polygon points, avoiding Bézier re-tessellation.
+  void _rasterizePolys(
+    List<List<Offset>> polys,
+    double dx,
+    double dy,
+    Uint8List pixels,
+    int width,
+    int height,
+    int r,
+    int g,
+    int b,
+    int a,
+  ) {
+    if (polys.isEmpty) return;
+
+    double minY = double.infinity, maxY = double.negativeInfinity;
+    for (final sp in polys) {
+      for (final pt in sp) {
+        final ty = pt.dy + dy;
+        if (ty < minY) minY = ty;
+        if (ty > maxY) maxY = ty;
+      }
+    }
+
+    final startY = math.max(0, minY.floor());
+    final endY = math.min(height, maxY.ceil());
+
+    for (int y = startY; y < endY; y++) {
+      final intersections = <double>[];
+      for (final sp in polys) {
+        for (int k = 0; k < sp.length - 1; k++) {
+          final p1y = sp[k].dy + dy;
+          final p2y = sp[k + 1].dy + dy;
+          if ((p1y <= y && p2y > y) || (p2y <= y && p1y > y)) {
+            final p1x = sp[k].dx + dx;
+            final p2x = sp[k + 1].dx + dx;
+            intersections
+                .add(p1x + (y - p1y) * (p2x - p1x) / (p2y - p1y));
+          }
+        }
+      }
+      intersections.sort();
+
+      for (int k = 0; k + 1 < intersections.length; k += 2) {
+        final startX = math.max(0, intersections[k].round());
+        final endX = math.min(width, intersections[k + 1].round());
+        for (int x = startX; x < endX; x++) {
+          final idx = (y * width + x) * 4;
+          if (idx < 0 || idx + 3 >= pixels.length) continue;
+          if (a == 255) {
+            pixels[idx] = r;
+            pixels[idx + 1] = g;
+            pixels[idx + 2] = b;
+            pixels[idx + 3] = 255;
+          } else {
+            final dstA = pixels[idx + 3];
+            final outA = (a + dstA * (255 - a) ~/ 255).clamp(0, 255);
+            if (outA > 0) {
+              pixels[idx] =
+                  ((r * a + pixels[idx] * dstA * (255 - a) ~/ 255) ~/ outA)
+                      .clamp(0, 255);
+              pixels[idx + 1] =
+                  ((g * a + pixels[idx + 1] * dstA * (255 - a) ~/ 255) ~/
+                          outA)
+                      .clamp(0, 255);
+              pixels[idx + 2] =
+                  ((b * a + pixels[idx + 2] * dstA * (255 - a) ~/ 255) ~/
+                          outA)
+                      .clamp(0, 255);
+              pixels[idx + 3] = outA;
+            }
+          }
+        }
+      }
+    }
   }
 
   /// Draws underline, overline, and/or line-through for glyphs in [line]
@@ -2503,6 +2591,101 @@ class _PureDartCodec implements Codec {
 // Keys are "<family>_<weightIndex>_<styleIndex>"; values are TtfFont instances.
 // ─────────────────────────────────────────────────────────────────────────────
 final Map<String, TtfFont> _pureDartFontCache = {};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Glyph polygon cache (Task 8.1 / 8.3)
+//
+// Stores pre-tessellated polygon subpaths for each (font, glyph, fontSize)
+// triple in normalized glyph space: origin at the pen/baseline position,
+//   x = fontX * scale,  y = −fontY * scale  (Y-flipped to screen orientation)
+//
+// By caching here we skip the quadratic-Bézier tessellation (16 segments per
+// curve) on every subsequent render of the same glyph at the same size.
+// ─────────────────────────────────────────────────────────────────────────────
+final Map<String, List<List<Offset>>> _glyphPolyCache = {};
+
+/// Returns the glyph polygon cache key for [fontKey], [glyphId], [fontSize].
+String _glyphPolyCacheKey(String fontKey, int glyphId, double fontSize) =>
+    '$fontKey/$glyphId/${fontSize.toStringAsFixed(2)}';
+
+/// Builds tessellated polygon subpaths for [outline] at [scale].
+///
+/// Points are in *normalized glyph space*: origin at (penX=0, baseline=0),
+///   nx = fontX * scale,  ny = −fontY * scale
+///
+/// Bézier curves are tessellated with 16 linear segments each.
+/// The returned polygons are already closed (last point == first point).
+List<List<Offset>> _buildGlyphPolys(GlyphOutline outline, double scale) {
+  final result = <List<Offset>>[];
+
+  for (final contour in outline.contours) {
+    if (contour.points.isEmpty) continue;
+    final pts = contour.points;
+    final n = pts.length;
+
+    // Expand implicit on-curve points: two consecutive off-curve points imply
+    // an on-curve midpoint between them (TrueType spec §2).
+    final expanded = <GlyphPoint>[];
+    for (int i = 0; i < n; i++) {
+      expanded.add(pts[i]);
+      final next = pts[(i + 1) % n];
+      if (!pts[i].onCurve && !next.onCurve) {
+        expanded.add(GlyphPoint(
+            (pts[i].x + next.x) / 2.0, (pts[i].y + next.y) / 2.0, true));
+      }
+    }
+
+    // Find the first on-curve point to start the polygon.
+    int startIdx = -1;
+    for (int i = 0; i < expanded.length; i++) {
+      if (expanded[i].onCurve) {
+        startIdx = i;
+        break;
+      }
+    }
+    if (startIdx == -1) continue; // all off-curve — degenerate contour
+
+    // Convert a font-space point to normalized glyph space.
+    Offset norm(GlyphPoint p) => Offset(p.x * scale, -p.y * scale);
+
+    final poly = <Offset>[norm(expanded[startIdx])];
+    final en = expanded.length;
+    int i = (startIdx + 1) % en;
+    int walked = 0;
+
+    while (walked < en) {
+      final pt = expanded[i % en];
+      if (pt.onCurve) {
+        poly.add(norm(pt));
+        i = (i + 1) % en;
+        walked++;
+      } else {
+        // Off-curve: quadratic Bézier with the next on-curve as the endpoint.
+        final next = expanded[(i + 1) % en];
+        final start = poly.last;
+        final ctrl = norm(pt);
+        final end = norm(next);
+        const seg = 16;
+        for (int s = 1; s <= seg; s++) {
+          final t = s / seg;
+          final mt = 1.0 - t;
+          poly.add(Offset(
+            mt * mt * start.dx + 2 * mt * t * ctrl.dx + t * t * end.dx,
+            mt * mt * start.dy + 2 * mt * t * ctrl.dy + t * t * end.dy,
+          ));
+        }
+        i = (i + 2) % en;
+        walked += 2;
+      }
+    }
+
+    // Close the polygon.
+    if (poly.isNotEmpty) poly.add(poly.first);
+    if (poly.length >= 3) result.add(poly);
+  }
+
+  return result;
+}
 
 /// Returns a cache key that encodes family name, weight, and style.
 String _fontCacheKey(String family, FontWeight weight, FontStyle style) =>
