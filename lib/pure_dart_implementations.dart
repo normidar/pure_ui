@@ -2145,3 +2145,244 @@ class _PureDartCodec implements Codec {
             resized.getBytes(order: img.ChannelOrder.rgba), targetW, targetH));
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Pure Dart Paragraph implementation
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// A single run of text with a uniform [TextStyle].
+///
+/// Used internally by [_PureDartParagraphBuilder] to accumulate styled spans
+/// before passing them to [_PureDartParagraph].
+class _TextSpan {
+  /// The raw text content of this span.
+  final String text;
+
+  /// The style applied to [text], or null to inherit from the paragraph style.
+  final TextStyle? style;
+
+  _TextSpan(this.text, this.style);
+}
+
+/// Pure Dart implementation of [Paragraph].
+///
+/// Instances are created by [_PureDartParagraphBuilder.build].
+/// Call [layout] before accessing any metric properties or drawing.
+///
+/// Text rendering (glyph rasterisation) is implemented in later phases;
+/// Phase 1 provides a fully typed skeleton so that the API is functional.
+class _PureDartParagraph implements Paragraph {
+  final List<_TextSpan> _spans;
+  final ParagraphStyle _paragraphStyle;
+
+  bool _disposed = false;
+  double _layoutWidth = 0.0;
+
+  _PureDartParagraph(this._spans, this._paragraphStyle);
+
+  /// The text spans that make up this paragraph.
+  ///
+  /// Used by the rendering pipeline (Phase 5+) to iterate over styled text.
+  List<_TextSpan> get spans => _spans;
+
+  /// The paragraph-level style (alignment, maxLines, etc.).
+  ///
+  /// Used by the layout engine (Phase 5+).
+  ParagraphStyle get style => _paragraphStyle;
+
+  // ── Paragraph API ──────────────────────────────────────────────────────────
+
+  @override
+  bool get debugDisposed => _disposed;
+
+  @override
+  void dispose() {
+    _disposed = true;
+  }
+
+  /// The width of the paragraph after [layout], equal to the constraint width.
+  @override
+  double get width => _layoutWidth;
+
+  /// The vertical extent of the paragraph.
+  ///
+  /// Returns 0 until Phase 5 (text layout engine) is implemented.
+  @override
+  double get height => 0.0;
+
+  /// The width of the longest line.
+  ///
+  /// Returns 0 until Phase 5 is implemented.
+  @override
+  double get longestLine => 0.0;
+
+  /// Minimum width that avoids clipping content.
+  ///
+  /// Returns 0 until Phase 5 is implemented.
+  @override
+  double get minIntrinsicWidth => 0.0;
+
+  /// Width beyond which increasing the constraint never decreases the height.
+  ///
+  /// Returns 0 until Phase 5 is implemented.
+  @override
+  double get maxIntrinsicWidth => 0.0;
+
+  /// Distance from the top of the paragraph to the alphabetic baseline of the
+  /// first line.
+  ///
+  /// Returns 0 until Phase 5 is implemented.
+  @override
+  double get alphabeticBaseline => 0.0;
+
+  /// Distance from the top of the paragraph to the ideographic baseline of the
+  /// first line.
+  ///
+  /// Returns 0 until Phase 5 is implemented.
+  @override
+  double get ideographicBaseline => 0.0;
+
+  /// Whether the paragraph was truncated due to [ParagraphStyle.maxLines].
+  ///
+  /// Always false until Phase 5 is implemented.
+  @override
+  bool get didExceedMaxLines => false;
+
+  /// Total number of visible lines.
+  ///
+  /// Returns 0 until Phase 5 is implemented.
+  @override
+  int get numberOfLines => 0;
+
+  /// Records the layout constraint width and prepares for rendering.
+  ///
+  /// Must be called before passing this paragraph to [Canvas.drawParagraph].
+  /// The actual text layout is computed in Phase 5.
+  @override
+  void layout(ParagraphConstraints constraints) {
+    _layoutWidth = constraints.width;
+  }
+
+  @override
+  List<TextBox> getBoxesForRange(
+    int start,
+    int end, {
+    BoxHeightStyle boxHeightStyle = BoxHeightStyle.tight,
+    BoxWidthStyle boxWidthStyle = BoxWidthStyle.tight,
+  }) =>
+      [];
+
+  @override
+  List<TextBox> getBoxesForPlaceholders() => [];
+
+  @override
+  TextPosition getPositionForOffset(Offset offset) =>
+      const TextPosition(offset: 0);
+
+  @override
+  GlyphInfo? getClosestGlyphInfoForOffset(Offset offset) => null;
+
+  @override
+  GlyphInfo? getGlyphInfoAt(int codeUnitOffset) => null;
+
+  @override
+  TextRange getWordBoundary(TextPosition position) =>
+      const TextRange(start: 0, end: 0);
+
+  @override
+  TextRange getLineBoundary(TextPosition position) =>
+      const TextRange(start: 0, end: 0);
+
+  @override
+  List<LineMetrics> computeLineMetrics() => [];
+
+  @override
+  LineMetrics? getLineMetricsAt(int lineNumber) => null;
+
+  @override
+  int? getLineNumberAt(int codeUnitOffset) => null;
+}
+
+/// Pure Dart implementation of [ParagraphBuilder].
+///
+/// Builds a [_PureDartParagraph] from a sequence of styled text spans.
+/// Mirrors the [ParagraphBuilder] contract from [dart:ui]:
+///
+/// ```dart
+/// final builder = ParagraphBuilder(ParagraphStyle(fontFamily: 'Roboto'));
+/// builder.pushStyle(TextStyle(fontSize: 16, color: Color(0xFF000000)));
+/// builder.addText('Hello, world!');
+/// builder.pop();
+/// final paragraph = builder.build();
+/// paragraph.layout(const ParagraphConstraints(width: 300));
+/// canvas.drawParagraph(paragraph, Offset.zero);
+/// ```
+class _PureDartParagraphBuilder implements ParagraphBuilder {
+  final ParagraphStyle _paragraphStyle;
+  final List<_TextSpan> _spans = [];
+  final List<TextStyle> _styleStack = [];
+  int _placeholderCount = 0;
+  final List<double> _placeholderScales = [];
+
+  _PureDartParagraphBuilder(this._paragraphStyle);
+
+  @override
+  int get placeholderCount => _placeholderCount;
+
+  @override
+  List<double> get placeholderScales => List.unmodifiable(_placeholderScales);
+
+  /// Pushes [style] onto the style stack.
+  ///
+  /// Subsequent [addText] calls inherit this style until [pop] is called.
+  @override
+  void pushStyle(TextStyle style) {
+    _styleStack.add(style);
+  }
+
+  /// Removes the most recently pushed style from the stack.
+  ///
+  /// Has no effect if the stack is already empty.
+  @override
+  void pop() {
+    if (_styleStack.isNotEmpty) {
+      _styleStack.removeLast();
+    }
+  }
+
+  /// Appends [text] as a new span using the current top-of-stack style.
+  ///
+  /// If no style has been pushed, the span inherits from [ParagraphStyle].
+  @override
+  void addText(String text) {
+    _spans.add(
+      _TextSpan(text, _styleStack.isEmpty ? null : _styleStack.last),
+    );
+  }
+
+  /// Inserts an inline placeholder and records its scale.
+  @override
+  void addPlaceholder(
+    double width,
+    double height,
+    PlaceholderAlignment alignment, {
+    double scale = 1.0,
+    double? baselineOffset,
+    TextBaseline? baseline,
+  }) {
+    _placeholderCount++;
+    _placeholderScales.add(scale);
+    // U+FFFC OBJECT REPLACEMENT CHARACTER represents the placeholder in text.
+    _spans.add(
+      _TextSpan('\uFFFC', _styleStack.isEmpty ? null : _styleStack.last),
+    );
+  }
+
+  /// Builds and returns the [Paragraph].
+  ///
+  /// The builder must not be used after calling [build].
+  @override
+  Paragraph build() {
+    return _PureDartParagraph(List.unmodifiable(_spans), _paragraphStyle);
+  }
+}

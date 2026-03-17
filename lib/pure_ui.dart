@@ -29,6 +29,7 @@ import 'package:vector_math/vector_math_64.dart';
 part 'annotations.dart';
 part 'channel_buffers.dart';
 part 'compositing.dart';
+part 'font_loader.dart';
 part 'geometry.dart';
 part 'hooks.dart';
 part 'image_exporter.dart';

@@ -3429,7 +3429,7 @@ base class _NativeParagraph extends NativeFieldWrapperClass1 implements Paragrap
 abstract class ParagraphBuilder {
   /// Creates a new [ParagraphBuilder] object, which is used to create a
   /// [Paragraph].
-  factory ParagraphBuilder(ParagraphStyle style) = _NativeParagraphBuilder;
+  factory ParagraphBuilder(ParagraphStyle style) = _PureDartParagraphBuilder;
 
   /// The number of placeholders currently in the paragraph.
   int get placeholderCount;
@@ -3519,6 +3519,7 @@ abstract class ParagraphBuilder {
   Paragraph build();
 }
 
+// ignore: unused_element
 base class _NativeParagraphBuilder extends NativeFieldWrapperClass1 implements ParagraphBuilder {
   _NativeParagraphBuilder(ParagraphStyle style)
     : _defaultLeadingDistribution = style._leadingDistribution {
