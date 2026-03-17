@@ -2500,9 +2500,89 @@ class _PureDartCodec implements Codec {
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Module-level TTF font cache (shared across all canvas instances).
-// Keys are font family names; values are parsed TtfFont instances.
+// Keys are "<family>_<weightIndex>_<styleIndex>"; values are TtfFont instances.
 // ─────────────────────────────────────────────────────────────────────────────
 final Map<String, TtfFont> _pureDartFontCache = {};
+
+/// Returns a cache key that encodes family name, weight, and style.
+String _fontCacheKey(String family, FontWeight weight, FontStyle style) =>
+    '${family}_${weight.index}_${style.index}';
+
+/// Merges [child] style onto [parent], with [child] properties taking
+/// precedence for any property that the child explicitly sets.
+///
+/// For encoded properties the bit flag in [TextStyle._encoded[0]] determines
+/// whether the property is set. Nullable scalar fields ([_fontSize] etc.)
+/// follow the same rule: child wins when non-null.
+TextStyle _mergeTextStyle(TextStyle parent, TextStyle child) {
+  // Encoded properties (bit-flag controlled).
+  Color? color;
+  if ((child._encoded[0] & (1 << 1)) != 0) {
+    color = Color(child._encoded[1]);
+  } else if ((parent._encoded[0] & (1 << 1)) != 0) {
+    color = Color(parent._encoded[1]);
+  }
+
+  TextDecoration? decoration;
+  if ((child._encoded[0] & (1 << 2)) != 0) {
+    decoration = TextDecoration._(child._encoded[2]);
+  } else if ((parent._encoded[0] & (1 << 2)) != 0) {
+    decoration = TextDecoration._(parent._encoded[2]);
+  }
+
+  Color? decorationColor;
+  if ((child._encoded[0] & (1 << 3)) != 0) {
+    decorationColor = Color(child._encoded[3]);
+  } else if ((parent._encoded[0] & (1 << 3)) != 0) {
+    decorationColor = Color(parent._encoded[3]);
+  }
+
+  TextDecorationStyle? decorationStyle;
+  if ((child._encoded[0] & (1 << 4)) != 0) {
+    decorationStyle = TextDecorationStyle.values[child._encoded[4]];
+  } else if ((parent._encoded[0] & (1 << 4)) != 0) {
+    decorationStyle = TextDecorationStyle.values[parent._encoded[4]];
+  }
+
+  FontWeight? fontWeight;
+  if ((child._encoded[0] & (1 << 5)) != 0) {
+    fontWeight = FontWeight.values[child._encoded[5]];
+  } else if ((parent._encoded[0] & (1 << 5)) != 0) {
+    fontWeight = FontWeight.values[parent._encoded[5]];
+  }
+
+  FontStyle? fontStyle;
+  if ((child._encoded[0] & (1 << 6)) != 0) {
+    fontStyle = FontStyle.values[child._encoded[6]];
+  } else if ((parent._encoded[0] & (1 << 6)) != 0) {
+    fontStyle = FontStyle.values[parent._encoded[6]];
+  }
+
+  // String / nullable-scalar properties.
+  final String fontFamily = child._fontFamily.isNotEmpty
+      ? child._fontFamily
+      : parent._fontFamily;
+
+  return TextStyle(
+    color: color,
+    decoration: decoration,
+    decorationColor: decorationColor,
+    decorationStyle: decorationStyle,
+    fontWeight: fontWeight,
+    fontStyle: fontStyle,
+    fontFamily: fontFamily.isNotEmpty ? fontFamily : null,
+    fontSize: child._fontSize ?? parent._fontSize,
+    letterSpacing: child._letterSpacing ?? parent._letterSpacing,
+    wordSpacing: child._wordSpacing ?? parent._wordSpacing,
+    height: child._height ?? parent._height,
+    decorationThickness:
+        child._decorationThickness ?? parent._decorationThickness,
+    shadows: child._shadows ?? parent._shadows,
+    fontFeatures: child._fontFeatures ?? parent._fontFeatures,
+    fontVariations: child._fontVariations ?? parent._fontVariations,
+    locale: child._locale ?? parent._locale,
+  );
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Pure Dart Paragraph implementation
@@ -2625,10 +2705,20 @@ class _PureDartParagraph implements Paragraph {
         ? style._fontFamily
         : (_paragraphStyle._fontFamily ?? '');
     if (fontFamily.isEmpty) return [];
-    final fontBytes = FontLoader.getFont(fontFamily);
+    final FontWeight fontWeight =
+        (style._encoded[0] & (1 << 5)) != 0
+            ? FontWeight.values[style._encoded[5]]
+            : FontWeight.normal;
+    final FontStyle fontStyle =
+        (style._encoded[0] & (1 << 6)) != 0
+            ? FontStyle.values[style._encoded[6]]
+            : FontStyle.normal;
+    final fontBytes =
+        FontLoader.getFont(fontFamily, weight: fontWeight, style: fontStyle);
     if (fontBytes == null) return [];
-    final font =
-        _pureDartFontCache.putIfAbsent(fontFamily, () => TtfFont.load(fontBytes));
+    final cacheKey = _fontCacheKey(fontFamily, fontWeight, fontStyle);
+    final font = _pureDartFontCache.putIfAbsent(
+        cacheKey, () => TtfFont.load(fontBytes));
     return shapeText(span.text, style, font);
   }
 
@@ -2722,9 +2812,16 @@ class _PureDartParagraphBuilder implements ParagraphBuilder {
   /// Pushes [style] onto the style stack.
   ///
   /// Subsequent [addText] calls inherit this style until [pop] is called.
+  ///
+  /// If a style is already on the stack the new style is merged onto it so
+  /// that properties not explicitly set in [style] are inherited from the
+  /// enclosing span.
   @override
   void pushStyle(TextStyle style) {
-    _styleStack.add(style);
+    final merged = _styleStack.isEmpty
+        ? style
+        : _mergeTextStyle(_styleStack.last, style);
+    _styleStack.add(merged);
   }
 
   /// Removes the most recently pushed style from the stack.

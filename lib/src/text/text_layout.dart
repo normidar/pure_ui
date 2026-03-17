@@ -76,11 +76,23 @@ _LayoutResult layoutText(
         (paraStyle._fontFamily?.isNotEmpty == true ? paraStyle._fontFamily : null);
     if (fontFamily == null) continue;
 
-    final fontBytes = FontLoader.getFont(fontFamily);
+    // Resolve font weight and style for variant lookup.
+    final FontWeight fontWeight = (style != null &&
+            (style._encoded[0] & (1 << 5)) != 0)
+        ? FontWeight.values[style._encoded[5]]
+        : FontWeight.normal;
+    final FontStyle fontStyle =
+        (style != null && (style._encoded[0] & (1 << 6)) != 0)
+            ? FontStyle.values[style._encoded[6]]
+            : FontStyle.normal;
+
+    final fontBytes =
+        FontLoader.getFont(fontFamily, weight: fontWeight, style: fontStyle);
     if (fontBytes == null) continue;
 
-    final font =
-        _pureDartFontCache.putIfAbsent(fontFamily, () => TtfFont.load(fontBytes));
+    final cacheKey = _fontCacheKey(fontFamily, fontWeight, fontStyle);
+    final font = _pureDartFontCache.putIfAbsent(
+        cacheKey, () => TtfFont.load(fontBytes));
     final double fontSize = style?._fontSize ?? paraStyle._fontSize ?? 14.0;
     final effectiveStyle =
         style ?? TextStyle(fontSize: fontSize, fontFamily: fontFamily);
