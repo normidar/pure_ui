@@ -1460,6 +1460,20 @@ class _PureDartPicture implements Picture {
     return points;
   }
 
+  List<Offset> _generateQuadraticBezierPoints(
+      Offset start, Offset control, Offset end) {
+    const int segments = 16;
+    final points = <Offset>[];
+    for (int i = 1; i <= segments; i++) {
+      final t = i / segments;
+      final mt = 1.0 - t;
+      final x = mt * mt * start.dx + 2 * mt * t * control.dx + t * t * end.dx;
+      final y = mt * mt * start.dy + 2 * mt * t * control.dy + t * t * end.dy;
+      points.add(Offset(x, y));
+    }
+    return points;
+  }
+
   /// Helper method to get color from a gradient shader at a specific pixel position
   Color _getGradientColor(Gradient gradient, double x, double y) {
     if (gradient._type == GradientType.linear) {
@@ -1665,6 +1679,17 @@ class _PureDartPicture implements Picture {
           height,
         );
         break;
+      case _DrawCommandType.drawParagraph:
+        if (command.args[0] is _PureDartParagraph) {
+          _drawParagraphToPixels(
+            command.args[0] as _PureDartParagraph,
+            command.args[1] as Offset,
+            pixels,
+            width,
+            height,
+          );
+        }
+        break;
       // Add more command processing as needed
       default:
         // Ignore unsupported commands for now
@@ -1744,6 +1769,20 @@ class _PureDartPicture implements Picture {
           currentX = x3;
           currentY = y3;
           break;
+        case _PathCommandType.quadraticBezierTo:
+          final qx1 = command.args[0] as double;
+          final qy1 = command.args[1] as double;
+          final qx2 = command.args[2] as double;
+          final qy2 = command.args[3] as double;
+          final qPts = _generateQuadraticBezierPoints(
+            Offset(currentX, currentY),
+            Offset(qx1, qy1),
+            Offset(qx2, qy2),
+          );
+          pathPoints.addAll(qPts);
+          currentX = qx2;
+          currentY = qy2;
+          break;
         case _PathCommandType.close:
           if (pathPoints.isNotEmpty) {
             // Close the path by adding the first point
@@ -1805,6 +1844,254 @@ class _PureDartPicture implements Picture {
       final start = points[i];
       final end = points[i + 1];
       _drawLineSegment(start, end, stroke, pixels, width, height, r, g, b, a);
+    }
+  }
+
+  // ── Glyph rasterization (Phase 3) ─────────────────────────────────────────
+
+  /// Converts a [GlyphOutline] (font units, Y-up) to a [_PureDartPath]
+  /// in screen coordinates (pixels, Y-down).
+  ///
+  /// [penX]: left edge of the glyph in screen pixels.
+  /// [baseline]: Y position of the text baseline in screen pixels.
+  /// [scale]: `fontSize / unitsPerEm`.
+  _PureDartPath _glyphOutlineToPath(
+      GlyphOutline outline, double penX, double baseline, double scale) {
+    final path = _PureDartPath();
+
+    for (final contour in outline.contours) {
+      if (contour.points.isEmpty) continue;
+      final pts = contour.points;
+      final n = pts.length;
+
+      // Expand implicit on-curve points: if two consecutive points are both
+      // off-curve, insert an implied on-curve point at their midpoint.
+      final List<GlyphPoint> expanded = [];
+      for (int i = 0; i < n; i++) {
+        expanded.add(pts[i]);
+        final next = pts[(i + 1) % n];
+        if (!pts[i].onCurve && !next.onCurve) {
+          expanded.add(GlyphPoint(
+              (pts[i].x + next.x) / 2.0, (pts[i].y + next.y) / 2.0, true));
+        }
+      }
+
+      // Find the first on-curve point to use as the moveTo target.
+      int startIdx = -1;
+      for (int i = 0; i < expanded.length; i++) {
+        if (expanded[i].onCurve) {
+          startIdx = i;
+          break;
+        }
+      }
+      if (startIdx == -1) continue; // all off-curve — skip
+
+      double sx(double fx) => penX + fx * scale;
+      double sy(double fy) => baseline - fy * scale; // Y-flip
+
+      final startPt = expanded[startIdx];
+      path.moveTo(sx(startPt.x), sy(startPt.y));
+
+      final en = expanded.length;
+      int i = (startIdx + 1) % en;
+      int walked = 0;
+      while (walked < en) {
+        final pt = expanded[i % en];
+        if (pt.onCurve) {
+          path.lineTo(sx(pt.x), sy(pt.y));
+          i = (i + 1) % en;
+          walked++;
+        } else {
+          // After expansion every off-curve is immediately followed by on-curve.
+          final next = expanded[(i + 1) % en];
+          path.quadraticBezierTo(
+              sx(pt.x), sy(pt.y), sx(next.x), sy(next.y));
+          i = (i + 2) % en;
+          walked += 2;
+        }
+      }
+      path.close();
+    }
+    return path;
+  }
+
+  /// Rasterises [path] into [pixels] using a scanline fill that respects
+  /// multiple sub-paths (contours) with even-odd winding.
+  ///
+  /// Handles `moveTo`, `lineTo`, `quadraticBezierTo`, and `close` commands.
+  void _rasterizeGlyphPath(_PureDartPath path, Uint8List pixels, int width,
+      int height, int r, int g, int b, int a) {
+    final List<List<Offset>> subpaths = [];
+    List<Offset>? current;
+    double curX = 0, curY = 0;
+
+    for (final cmd in path._commands) {
+      switch (cmd.type) {
+        case _PathCommandType.moveTo:
+          if (current != null && current.length >= 3) subpaths.add(current);
+          curX = cmd.args[0] as double;
+          curY = cmd.args[1] as double;
+          current = [Offset(curX, curY)];
+          break;
+        case _PathCommandType.lineTo:
+          curX = cmd.args[0] as double;
+          curY = cmd.args[1] as double;
+          current?.add(Offset(curX, curY));
+          break;
+        case _PathCommandType.quadraticBezierTo:
+          final cx = cmd.args[0] as double;
+          final cy = cmd.args[1] as double;
+          final ex = cmd.args[2] as double;
+          final ey = cmd.args[3] as double;
+          current?.addAll(_generateQuadraticBezierPoints(
+              Offset(curX, curY), Offset(cx, cy), Offset(ex, ey)));
+          curX = ex;
+          curY = ey;
+          break;
+        case _PathCommandType.close:
+          if (current != null && current.isNotEmpty) {
+            current.add(current.first);
+            if (current.length >= 3) subpaths.add(current);
+          }
+          current = null;
+          break;
+        default:
+          break;
+      }
+    }
+    if (current != null && current.length >= 3) subpaths.add(current);
+    if (subpaths.isEmpty) return;
+
+    // Find global bounding box.
+    double minY = double.infinity, maxY = double.negativeInfinity;
+    for (final sp in subpaths) {
+      for (final pt in sp) {
+        if (pt.dy < minY) minY = pt.dy;
+        if (pt.dy > maxY) maxY = pt.dy;
+      }
+    }
+
+    final startY = math.max(0, minY.floor());
+    final endY = math.min(height, maxY.ceil());
+
+    for (int y = startY; y < endY; y++) {
+      final intersections = <double>[];
+      for (final sp in subpaths) {
+        for (int k = 0; k < sp.length - 1; k++) {
+          final p1 = sp[k];
+          final p2 = sp[k + 1];
+          if ((p1.dy <= y && p2.dy > y) || (p2.dy <= y && p1.dy > y)) {
+            intersections
+                .add(p1.dx + (y - p1.dy) * (p2.dx - p1.dx) / (p2.dy - p1.dy));
+          }
+        }
+      }
+      intersections.sort();
+
+      // Even-odd fill: fill between pairs of intersections.
+      for (int k = 0; k + 1 < intersections.length; k += 2) {
+        final startX = math.max(0, intersections[k].round());
+        final endX = math.min(width, intersections[k + 1].round());
+        for (int x = startX; x < endX; x++) {
+          final idx = (y * width + x) * 4;
+          if (idx < 0 || idx + 3 >= pixels.length) continue;
+          if (a == 255) {
+            pixels[idx] = r;
+            pixels[idx + 1] = g;
+            pixels[idx + 2] = b;
+            pixels[idx + 3] = 255;
+          } else {
+            // Alpha-blend over existing pixel.
+            final dstA = pixels[idx + 3];
+            final outA = (a + dstA * (255 - a) ~/ 255).clamp(0, 255);
+            if (outA > 0) {
+              pixels[idx] =
+                  ((r * a + pixels[idx] * dstA * (255 - a) ~/ 255) ~/ outA)
+                      .clamp(0, 255);
+              pixels[idx + 1] =
+                  ((g * a + pixels[idx + 1] * dstA * (255 - a) ~/ 255) ~/
+                          outA)
+                      .clamp(0, 255);
+              pixels[idx + 2] =
+                  ((b * a + pixels[idx + 2] * dstA * (255 - a) ~/ 255) ~/
+                          outA)
+                      .clamp(0, 255);
+              pixels[idx + 3] = outA;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /// Renders [paragraph] at [offset] into [pixels].
+  ///
+  /// Looks up the font family via [FontLoader], parses the TTF (cached in
+  /// [_pureDartFontCache]), and rasterises each glyph using the even-odd
+  /// scanline fill on the TrueType quadratic Bézier outlines.
+  void _drawParagraphToPixels(_PureDartParagraph paragraph, Offset offset,
+      Uint8List pixels, int width, int height) {
+    final paraStyle = paragraph._paragraphStyle;
+    double penX = offset.dx;
+
+    for (final span in paragraph._spans) {
+      final style = span.style;
+
+      // Resolve font family (span style → paragraph style → give up).
+      final String? spanFont =
+          style != null && style._fontFamily.isNotEmpty
+              ? style._fontFamily
+              : null;
+      final String? fontFamily = spanFont ??
+          (paraStyle._fontFamily?.isNotEmpty == true
+              ? paraStyle._fontFamily
+              : null);
+      if (fontFamily == null) continue;
+
+      // Resolve font size.
+      final double fontSize = style?._fontSize ?? paraStyle._fontSize ?? 14.0;
+
+      // Resolve text color (bit 1 of encoded[0] = color present).
+      Color color = const Color(0xFF000000);
+      if (style != null && (style._encoded[0] & (1 << 1)) != 0) {
+        color = Color(style._encoded[1]);
+      }
+      final int r = (color.r * 255).round() & 0xff;
+      final int g = (color.g * 255).round() & 0xff;
+      final int b = (color.b * 255).round() & 0xff;
+      final int a = (color.a * 255).round() & 0xff;
+
+      // Load font bytes from FontLoader registry.
+      final fontBytes = FontLoader.getFont(fontFamily);
+      if (fontBytes == null) continue;
+
+      // Parse / retrieve cached TtfFont.
+      final font = _pureDartFontCache.putIfAbsent(
+          fontFamily, () => TtfFont.load(fontBytes));
+
+      final double scale = fontSize / font.metrics.unitsPerEm;
+      final double baseline = offset.dy + font.metrics.ascender * scale;
+
+      for (final rune in span.text.runes) {
+        if (rune == 0x0A) continue; // skip newline (Phase 5 handles layout)
+
+        final glyphId = font.getGlyphId(rune);
+        if (glyphId == null) {
+          penX += fontSize * 0.5;
+          continue;
+        }
+
+        final advance = font.getAdvanceWidth(glyphId, fontSize);
+        final outline = font.getGlyphOutline(glyphId);
+
+        if (outline != null && !outline.isEmpty) {
+          final glyphPath =
+              _glyphOutlineToPath(outline, penX, baseline, scale);
+          _rasterizeGlyphPath(glyphPath, pixels, width, height, r, g, b, a);
+        }
+
+        penX += advance;
+      }
     }
   }
 
@@ -2145,6 +2432,12 @@ class _PureDartCodec implements Codec {
             resized.getBytes(order: img.ChannelOrder.rgba), targetW, targetH));
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Module-level TTF font cache (shared across all canvas instances).
+// Keys are font family names; values are parsed TtfFont instances.
+// ─────────────────────────────────────────────────────────────────────────────
+final Map<String, TtfFont> _pureDartFontCache = {};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Pure Dart Paragraph implementation
