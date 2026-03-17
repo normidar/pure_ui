@@ -2037,7 +2037,7 @@ class _PureDartPicture implements Picture {
     for (final span in paragraph._spans) {
       final style = span.style;
 
-      // Resolve font family (span style → paragraph style → give up).
+      // Resolve font family: span style → paragraph style → skip.
       final String? spanFont =
           style != null && style._fontFamily.isNotEmpty
               ? style._fontFamily
@@ -2048,19 +2048,6 @@ class _PureDartPicture implements Picture {
               : null);
       if (fontFamily == null) continue;
 
-      // Resolve font size.
-      final double fontSize = style?._fontSize ?? paraStyle._fontSize ?? 14.0;
-
-      // Resolve text color (bit 1 of encoded[0] = color present).
-      Color color = const Color(0xFF000000);
-      if (style != null && (style._encoded[0] & (1 << 1)) != 0) {
-        color = Color(style._encoded[1]);
-      }
-      final int r = (color.r * 255).round() & 0xff;
-      final int g = (color.g * 255).round() & 0xff;
-      final int b = (color.b * 255).round() & 0xff;
-      final int a = (color.a * 255).round() & 0xff;
-
       // Load font bytes from FontLoader registry.
       final fontBytes = FontLoader.getFont(fontFamily);
       if (fontBytes == null) continue;
@@ -2069,28 +2056,40 @@ class _PureDartPicture implements Picture {
       final font = _pureDartFontCache.putIfAbsent(
           fontFamily, () => TtfFont.load(fontBytes));
 
+      // Build an effective TextStyle: inherit missing values from paragraphStyle.
+      final double fontSize =
+          style?._fontSize ?? paraStyle._fontSize ?? 14.0;
+      final effectiveStyle = style ??
+          TextStyle(
+            fontSize: fontSize,
+            fontFamily: fontFamily,
+          );
+
+      // Shape text: resolves glyph IDs, advance widths, kerning,
+      // letterSpacing, wordSpacing, and colour.
+      final shaped = shapeText(span.text, effectiveStyle, font);
+
       final double scale = fontSize / font.metrics.unitsPerEm;
       final double baseline = offset.dy + font.metrics.ascender * scale;
 
-      for (final rune in span.text.runes) {
-        if (rune == 0x0A) continue; // skip newline (Phase 5 handles layout)
-
-        final glyphId = font.getGlyphId(rune);
-        if (glyphId == null) {
-          penX += fontSize * 0.5;
-          continue;
-        }
-
-        final advance = font.getAdvanceWidth(glyphId, fontSize);
-        final outline = font.getGlyphOutline(glyphId);
+      for (final glyph in shaped) {
+        // Skip newline (Phase 5 will handle multi-line layout).
+        // Newline has no outline, so we just skip advancing.
+        final outline = font.getGlyphOutline(glyph.glyphId);
 
         if (outline != null && !outline.isEmpty) {
+          final color = glyph.color;
+          final r = (color.r * 255).round() & 0xff;
+          final g = (color.g * 255).round() & 0xff;
+          final b = (color.b * 255).round() & 0xff;
+          final a = (color.a * 255).round() & 0xff;
+
           final glyphPath =
               _glyphOutlineToPath(outline, penX, baseline, scale);
           _rasterizeGlyphPath(glyphPath, pixels, width, height, r, g, b, a);
         }
 
-        penX += advance;
+        penX += glyph.advance;
       }
     }
   }
