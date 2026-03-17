@@ -22,6 +22,16 @@ class ShapedGlyph {
   /// Resolved text colour.
   final Color color;
 
+  /// Bit mask of active text decorations.
+  /// 0x1 = underline, 0x2 = overline, 0x4 = line-through.
+  final int decorationMask;
+
+  /// Colour override for the text decoration, or null to use [color].
+  final Color? decorationColor;
+
+  /// Text shadows to render behind this glyph, or null if none.
+  final List<Shadow>? shadows;
+
   const ShapedGlyph({
     required this.codePoint,
     required this.glyphId,
@@ -29,6 +39,9 @@ class ShapedGlyph {
     required this.fontSize,
     required this.advance,
     required this.color,
+    this.decorationMask = 0,
+    this.decorationColor,
+    this.shadows,
   });
 
   /// True if this glyph represents a newline character (U+000A).
@@ -59,6 +72,20 @@ List<ShapedGlyph> shapeText(String text, TextStyle style, TtfFont font) {
     color = Color(style._encoded[1]);
   }
 
+  // Resolve text decorations (bit 2 of encoded[0] → mask in encoded[2]).
+  final int decorationMask =
+      (style._encoded[0] & (1 << 2)) != 0 ? style._encoded[2] : 0;
+
+  // Resolve decoration colour (bit 3 of encoded[0] → ARGB in encoded[3]).
+  final Color? decorationColor =
+      (style._encoded[0] & (1 << 3)) != 0 ? Color(style._encoded[3]) : null;
+
+  // Resolve shadows from the direct _shadows field.
+  final List<Shadow>? shadows =
+      (style._shadows != null && style._shadows!.isNotEmpty)
+          ? style._shadows
+          : null;
+
   final List<ShapedGlyph> result = [];
 
   for (final codePoint in text.runes) {
@@ -72,6 +99,9 @@ List<ShapedGlyph> shapeText(String text, TextStyle style, TtfFont font) {
         fontSize: fontSize,
         advance: 0,
         color: color,
+        decorationMask: decorationMask,
+        decorationColor: decorationColor,
+        shadows: shadows,
       ));
       continue;
     }
@@ -102,6 +132,9 @@ List<ShapedGlyph> shapeText(String text, TextStyle style, TtfFont font) {
       fontSize: fontSize,
       advance: advance,
       color: color,
+      decorationMask: decorationMask,
+      decorationColor: decorationColor,
+      shadows: shadows,
     ));
   }
 

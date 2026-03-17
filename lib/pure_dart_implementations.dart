@@ -2029,6 +2029,11 @@ class _PureDartPicture implements Picture {
   /// Looks up the font family via [FontLoader], parses the TTF (cached in
   /// [_pureDartFontCache]), and rasterises each glyph using the even-odd
   /// scanline fill on the TrueType quadratic Bézier outlines.
+  ///
+  /// Rendering order per line:
+  ///   1. Text shadows (rendered behind the glyphs).
+  ///   2. Glyph ink.
+  ///   3. Text decorations (underline / overline / line-through).
   void _drawParagraphToPixels(_PureDartParagraph paragraph, Offset offset,
       Uint8List pixels, int width, int height) {
     // Use pre-computed layout lines from paragraph.layout().
@@ -2036,6 +2041,26 @@ class _PureDartPicture implements Picture {
     for (final line in paragraph._lines) {
       final double screenBaseline = offset.dy + line.baseline;
 
+      // ── Pass 1: shadows ────────────────────────────────────────────────────
+      for (int i = 0; i < line.glyphs.length; i++) {
+        final glyph = line.glyphs[i];
+        final shadows = glyph.shadows;
+        if (shadows == null) continue;
+        final double screenX = offset.dx + line.left + line.xOffsets[i];
+        for (final shadow in shadows) {
+          _renderGlyphShadow(
+            glyph,
+            screenX + shadow.offset.dx,
+            screenBaseline + shadow.offset.dy,
+            shadow.color,
+            pixels,
+            width,
+            height,
+          );
+        }
+      }
+
+      // ── Pass 2: glyph ink ─────────────────────────────────────────────────
       for (int i = 0; i < line.glyphs.length; i++) {
         final glyph = line.glyphs[i];
         final double screenX = offset.dx + line.left + line.xOffsets[i];
@@ -2053,6 +2078,84 @@ class _PureDartPicture implements Picture {
         final glyphPath =
             _glyphOutlineToPath(outline, screenX, screenBaseline, scale);
         _rasterizeGlyphPath(glyphPath, pixels, width, height, r, g, b, a);
+      }
+
+      // ── Pass 3: decorations ───────────────────────────────────────────────
+      _drawLineDecorations(
+          line, offset, screenBaseline, pixels, width, height);
+    }
+  }
+
+  /// Renders [glyph] at ([shadowX], [shadowBaseline]) using [shadowColor].
+  ///
+  /// Blur is not applied; the shadow is drawn as a solid silhouette.
+  void _renderGlyphShadow(
+    ShapedGlyph glyph,
+    double shadowX,
+    double shadowBaseline,
+    Color shadowColor,
+    Uint8List pixels,
+    int imgWidth,
+    int imgHeight,
+  ) {
+    final outline = glyph.font.getGlyphOutline(glyph.glyphId);
+    if (outline == null || outline.isEmpty) return;
+
+    final double scale = glyph.fontSize / glyph.font.metrics.unitsPerEm;
+    final r = (shadowColor.r * 255).round() & 0xff;
+    final g = (shadowColor.g * 255).round() & 0xff;
+    final b = (shadowColor.b * 255).round() & 0xff;
+    final a = (shadowColor.a * 255).round() & 0xff;
+
+    final glyphPath =
+        _glyphOutlineToPath(outline, shadowX, shadowBaseline, scale);
+    _rasterizeGlyphPath(glyphPath, pixels, imgWidth, imgHeight, r, g, b, a);
+  }
+
+  /// Draws underline, overline, and/or line-through for glyphs in [line]
+  /// that have a non-zero [ShapedGlyph.decorationMask].
+  void _drawLineDecorations(
+    LayoutLine line,
+    Offset paragraphOffset,
+    double screenBaseline,
+    Uint8List pixels,
+    int imgWidth,
+    int imgHeight,
+  ) {
+    for (int i = 0; i < line.glyphs.length; i++) {
+      final glyph = line.glyphs[i];
+      if (glyph.decorationMask == 0) continue;
+
+      final double x0 = paragraphOffset.dx + line.left + line.xOffsets[i];
+      final double x1 = x0 + glyph.advance;
+      if (x1 <= x0) continue; // zero-advance (e.g. newline glyph)
+
+      final Color decoColor = glyph.decorationColor ?? glyph.color;
+      final int r = (decoColor.r * 255).round() & 0xff;
+      final int g = (decoColor.g * 255).round() & 0xff;
+      final int b = (decoColor.b * 255).round() & 0xff;
+      final int a = (decoColor.a * 255).round() & 0xff;
+
+      // Underline – slightly below the baseline.
+      if ((glyph.decorationMask & 0x1) != 0) {
+        final double y =
+            screenBaseline + (glyph.fontSize * 0.1).clamp(1.0, 3.0);
+        _drawLine(Offset(x0, y), Offset(x1, y), 1.0, pixels, imgWidth,
+            imgHeight, r, g, b, a);
+      }
+
+      // Overline – at the top of the ascent.
+      if ((glyph.decorationMask & 0x2) != 0) {
+        final double y = screenBaseline - line.ascent;
+        _drawLine(Offset(x0, y), Offset(x1, y), 1.0, pixels, imgWidth,
+            imgHeight, r, g, b, a);
+      }
+
+      // Line-through – at roughly x-height mid.
+      if ((glyph.decorationMask & 0x4) != 0) {
+        final double y = screenBaseline - line.ascent * 0.35;
+        _drawLine(Offset(x0, y), Offset(x1, y), 1.0, pixels, imgWidth,
+            imgHeight, r, g, b, a);
       }
     }
   }
