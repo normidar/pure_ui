@@ -1460,6 +1460,20 @@ class _PureDartPicture implements Picture {
     return points;
   }
 
+  List<Offset> _generateQuadraticBezierPoints(
+      Offset start, Offset control, Offset end) {
+    const int segments = 16;
+    final points = <Offset>[];
+    for (int i = 1; i <= segments; i++) {
+      final t = i / segments;
+      final mt = 1.0 - t;
+      final x = mt * mt * start.dx + 2 * mt * t * control.dx + t * t * end.dx;
+      final y = mt * mt * start.dy + 2 * mt * t * control.dy + t * t * end.dy;
+      points.add(Offset(x, y));
+    }
+    return points;
+  }
+
   /// Helper method to get color from a gradient shader at a specific pixel position
   Color _getGradientColor(Gradient gradient, double x, double y) {
     if (gradient._type == GradientType.linear) {
@@ -1665,6 +1679,17 @@ class _PureDartPicture implements Picture {
           height,
         );
         break;
+      case _DrawCommandType.drawParagraph:
+        if (command.args[0] is _PureDartParagraph) {
+          _drawParagraphToPixels(
+            command.args[0] as _PureDartParagraph,
+            command.args[1] as Offset,
+            pixels,
+            width,
+            height,
+          );
+        }
+        break;
       // Add more command processing as needed
       default:
         // Ignore unsupported commands for now
@@ -1744,6 +1769,20 @@ class _PureDartPicture implements Picture {
           currentX = x3;
           currentY = y3;
           break;
+        case _PathCommandType.quadraticBezierTo:
+          final qx1 = command.args[0] as double;
+          final qy1 = command.args[1] as double;
+          final qx2 = command.args[2] as double;
+          final qy2 = command.args[3] as double;
+          final qPts = _generateQuadraticBezierPoints(
+            Offset(currentX, currentY),
+            Offset(qx1, qy1),
+            Offset(qx2, qy2),
+          );
+          pathPoints.addAll(qPts);
+          currentX = qx2;
+          currentY = qy2;
+          break;
         case _PathCommandType.close:
           if (pathPoints.isNotEmpty) {
             // Close the path by adding the first point
@@ -1805,6 +1844,230 @@ class _PureDartPicture implements Picture {
       final start = points[i];
       final end = points[i + 1];
       _drawLineSegment(start, end, stroke, pixels, width, height, r, g, b, a);
+    }
+  }
+
+  /// Renders [paragraph] at [offset] into [pixels].
+  ///
+  /// Looks up the font family via [FontLoader], parses the TTF (cached in
+  /// [_pureDartFontCache]), and rasterises each glyph using the even-odd
+  /// scanline fill on the TrueType quadratic Bézier outlines.
+  ///
+  /// Rendering order per line:
+  ///   1. Text shadows (rendered behind the glyphs).
+  ///   2. Glyph ink.
+  ///   3. Text decorations (underline / overline / line-through).
+  void _drawParagraphToPixels(_PureDartParagraph paragraph, Offset offset,
+      Uint8List pixels, int width, int height) {
+    // Use pre-computed layout lines from paragraph.layout().
+    // If layout() has not been called, _lines is empty and nothing is drawn.
+    for (final line in paragraph._lines) {
+      final double screenBaseline = offset.dy + line.baseline;
+
+      // ── Pass 1: shadows ────────────────────────────────────────────────────
+      for (int i = 0; i < line.glyphs.length; i++) {
+        final glyph = line.glyphs[i];
+        final shadows = glyph.shadows;
+        if (shadows == null) continue;
+        final double screenX = offset.dx + line.left + line.xOffsets[i];
+        for (final shadow in shadows) {
+          _renderGlyphShadow(
+            glyph,
+            screenX + shadow.offset.dx,
+            screenBaseline + shadow.offset.dy,
+            shadow.color,
+            pixels,
+            width,
+            height,
+          );
+        }
+      }
+
+      // ── Pass 2: glyph ink ─────────────────────────────────────────────────
+      for (int i = 0; i < line.glyphs.length; i++) {
+        final glyph = line.glyphs[i];
+        final double screenX = offset.dx + line.left + line.xOffsets[i];
+
+        final outline = glyph.font.getGlyphOutline(glyph.glyphId);
+        if (outline == null || outline.isEmpty) continue;
+
+        final double scale = glyph.fontSize / glyph.font.metrics.unitsPerEm;
+        final color = glyph.color;
+        final r = (color.r * 255).round() & 0xff;
+        final g = (color.g * 255).round() & 0xff;
+        final b = (color.b * 255).round() & 0xff;
+        final a = (color.a * 255).round() & 0xff;
+
+        final polyKey =
+            _glyphPolyCacheKey(glyph.fontKey, glyph.glyphId, glyph.fontSize);
+        final polys = _glyphPolyCache.putIfAbsent(
+            polyKey, () => _buildGlyphPolys(outline, scale));
+        _rasterizePolys(
+            polys, screenX, screenBaseline, pixels, width, height, r, g, b, a);
+      }
+
+      // ── Pass 3: decorations ───────────────────────────────────────────────
+      _drawLineDecorations(
+          line, offset, screenBaseline, pixels, width, height);
+    }
+  }
+
+  /// Renders [glyph] at ([shadowX], [shadowBaseline]) using [shadowColor].
+  ///
+  /// Blur is not applied; the shadow is drawn as a solid silhouette.
+  void _renderGlyphShadow(
+    ShapedGlyph glyph,
+    double shadowX,
+    double shadowBaseline,
+    Color shadowColor,
+    Uint8List pixels,
+    int imgWidth,
+    int imgHeight,
+  ) {
+    final outline = glyph.font.getGlyphOutline(glyph.glyphId);
+    if (outline == null || outline.isEmpty) return;
+
+    final double scale = glyph.fontSize / glyph.font.metrics.unitsPerEm;
+    final r = (shadowColor.r * 255).round() & 0xff;
+    final g = (shadowColor.g * 255).round() & 0xff;
+    final b = (shadowColor.b * 255).round() & 0xff;
+    final a = (shadowColor.a * 255).round() & 0xff;
+
+    final polyKey =
+        _glyphPolyCacheKey(glyph.fontKey, glyph.glyphId, glyph.fontSize);
+    final polys = _glyphPolyCache.putIfAbsent(
+        polyKey, () => _buildGlyphPolys(outline, scale));
+    _rasterizePolys(
+        polys, shadowX, shadowBaseline, pixels, imgWidth, imgHeight, r, g, b, a);
+  }
+
+  /// Rasterises pre-tessellated [polys] into [pixels] at screen offset
+  /// ([dx], [dy]).
+  ///
+  /// [polys] are in normalized glyph space (see [_buildGlyphPolys]).  The
+  /// scanline even-odd fill is identical to [_rasterizeGlyphPath] but operates
+  /// on the already-computed polygon points, avoiding Bézier re-tessellation.
+  void _rasterizePolys(
+    List<List<Offset>> polys,
+    double dx,
+    double dy,
+    Uint8List pixels,
+    int width,
+    int height,
+    int r,
+    int g,
+    int b,
+    int a,
+  ) {
+    if (polys.isEmpty) return;
+
+    double minY = double.infinity, maxY = double.negativeInfinity;
+    for (final sp in polys) {
+      for (final pt in sp) {
+        final ty = pt.dy + dy;
+        if (ty < minY) minY = ty;
+        if (ty > maxY) maxY = ty;
+      }
+    }
+
+    final startY = math.max(0, minY.floor());
+    final endY = math.min(height, maxY.ceil());
+
+    for (int y = startY; y < endY; y++) {
+      final intersections = <double>[];
+      for (final sp in polys) {
+        for (int k = 0; k < sp.length - 1; k++) {
+          final p1y = sp[k].dy + dy;
+          final p2y = sp[k + 1].dy + dy;
+          if ((p1y <= y && p2y > y) || (p2y <= y && p1y > y)) {
+            final p1x = sp[k].dx + dx;
+            final p2x = sp[k + 1].dx + dx;
+            intersections
+                .add(p1x + (y - p1y) * (p2x - p1x) / (p2y - p1y));
+          }
+        }
+      }
+      intersections.sort();
+
+      for (int k = 0; k + 1 < intersections.length; k += 2) {
+        final startX = math.max(0, intersections[k].round());
+        final endX = math.min(width, intersections[k + 1].round());
+        for (int x = startX; x < endX; x++) {
+          final idx = (y * width + x) * 4;
+          if (idx < 0 || idx + 3 >= pixels.length) continue;
+          if (a == 255) {
+            pixels[idx] = r;
+            pixels[idx + 1] = g;
+            pixels[idx + 2] = b;
+            pixels[idx + 3] = 255;
+          } else {
+            final dstA = pixels[idx + 3];
+            final outA = (a + dstA * (255 - a) ~/ 255).clamp(0, 255);
+            if (outA > 0) {
+              pixels[idx] =
+                  ((r * a + pixels[idx] * dstA * (255 - a) ~/ 255) ~/ outA)
+                      .clamp(0, 255);
+              pixels[idx + 1] =
+                  ((g * a + pixels[idx + 1] * dstA * (255 - a) ~/ 255) ~/
+                          outA)
+                      .clamp(0, 255);
+              pixels[idx + 2] =
+                  ((b * a + pixels[idx + 2] * dstA * (255 - a) ~/ 255) ~/
+                          outA)
+                      .clamp(0, 255);
+              pixels[idx + 3] = outA;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /// Draws underline, overline, and/or line-through for glyphs in [line]
+  /// that have a non-zero [ShapedGlyph.decorationMask].
+  void _drawLineDecorations(
+    LayoutLine line,
+    Offset paragraphOffset,
+    double screenBaseline,
+    Uint8List pixels,
+    int imgWidth,
+    int imgHeight,
+  ) {
+    for (int i = 0; i < line.glyphs.length; i++) {
+      final glyph = line.glyphs[i];
+      if (glyph.decorationMask == 0) continue;
+
+      final double x0 = paragraphOffset.dx + line.left + line.xOffsets[i];
+      final double x1 = x0 + glyph.advance;
+      if (x1 <= x0) continue; // zero-advance (e.g. newline glyph)
+
+      final Color decoColor = glyph.decorationColor ?? glyph.color;
+      final int r = (decoColor.r * 255).round() & 0xff;
+      final int g = (decoColor.g * 255).round() & 0xff;
+      final int b = (decoColor.b * 255).round() & 0xff;
+      final int a = (decoColor.a * 255).round() & 0xff;
+
+      // Underline – slightly below the baseline.
+      if ((glyph.decorationMask & 0x1) != 0) {
+        final double y =
+            screenBaseline + (glyph.fontSize * 0.1).clamp(1.0, 3.0);
+        _drawLine(Offset(x0, y), Offset(x1, y), 1.0, pixels, imgWidth,
+            imgHeight, r, g, b, a);
+      }
+
+      // Overline – at the top of the ascent.
+      if ((glyph.decorationMask & 0x2) != 0) {
+        final double y = screenBaseline - line.ascent;
+        _drawLine(Offset(x0, y), Offset(x1, y), 1.0, pixels, imgWidth,
+            imgHeight, r, g, b, a);
+      }
+
+      // Line-through – at roughly x-height mid.
+      if ((glyph.decorationMask & 0x4) != 0) {
+        final double y = screenBaseline - line.ascent * 0.35;
+        _drawLine(Offset(x0, y), Offset(x1, y), 1.0, pixels, imgWidth,
+            imgHeight, r, g, b, a);
+      }
     }
   }
 
@@ -2143,5 +2406,473 @@ class _PureDartCodec implements Codec {
         duration: Duration.zero,
         image: _PureDartImage(
             resized.getBytes(order: img.ChannelOrder.rgba), targetW, targetH));
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Module-level TTF font cache (shared across all canvas instances).
+// Keys are "<family>_<weightIndex>_<styleIndex>"; values are TtfFont instances.
+// ─────────────────────────────────────────────────────────────────────────────
+final Map<String, TtfFont> _pureDartFontCache = {};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Glyph polygon cache (Task 8.1 / 8.3)
+//
+// Stores pre-tessellated polygon subpaths for each (font, glyph, fontSize)
+// triple in normalized glyph space: origin at the pen/baseline position,
+//   x = fontX * scale,  y = −fontY * scale  (Y-flipped to screen orientation)
+//
+// By caching here we skip the quadratic-Bézier tessellation (16 segments per
+// curve) on every subsequent render of the same glyph at the same size.
+// ─────────────────────────────────────────────────────────────────────────────
+final Map<String, List<List<Offset>>> _glyphPolyCache = {};
+
+/// Returns the glyph polygon cache key for [fontKey], [glyphId], [fontSize].
+String _glyphPolyCacheKey(String fontKey, int glyphId, double fontSize) =>
+    '$fontKey/$glyphId/${fontSize.toStringAsFixed(2)}';
+
+/// Builds tessellated polygon subpaths for [outline] at [scale].
+///
+/// Points are in *normalized glyph space*: origin at (penX=0, baseline=0),
+///   nx = fontX * scale,  ny = −fontY * scale
+///
+/// Bézier curves are tessellated with 16 linear segments each.
+/// The returned polygons are already closed (last point == first point).
+List<List<Offset>> _buildGlyphPolys(GlyphOutline outline, double scale) {
+  final result = <List<Offset>>[];
+
+  for (final contour in outline.contours) {
+    if (contour.points.isEmpty) continue;
+    final pts = contour.points;
+    final n = pts.length;
+
+    // Expand implicit on-curve points: two consecutive off-curve points imply
+    // an on-curve midpoint between them (TrueType spec §2).
+    final expanded = <GlyphPoint>[];
+    for (int i = 0; i < n; i++) {
+      expanded.add(pts[i]);
+      final next = pts[(i + 1) % n];
+      if (!pts[i].onCurve && !next.onCurve) {
+        expanded.add(GlyphPoint(
+            (pts[i].x + next.x) / 2.0, (pts[i].y + next.y) / 2.0, true));
+      }
+    }
+
+    // Find the first on-curve point to start the polygon.
+    int startIdx = -1;
+    for (int i = 0; i < expanded.length; i++) {
+      if (expanded[i].onCurve) {
+        startIdx = i;
+        break;
+      }
+    }
+    if (startIdx == -1) continue; // all off-curve — degenerate contour
+
+    // Convert a font-space point to normalized glyph space.
+    Offset norm(GlyphPoint p) => Offset(p.x * scale, -p.y * scale);
+
+    final poly = <Offset>[norm(expanded[startIdx])];
+    final en = expanded.length;
+    int i = (startIdx + 1) % en;
+    int walked = 0;
+
+    while (walked < en) {
+      final pt = expanded[i % en];
+      if (pt.onCurve) {
+        poly.add(norm(pt));
+        i = (i + 1) % en;
+        walked++;
+      } else {
+        // Off-curve: quadratic Bézier with the next on-curve as the endpoint.
+        final next = expanded[(i + 1) % en];
+        final start = poly.last;
+        final ctrl = norm(pt);
+        final end = norm(next);
+        const seg = 16;
+        for (int s = 1; s <= seg; s++) {
+          final t = s / seg;
+          final mt = 1.0 - t;
+          poly.add(Offset(
+            mt * mt * start.dx + 2 * mt * t * ctrl.dx + t * t * end.dx,
+            mt * mt * start.dy + 2 * mt * t * ctrl.dy + t * t * end.dy,
+          ));
+        }
+        i = (i + 2) % en;
+        walked += 2;
+      }
+    }
+
+    // Close the polygon.
+    if (poly.isNotEmpty) poly.add(poly.first);
+    if (poly.length >= 3) result.add(poly);
+  }
+
+  return result;
+}
+
+/// Returns a cache key that encodes family name, weight, and style.
+String _fontCacheKey(String family, FontWeight weight, FontStyle style) =>
+    '${family}_${weight.index}_${style.index}';
+
+/// Merges [child] style onto [parent], with [child] properties taking
+/// precedence for any property that the child explicitly sets.
+///
+/// For encoded properties the bit flag in [TextStyle._encoded[0]] determines
+/// whether the property is set. Nullable scalar fields ([_fontSize] etc.)
+/// follow the same rule: child wins when non-null.
+TextStyle _mergeTextStyle(TextStyle parent, TextStyle child) {
+  // Encoded properties (bit-flag controlled).
+  Color? color;
+  if ((child._encoded[0] & (1 << 1)) != 0) {
+    color = Color(child._encoded[1]);
+  } else if ((parent._encoded[0] & (1 << 1)) != 0) {
+    color = Color(parent._encoded[1]);
+  }
+
+  TextDecoration? decoration;
+  if ((child._encoded[0] & (1 << 2)) != 0) {
+    decoration = TextDecoration._(child._encoded[2]);
+  } else if ((parent._encoded[0] & (1 << 2)) != 0) {
+    decoration = TextDecoration._(parent._encoded[2]);
+  }
+
+  Color? decorationColor;
+  if ((child._encoded[0] & (1 << 3)) != 0) {
+    decorationColor = Color(child._encoded[3]);
+  } else if ((parent._encoded[0] & (1 << 3)) != 0) {
+    decorationColor = Color(parent._encoded[3]);
+  }
+
+  TextDecorationStyle? decorationStyle;
+  if ((child._encoded[0] & (1 << 4)) != 0) {
+    decorationStyle = TextDecorationStyle.values[child._encoded[4]];
+  } else if ((parent._encoded[0] & (1 << 4)) != 0) {
+    decorationStyle = TextDecorationStyle.values[parent._encoded[4]];
+  }
+
+  FontWeight? fontWeight;
+  if ((child._encoded[0] & (1 << 5)) != 0) {
+    fontWeight = FontWeight.values[child._encoded[5]];
+  } else if ((parent._encoded[0] & (1 << 5)) != 0) {
+    fontWeight = FontWeight.values[parent._encoded[5]];
+  }
+
+  FontStyle? fontStyle;
+  if ((child._encoded[0] & (1 << 6)) != 0) {
+    fontStyle = FontStyle.values[child._encoded[6]];
+  } else if ((parent._encoded[0] & (1 << 6)) != 0) {
+    fontStyle = FontStyle.values[parent._encoded[6]];
+  }
+
+  // String / nullable-scalar properties.
+  final String fontFamily = child._fontFamily.isNotEmpty
+      ? child._fontFamily
+      : parent._fontFamily;
+
+  return TextStyle(
+    color: color,
+    decoration: decoration,
+    decorationColor: decorationColor,
+    decorationStyle: decorationStyle,
+    fontWeight: fontWeight,
+    fontStyle: fontStyle,
+    fontFamily: fontFamily.isNotEmpty ? fontFamily : null,
+    fontSize: child._fontSize ?? parent._fontSize,
+    letterSpacing: child._letterSpacing ?? parent._letterSpacing,
+    wordSpacing: child._wordSpacing ?? parent._wordSpacing,
+    height: child._height ?? parent._height,
+    decorationThickness:
+        child._decorationThickness ?? parent._decorationThickness,
+    shadows: child._shadows ?? parent._shadows,
+    fontFeatures: child._fontFeatures ?? parent._fontFeatures,
+    fontVariations: child._fontVariations ?? parent._fontVariations,
+    locale: child._locale ?? parent._locale,
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Pure Dart Paragraph implementation
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// A single run of text with a uniform [TextStyle].
+///
+/// Used internally by [_PureDartParagraphBuilder] to accumulate styled spans
+/// before passing them to [_PureDartParagraph].
+class _TextSpan {
+  /// The raw text content of this span.
+  final String text;
+
+  /// The style applied to [text], or null to inherit from the paragraph style.
+  final TextStyle? style;
+
+  _TextSpan(this.text, this.style);
+}
+
+/// Pure Dart implementation of [Paragraph].
+///
+/// Instances are created by [_PureDartParagraphBuilder.build].
+/// Call [layout] before accessing any metric properties or drawing.
+///
+/// Text rendering (glyph rasterisation) is implemented in later phases;
+/// Phase 1 provides a fully typed skeleton so that the API is functional.
+class _PureDartParagraph implements Paragraph {
+  final List<_TextSpan> _spans;
+  final ParagraphStyle _paragraphStyle;
+
+  bool _disposed = false;
+  double _layoutWidth = 0.0;
+
+  // Layout results (populated by layout()).
+  List<LayoutLine> _lines = [];
+  bool _didExceedMaxLines = false;
+
+  _PureDartParagraph(this._spans, this._paragraphStyle);
+
+  List<_TextSpan> get spans => _spans;
+  ParagraphStyle get style => _paragraphStyle;
+
+  // ── Paragraph API ──────────────────────────────────────────────────────────
+
+  @override
+  bool get debugDisposed => _disposed;
+
+  @override
+  void dispose() => _disposed = true;
+
+  @override
+  double get width => _layoutWidth;
+
+  @override
+  double get height {
+    if (_lines.isEmpty) return 0.0;
+    final last = _lines.last;
+    return last.baseline + last.descent;
+  }
+
+  @override
+  double get longestLine =>
+      _lines.isEmpty ? 0.0 : _lines.map((l) => l.width).reduce(math.max);
+
+  @override
+  double get minIntrinsicWidth {
+    // Minimum width needed to avoid clipping: longest single word.
+    double maxWordWidth = 0.0;
+    for (final span in _spans) {
+      double wordWidth = 0.0;
+      for (final g in (span.style != null
+          ? _glyphsForSpan(span)
+          : <ShapedGlyph>[])) {
+        if (g.isSpace || g.isNewline) {
+          if (wordWidth > maxWordWidth) maxWordWidth = wordWidth;
+          wordWidth = 0.0;
+        } else {
+          wordWidth += g.advance;
+        }
+      }
+      if (wordWidth > maxWordWidth) maxWordWidth = wordWidth;
+    }
+    return maxWordWidth;
+  }
+
+  @override
+  double get maxIntrinsicWidth {
+    // Width needed to lay out the paragraph on one line (no wrapping).
+    final result = layoutText(_spans, _paragraphStyle, double.infinity);
+    return result.lines.isEmpty
+        ? 0.0
+        : result.lines.map((l) => l.width).reduce(math.max);
+  }
+
+  @override
+  double get alphabeticBaseline =>
+      _lines.isEmpty ? 0.0 : _lines.first.baseline;
+
+  @override
+  double get ideographicBaseline => alphabeticBaseline;
+
+  @override
+  bool get didExceedMaxLines => _didExceedMaxLines;
+
+  @override
+  int get numberOfLines => _lines.length;
+
+  @override
+  void layout(ParagraphConstraints constraints) {
+    _layoutWidth = constraints.width;
+    final result = layoutText(_spans, _paragraphStyle, constraints.width);
+    _lines = result.lines;
+    _didExceedMaxLines = result.didExceedMaxLines;
+  }
+
+  // Helper: shape a span's text to get its glyphs (used for minIntrinsicWidth).
+  List<ShapedGlyph> _glyphsForSpan(_TextSpan span) {
+    final style = span.style!;
+    final String fontFamily = style._fontFamily.isNotEmpty
+        ? style._fontFamily
+        : (_paragraphStyle._fontFamily ?? '');
+    if (fontFamily.isEmpty) return [];
+    final FontWeight fontWeight =
+        (style._encoded[0] & (1 << 5)) != 0
+            ? FontWeight.values[style._encoded[5]]
+            : FontWeight.normal;
+    final FontStyle fontStyle =
+        (style._encoded[0] & (1 << 6)) != 0
+            ? FontStyle.values[style._encoded[6]]
+            : FontStyle.normal;
+    final fontBytes =
+        FontLoader.getFont(fontFamily, weight: fontWeight, style: fontStyle);
+    if (fontBytes == null) return [];
+    final cacheKey = _fontCacheKey(fontFamily, fontWeight, fontStyle);
+    final font = _pureDartFontCache.putIfAbsent(
+        cacheKey, () => TtfFont.load(fontBytes));
+    return shapeText(span.text, style, font);
+  }
+
+  @override
+  List<TextBox> getBoxesForRange(
+    int start,
+    int end, {
+    BoxHeightStyle boxHeightStyle = BoxHeightStyle.tight,
+    BoxWidthStyle boxWidthStyle = BoxWidthStyle.tight,
+  }) =>
+      [];
+
+  @override
+  List<TextBox> getBoxesForPlaceholders() => [];
+
+  @override
+  TextPosition getPositionForOffset(Offset offset) =>
+      const TextPosition(offset: 0);
+
+  @override
+  GlyphInfo? getClosestGlyphInfoForOffset(Offset offset) => null;
+
+  @override
+  GlyphInfo? getGlyphInfoAt(int codeUnitOffset) => null;
+
+  @override
+  TextRange getWordBoundary(TextPosition position) =>
+      const TextRange(start: 0, end: 0);
+
+  @override
+  TextRange getLineBoundary(TextPosition position) =>
+      const TextRange(start: 0, end: 0);
+
+  @override
+  List<LineMetrics> computeLineMetrics() {
+    return [
+      for (int i = 0; i < _lines.length; i++)
+        LineMetrics(
+          hardBreak: _lines[i].hardBreak,
+          ascent: _lines[i].ascent,
+          descent: _lines[i].descent,
+          unscaledAscent: _lines[i].ascent,
+          height: _lines[i].height,
+          width: _lines[i].width,
+          left: _lines[i].left,
+          baseline: _lines[i].baseline,
+          lineNumber: i,
+        ),
+    ];
+  }
+
+  @override
+  LineMetrics? getLineMetricsAt(int lineNumber) {
+    if (lineNumber < 0 || lineNumber >= _lines.length) return null;
+    return computeLineMetrics()[lineNumber];
+  }
+
+  @override
+  int? getLineNumberAt(int codeUnitOffset) => null;
+}
+
+/// Pure Dart implementation of [ParagraphBuilder].
+///
+/// Builds a [_PureDartParagraph] from a sequence of styled text spans.
+/// Mirrors the [ParagraphBuilder] contract from [dart:ui]:
+///
+/// ```dart
+/// final builder = ParagraphBuilder(ParagraphStyle(fontFamily: 'Roboto'));
+/// builder.pushStyle(TextStyle(fontSize: 16, color: Color(0xFF000000)));
+/// builder.addText('Hello, world!');
+/// builder.pop();
+/// final paragraph = builder.build();
+/// paragraph.layout(const ParagraphConstraints(width: 300));
+/// canvas.drawParagraph(paragraph, Offset.zero);
+/// ```
+class _PureDartParagraphBuilder implements ParagraphBuilder {
+  final ParagraphStyle _paragraphStyle;
+  final List<_TextSpan> _spans = [];
+  final List<TextStyle> _styleStack = [];
+  int _placeholderCount = 0;
+  final List<double> _placeholderScales = [];
+
+  _PureDartParagraphBuilder(this._paragraphStyle);
+
+  @override
+  int get placeholderCount => _placeholderCount;
+
+  @override
+  List<double> get placeholderScales => List.unmodifiable(_placeholderScales);
+
+  /// Pushes [style] onto the style stack.
+  ///
+  /// Subsequent [addText] calls inherit this style until [pop] is called.
+  ///
+  /// If a style is already on the stack the new style is merged onto it so
+  /// that properties not explicitly set in [style] are inherited from the
+  /// enclosing span.
+  @override
+  void pushStyle(TextStyle style) {
+    final merged = _styleStack.isEmpty
+        ? style
+        : _mergeTextStyle(_styleStack.last, style);
+    _styleStack.add(merged);
+  }
+
+  /// Removes the most recently pushed style from the stack.
+  ///
+  /// Has no effect if the stack is already empty.
+  @override
+  void pop() {
+    if (_styleStack.isNotEmpty) {
+      _styleStack.removeLast();
+    }
+  }
+
+  /// Appends [text] as a new span using the current top-of-stack style.
+  ///
+  /// If no style has been pushed, the span inherits from [ParagraphStyle].
+  @override
+  void addText(String text) {
+    _spans.add(
+      _TextSpan(text, _styleStack.isEmpty ? null : _styleStack.last),
+    );
+  }
+
+  /// Inserts an inline placeholder and records its scale.
+  @override
+  void addPlaceholder(
+    double width,
+    double height,
+    PlaceholderAlignment alignment, {
+    double scale = 1.0,
+    double? baselineOffset,
+    TextBaseline? baseline,
+  }) {
+    _placeholderCount++;
+    _placeholderScales.add(scale);
+    // U+FFFC OBJECT REPLACEMENT CHARACTER represents the placeholder in text.
+    _spans.add(
+      _TextSpan('\uFFFC', _styleStack.isEmpty ? null : _styleStack.last),
+    );
+  }
+
+  /// Builds and returns the [Paragraph].
+  ///
+  /// The builder must not be used after calling [build].
+  @override
+  Paragraph build() {
+    return _PureDartParagraph(List.unmodifiable(_spans), _paragraphStyle);
   }
 }
