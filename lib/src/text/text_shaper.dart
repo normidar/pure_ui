@@ -88,7 +88,7 @@ List<ShapedGlyph> shapeText(String text, TextStyle style, TtfFont font,
 
   // Resolve shadows from the direct _shadows field.
   final List<Shadow>? shadows =
-      (style._shadows != null && style._shadows!.isNotEmpty)
+      (style._shadows != null && style._shadows.isNotEmpty)
           ? style._shadows
           : null;
 
