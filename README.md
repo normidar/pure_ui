@@ -1,12 +1,13 @@
 # Pure UI - Pure Dart Alternative to Flutter's dart:ui
 
-Pure UI is a Canvas API implemented in pure Dart without Flutter dependencies. It provides a fully compatible API with Flutter's dart:ui, enabling image processing and drawing operations anywhere Dart runs.
+Pure UI is a Canvas API implemented in pure Dart without Flutter dependencies. It provides a fully compatible API with Flutter's dart:ui, enabling image processing, drawing operations, and **text rendering** anywhere Dart runs.
 
 **🎯 Why Choose Pure UI?**
 
 - Use dart:ui APIs outside Flutter projects
 - Migrate existing Flutter code seamlessly
 - Perfect for server-side and CLI image generation
+- Render text from TTF fonts with no Flutter engine required
 
 ## Key Features
 
@@ -14,6 +15,7 @@ Pure UI is a Canvas API implemented in pure Dart without Flutter dependencies. I
 - **🔄 dart:ui Full Compatibility**: Use Flutter Canvas code as-is with complete API compatibility
 - **🖼️ PNG Output**: Export drawings in PNG format
 - **📐 Vector Graphics**: Path-based drawing support
+- **✍️ Text Rendering**: Full `ParagraphBuilder` / `Canvas.drawParagraph()` pipeline powered by TTF font parsing
 - **⚡ Server-Side Ready**: Image generation for web servers and batch processing
 
 ## Migrating from dart:ui
@@ -73,68 +75,155 @@ void main() async {
 }
 ```
 
-## Usage Examples
+## Text Rendering
 
-### Basic Drawing Example (Same as dart:ui!)
+Pure UI includes a full TTF text rendering pipeline compatible with Flutter's `ParagraphBuilder` API.
+
+### Setup
+
+Register your TTF font file with `FontLoader` before building paragraphs:
 
 ```dart
 import 'dart:io';
 import 'package:pure_ui/pure_ui.dart';
 
 void main() async {
-  // Create a picture recorder
-  final recorder = PictureRecorder();
+  // Register a TTF font (supports weight / style variants)
+  FontLoader.load('MyFont', File('path/to/MyFont-Regular.ttf').readAsBytesSync());
+  FontLoader.load('MyFont', File('path/to/MyFont-Bold.ttf').readAsBytesSync(),
+      weight: FontWeight.bold);
+```
 
-  // Create a canvas with the recorder and bounds
+### Basic Text Rendering
+
+```dart
+  // Build a paragraph
+  final para = (ParagraphBuilder(ParagraphStyle(
+    fontFamily: 'MyFont',
+    fontSize: 32,
+  ))
+        ..pushStyle(TextStyle(
+          fontFamily: 'MyFont',
+          fontSize: 32,
+          color: const Color(0xFF222222),
+        ))
+        ..addText('Hello, World!')
+        ..pop())
+      .build()
+    ..layout(const ParagraphConstraints(width: 600));
+
+  // Draw it on a canvas
+  final recorder = PictureRecorder();
+  final canvas = Canvas(recorder, const Rect.fromLTWH(0, 0, 700, 100));
+  canvas.drawRect(
+    const Rect.fromLTWH(0, 0, 700, 100),
+    Paint()..color = const Color(0xFFFFFFFF),
+  );
+  canvas.drawParagraph(para, const Offset(20, 10));
+
+  // Export
+  final image = await recorder.endRecording().toImage(700, 100);
+  final bytes = await image.toByteData(format: ImageByteFormat.png);
+  await File('hello.png').writeAsBytes(bytes!.buffer.asUint8List());
+  image.dispose();
+}
+```
+
+### Multi-Style Spans
+
+```dart
+final para = (ParagraphBuilder(ParagraphStyle(fontFamily: 'MyFont', fontSize: 24))
+      ..pushStyle(TextStyle(fontFamily: 'MyFont', fontSize: 24,
+          color: const Color(0xFF000000)))
+      ..addText('Normal ')
+      ..pushStyle(TextStyle(color: const Color(0xFFCC0000))) // inherits font/size
+      ..addText('Red ')
+      ..pop()
+      ..pushStyle(TextStyle(fontWeight: FontWeight.bold))
+      ..addText('Bold')
+      ..pop()
+      ..pop())
+    .build()
+  ..layout(const ParagraphConstraints(width: 500));
+```
+
+### Text Features
+
+| Feature | API |
+|---------|-----|
+| Font size | `TextStyle(fontSize: 24)` |
+| Color | `TextStyle(color: Color(0xFFRRGGBB))` |
+| Bold / italic | `TextStyle(fontWeight: FontWeight.bold)` |
+| Underline | `TextStyle(decoration: TextDecoration.underline)` |
+| Strikethrough | `TextStyle(decoration: TextDecoration.lineThrough)` |
+| Letter spacing | `TextStyle(letterSpacing: 2.0)` |
+| Word spacing | `TextStyle(wordSpacing: 4.0)` |
+| Shadow | `TextStyle(shadows: [Shadow(color: ..., offset: Offset(2, 2))])` |
+| Text align | `ParagraphStyle(textAlign: TextAlign.center)` |
+| Max lines | `ParagraphStyle(maxLines: 2)` |
+| Ellipsis | `ParagraphStyle(maxLines: 1, ellipsis: '...')` |
+| Line wrapping | Automatic greedy word-wrap |
+| Hard line break | `\n` in text |
+
+### Unicode and Japanese Text
+
+Any language supported by your TTF font works out of the box:
+
+```dart
+FontLoader.load('ArialUnicode', File('/Library/Fonts/Arial Unicode.ttf').readAsBytesSync());
+
+final para = (ParagraphBuilder(ParagraphStyle(fontFamily: 'ArialUnicode', fontSize: 64))
+      ..pushStyle(TextStyle(fontFamily: 'ArialUnicode', fontSize: 64,
+          color: const Color(0xFF222222)))
+      ..addText('君、いいね')
+      ..pop())
+    .build()
+  ..layout(const ParagraphConstraints(width: 600));
+```
+
+## Usage Examples
+
+### Basic Drawing
+
+```dart
+import 'dart:io';
+import 'package:pure_ui/pure_ui.dart';
+
+void main() async {
+  final recorder = PictureRecorder();
   final canvas = Canvas(recorder, const Rect.fromLTWH(0, 0, 400, 300));
 
-  // Draw background
-  final bgPaint = Paint()
-    ..color = const Color.fromARGB(255, 240, 240, 255)
-    ..style = PaintingStyle.fill;
-  canvas.drawRect(const Rect.fromLTWH(0, 0, 400, 300), bgPaint);
+  // Background
+  canvas.drawRect(const Rect.fromLTWH(0, 0, 400, 300),
+      Paint()..color = const Color.fromARGB(255, 240, 240, 255));
 
-  // Draw a circle
-  final circlePaint = Paint()
-    ..color = const Color.fromARGB(255, 255, 0, 0)
-    ..style = PaintingStyle.fill;
-  canvas.drawCircle(const Offset(200, 150), 80, circlePaint);
+  // Circle
+  canvas.drawCircle(const Offset(200, 150), 80,
+      Paint()..color = const Color.fromARGB(255, 255, 0, 0));
 
-  // Draw a rectangle
-  final rectPaint = Paint()
-    ..color = const Color.fromARGB(255, 0, 0, 255)
-    ..style = PaintingStyle.stroke
-    ..strokeWidth = 4;
-  canvas.drawRect(const Rect.fromLTRB(50, 50, 350, 250), rectPaint);
+  // Stroked rectangle
+  canvas.drawRect(const Rect.fromLTRB(50, 50, 350, 250),
+      Paint()
+        ..color = const Color.fromARGB(255, 0, 0, 255)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 4);
 
-  // Draw a path
-  final pathPaint = Paint()
-    ..color = const Color.fromARGB(255, 0, 180, 0)
-    ..style = PaintingStyle.stroke
-    ..strokeWidth = 3;
+  // Path
+  final path = Path()
+    ..moveTo(50, 150)
+    ..lineTo(150, 250)
+    ..lineTo(250, 50)
+    ..lineTo(350, 150);
+  canvas.drawPath(path,
+      Paint()
+        ..color = const Color.fromARGB(255, 0, 180, 0)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3);
 
-  final path = Path();
-  path.moveTo(50, 150);
-  path.lineTo(150, 250);
-  path.lineTo(250, 50);
-  path.lineTo(350, 150);
-
-  canvas.drawPath(path, pathPaint);
-
-  // End recording and get the picture
-  final picture = recorder.endRecording();
-
-  // Convert picture to image
-  final image = await picture.toImage(400, 300);
-
-  // Save the image as PNG
-  final byteData = await image.toByteData(format: ImageByteFormat.png);
-  final pngBytes = byteData!.buffer.asUint8List();
-  await File('output.png').writeAsBytes(pngBytes);
-
-  // Clean up resources
+  final image = await recorder.endRecording().toImage(400, 300);
+  final bytes = await image.toByteData(format: ImageByteFormat.png);
+  await File('output.png').writeAsBytes(bytes!.buffer.asUint8List());
   image.dispose();
-  picture.dispose();
 }
 ```
 
@@ -146,19 +235,12 @@ import 'dart:math' as math;
 import 'package:pure_ui/pure_ui.dart';
 
 void main() async {
-  // Create a PictureRecorder
   final recorder = PictureRecorder();
-
-  // Create Canvas with bounds
   final canvas = Canvas(recorder, const Rect.fromLTWH(0, 0, 300, 300));
 
-  // Background
-  final bgPaint = Paint()
-    ..color = const Color(0xFF1a1a2e)
-    ..style = PaintingStyle.fill;
-  canvas.drawRect(const Rect.fromLTWH(0, 0, 300, 300), bgPaint);
+  canvas.drawRect(const Rect.fromLTWH(0, 0, 300, 300),
+      Paint()..color = const Color(0xFF1a1a2e));
 
-  // Create spiral pattern with transformations
   canvas.save();
   canvas.translate(150, 150);
 
@@ -166,108 +248,31 @@ void main() async {
     canvas.save();
     canvas.rotate(i * math.pi / 18);
 
-    // Create path for complex shape
-    final path = Path();
-    path.moveTo(0, -50);
-    path.quadraticBezierTo(20, -30, 0, -10);
-    path.quadraticBezierTo(-20, -30, 0, -50);
-    path.close();
+    final path = Path()
+      ..moveTo(0, -50)
+      ..quadraticBezierTo(20, -30, 0, -10)
+      ..quadraticBezierTo(-20, -30, 0, -50)
+      ..close();
 
-    final paint = Paint()
-      ..color = Color.fromARGB(
-          200,
-          (255 * math.sin(i * math.pi / 18)).abs().round(),
-          (255 * math.cos(i * math.pi / 12)).abs().round(),
-          255 - (i * 5))
-      ..style = PaintingStyle.fill;
-
-    canvas.drawPath(path, paint);
+    canvas.drawPath(path,
+        Paint()
+          ..color = Color.fromARGB(200,
+              (255 * math.sin(i * math.pi / 18)).abs().round(),
+              (255 * math.cos(i * math.pi / 12)).abs().round(),
+              255 - (i * 5))
+          ..style = PaintingStyle.fill);
     canvas.restore();
   }
   canvas.restore();
 
-  // End recording and get the Picture
-  final picture = recorder.endRecording();
-
-  // Create an image from the Picture
-  final image = await picture.toImage(300, 300);
-
-  // Save the image as PNG
-  final byteData = await image.toByteData(format: ImageByteFormat.png);
-  await File('artistic_pattern.png').writeAsBytes(byteData!.buffer.asUint8List());
-
-  // Clean up resources
-  image.dispose();
-  picture.dispose();
-}
-```
-
-### Advanced Features: Clipping & Bezier Curves
-
-```dart
-import 'dart:io';
-import 'dart:math' as math;
-import 'package:pure_ui/pure_ui.dart';
-
-void main() async {
-  final recorder = PictureRecorder();
-  final canvas = Canvas(recorder, const Rect.fromLTWH(0, 0, 400, 400));
-
-  // Background gradient simulation
-  for (int y = 0; y < 400; y += 5) {
-    final gradient = y / 399.0;
-    final paint = Paint()
-      ..color = Color.fromARGB(255, (50 + (gradient * 100)).round(),
-          (100 + (gradient * 50)).round(), (200 - (gradient * 50)).round())
-      ..style = PaintingStyle.fill;
-    canvas.drawRect(Rect.fromLTWH(0, y.toDouble(), 400, 5), paint);
-  }
-
-  // Clipping operations
-  canvas.save();
-  canvas.clipRect(const Rect.fromLTWH(50, 50, 300, 300));
-
-  // Complex transformations with overlapping shapes
-  for (int i = 0; i < 8; i++) {
-    canvas.save();
-    canvas.translate(200, 200);
-    canvas.rotate(i * math.pi / 4);
-
-    final paint = Paint()
-      ..color = Color.fromARGB(100, (i * 32) % 255, 255 - (i * 32), (i * 64) % 255)
-      ..style = PaintingStyle.fill;
-    canvas.drawOval(Rect.fromCenter(center: Offset.zero, width: 150, height: 50), paint);
-    canvas.restore();
-  }
-  canvas.restore();
-
-  // Bezier curves and complex paths
-  final path = Path();
-  path.moveTo(50, 350);
-  path.quadraticBezierTo(200, 250, 350, 350);
-  path.cubicTo(300, 320, 250, 280, 200, 320);
-  path.lineTo(100, 380);
-  path.close();
-
-  final pathPaint = Paint()
-    ..color = const Color(0xFF00AA44)
-    ..style = PaintingStyle.stroke
-    ..strokeWidth = 4.0;
-  canvas.drawPath(path, pathPaint);
-
-  final picture = recorder.endRecording();
-  final image = await picture.toImage(400, 400);
+  final image = await recorder.endRecording().toImage(300, 300);
   final bytes = await image.toByteData(format: ImageByteFormat.png);
-  await File('advanced_features.png').writeAsBytes(bytes!.buffer.asUint8List());
-
+  await File('artistic_pattern.png').writeAsBytes(bytes!.buffer.asUint8List());
   image.dispose();
-  picture.dispose();
 }
 ```
 
-## Simplified Image Export with exportImage
-
-For quick image generation, Pure UI provides the `exportImage` helper function that simplifies the process of creating and saving images:
+### Simplified Export with exportImage
 
 ```dart
 import 'dart:io';
@@ -276,35 +281,16 @@ import 'package:pure_ui/pure_ui.dart';
 void main() async {
   await exportImage(
     canvasFunction: (canvas) {
-      // Draw background
-      final backgroundPaint = Paint()..color = const Color(0xFFFFFFFF);
-      canvas.drawRect(const Rect.fromLTWH(0, 0, 300, 200), backgroundPaint);
-
-      // Draw a red circle
-      final paint = Paint()
-        ..color = const Color(0xFFFF0000)
-        ..style = PaintingStyle.fill;
-      canvas.drawCircle(const Offset(150, 100), 50, paint);
-
-      // Draw a blue rectangle outline
-      final rectPaint = Paint()
-        ..color = const Color(0xFF0000FF)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3;
-      canvas.drawRect(const Rect.fromLTWH(50, 50, 200, 100), rectPaint);
+      canvas.drawRect(const Rect.fromLTWH(0, 0, 300, 200),
+          Paint()..color = const Color(0xFFFFFFFF));
+      canvas.drawCircle(const Offset(150, 100), 50,
+          Paint()..color = const Color(0xFFFF0000));
     },
     size: const Size(300, 200),
     exportFile: File('simple_drawing.png'),
   );
 }
 ```
-
-### exportImage Parameters
-
-- **`canvasFunction`**: A callback function that receives a `Canvas` object for drawing operations
-- **`size`**: The dimensions of the output image as a `Size` object
-- **`exportFile`**: The `File` object where the image will be saved
-- **`imageByteFormat`** (optional): The output format, defaults to `ImageByteFormat.png`
 
 ## dart:ui Compatible Classes
 
@@ -319,54 +305,56 @@ Pure UI provides complete reimplementations of Flutter's dart:ui core classes:
 - **Picture**: Drawing operation recording with async image conversion
 - **PictureRecorder**: Drawing recording management
 - **Image**: Image representation with PNG export capabilities
-- **ImageByteFormat**: Support for PNG and other image formats
+- **ParagraphBuilder**: Multi-span text building with style stack
+- **Paragraph**: Laid-out text with metrics (`height`, `longestLine`, `computeLineMetrics()`, …)
+- **TextStyle**: Per-span style (font, size, color, decoration, shadows, …)
+- **ParagraphStyle**: Paragraph-level style (alignment, maxLines, ellipsis, …)
+- **FontLoader**: Font registry for TTF/OTF files
 
-**💡 Full API compatibility with dart:ui - just change your import and go!**
-
-### Key API Features:
+**Key API features:**
 
 - **Transformations**: `save()`, `restore()`, `translate()`, `rotate()`, `scale()`
 - **Clipping**: `clipRect()`, `clipPath()` with proper clipping boundaries
-- **Advanced Drawing**: Paths with quadratic Bézier curves, complex compositions
+- **Advanced Drawing**: Paths with quadratic/cubic Bézier curves
+- **Text**: `ParagraphBuilder` → `Paragraph` → `Canvas.drawParagraph()` — full pipeline
 - **Async Operations**: `picture.toImage()` and `image.toByteData()` return Futures
 - **Memory Management**: Proper `dispose()` methods for resource cleanup
 
-## Roadmap
+## Implemented Features
 
-Pure UI is under active development. Current implementation status:
+### Canvas & Drawing
+- Complete Canvas API — all major drawing operations
+- Advanced transformations (rotation, translation, scaling, save/restore stack)
+- Path drawing with quadratic and cubic Bézier curves
+- Clipping (rectangle and path-based)
+- PNG export via `ImageByteFormat.png`
+- Color management with full ARGB / transparency support
 
-### ✅ Implemented
-
-- **Complete Canvas API**: All major drawing operations
-- **Advanced Transformations**: Rotation, translation, scaling with save/restore
-- **Path Drawing**: Complex paths with Bézier curves and path operations
-- **PNG Export**: Direct PNG output via `ImageByteFormat.png`
-- **Clipping Operations**: Rectangle and path-based clipping
-- **Color Management**: Full ARGB color support with transparency
-- **Memory Management**: Proper resource disposal patterns
-
-### 🚧 In Development / Planned
-
-- Text drawing functionality
-- More image blend modes
-- Performance optimization
-- Improved anti-aliasing
-
-**💪 Continuously improving to become a complete dart:ui alternative!**
+### Text Rendering
+- TTF binary parser (cmap, glyf, hmtx, kern tables)
+- Glyph rasterisation via TrueType quadratic-Bézier outlines + scanline fill
+- Text shaper: advance widths, pair kerning, letter/word spacing
+- Layout engine: greedy word-wrap, hard line breaks (`\n`), `maxLines`, ellipsis, `TextAlign`
+- `ParagraphBuilder` style stack with proper inheritance (`pushStyle` / `pop`)
+- Font weight and style variants (`FontWeight.bold`, `FontStyle.italic`)
+- Text decorations: underline, overline, line-through
+- Text shadows
+- Unicode support (Latin, Japanese, CJK, and any script your font covers)
+- Performance caches: parsed font cache + glyph polygon cache (skips Bézier re-tessellation)
 
 ## Why Pure UI is Needed?
 
-### 🚫 dart:ui Limitations
+### dart:ui Limitations
 
 - Only usable within Flutter applications
 - Cannot be used in CLI tools or batch processing
 - Not available for web application backends
 
-### ✅ Pure UI Solutions
+### Pure UI Solutions
 
 - **Works Everywhere**: Runs anywhere Dart VM is available
-- **Server-Side Image Generation**: Chart/Graph generation for web servers
-- **CLI Tools**: Create command-line image processing tools
+- **Server-Side Image Generation**: Chart/graph/label generation for web servers
+- **CLI Tools**: Command-line image processing and text rendering
 
 **With Pure UI, you can leverage Flutter's excellent Canvas API anywhere!**
 
