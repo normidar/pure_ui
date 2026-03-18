@@ -1,5 +1,11 @@
 # Pure UI - Pure Dart Alternative to Flutter's dart:ui
 
+[![GitHub](https://img.shields.io/github/license/normidar/pure_ui.svg)](https://github.com/normidar/pure_ui/blob/main/LICENSE)
+[![pub package](https://img.shields.io/pub/v/pure_ui.svg)](https://pub.dartlang.org/packages/pure_ui)
+[![GitHub Stars](https://img.shields.io/github/stars/normidar/pure_ui.svg)](https://github.com/normidar/pure_ui/stargazers)
+[![Twitter](https://img.shields.io/twitter/url/https/twitter.com/normidar2.svg?style=social&label=Follow%20%40normidar2)](https://twitter.com/normidar2)
+[![Github-sponsors](https://img.shields.io/badge/sponsor-30363D?logo=GitHub-Sponsors&logoColor=#EA4AAA)](https://github.com/sponsors/normidar)
+
 Pure UI is a Canvas API implemented in pure Dart without Flutter dependencies. It provides a fully compatible API with Flutter's dart:ui, enabling image processing, drawing operations, and **text rendering** anywhere Dart runs.
 
 **🎯 Why Choose Pure UI?**
