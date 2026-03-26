@@ -1119,15 +1119,16 @@ class _PureDartPicture implements Picture {
       Path path, Paint paint, Uint8List pixels, int width, int height) {
     if (path is! _PureDartPath) return;
 
+    final shader = paint.shader;
+    final gradient = shader is Gradient ? shader : null;
     final color = paint.color;
     final r = (color.r * 255).round() & 0xff;
     final g = (color.g * 255).round() & 0xff;
     final b = (color.b * 255).round() & 0xff;
     final a = (color.a * 255).round() & 0xff;
 
-    // For now, implement a simple path renderer that handles basic shapes
-    // This is a simplified implementation that focuses on the most common path operations
-    _renderPath(path, paint, pixels, width, height, r, g, b, a);
+    _renderPath(path, paint, pixels, width, height, r, g, b, a,
+        shader: gradient);
   }
 
   void _drawPictureToPixels(
@@ -1374,7 +1375,7 @@ class _PureDartPicture implements Picture {
   }
 
   void _fillPolygon(List<Offset> points, Uint8List pixels, int width,
-      int height, int r, int g, int b, int a) {
+      int height, int r, int g, int b, int a, {Gradient? shader}) {
     // Simple polygon fill using scanline algorithm
     if (points.length < 3) return;
 
@@ -1416,10 +1417,18 @@ class _PureDartPicture implements Picture {
         for (int x = startX; x < endX; x++) {
           final index = (y * width + x) * 4;
           if (index >= 0 && index < pixels.length - 3) {
-            pixels[index] = r;
-            pixels[index + 1] = g;
-            pixels[index + 2] = b;
-            pixels[index + 3] = a;
+            if (shader != null) {
+              final c = _getGradientColor(shader, x.toDouble(), y.toDouble());
+              pixels[index] = (c.r * 255).round() & 0xff;
+              pixels[index + 1] = (c.g * 255).round() & 0xff;
+              pixels[index + 2] = (c.b * 255).round() & 0xff;
+              pixels[index + 3] = (c.a * 255).round() & 0xff;
+            } else {
+              pixels[index] = r;
+              pixels[index + 1] = g;
+              pixels[index + 2] = b;
+              pixels[index + 3] = a;
+            }
           }
         }
       }
@@ -1427,7 +1436,7 @@ class _PureDartPicture implements Picture {
   }
 
   void _fillRect(Rect rect, Uint8List pixels, int width, int height, int r,
-      int g, int b, int a) {
+      int g, int b, int a, {Gradient? shader}) {
     final left = math.max(0, rect.left.round());
     final top = math.max(0, rect.top.round());
     final right = math.min(width, rect.right.round());
@@ -1437,10 +1446,18 @@ class _PureDartPicture implements Picture {
       for (int x = left; x < right; x++) {
         final index = (y * width + x) * 4;
         if (index >= 0 && index < pixels.length - 3) {
-          pixels[index] = r;
-          pixels[index + 1] = g;
-          pixels[index + 2] = b;
-          pixels[index + 3] = a;
+          if (shader != null) {
+            final c = _getGradientColor(shader, x.toDouble(), y.toDouble());
+            pixels[index] = (c.r * 255).round() & 0xff;
+            pixels[index + 1] = (c.g * 255).round() & 0xff;
+            pixels[index + 2] = (c.b * 255).round() & 0xff;
+            pixels[index + 3] = (c.a * 255).round() & 0xff;
+          } else {
+            pixels[index] = r;
+            pixels[index + 1] = g;
+            pixels[index + 2] = b;
+            pixels[index + 3] = a;
+          }
         }
       }
     }
@@ -1718,7 +1735,7 @@ class _PureDartPicture implements Picture {
   }
 
   void _rasterizeComplexPath(_PureDartPath path, Paint paint, Uint8List pixels,
-      int width, int height, int r, int g, int b, int a) {
+      int width, int height, int r, int g, int b, int a, {Gradient? shader}) {
     // For now, implement a basic path rasterizer that handles common path operations
     // This is a simplified version that will handle basic shapes and can be extended
 
@@ -1743,7 +1760,7 @@ class _PureDartPicture implements Picture {
         case _PathCommandType.addRect:
           final rect = command.args[0] as Rect;
           if (paint.style == PaintingStyle.fill) {
-            _fillRect(rect, pixels, width, height, r, g, b, a);
+            _fillRect(rect, pixels, width, height, r, g, b, a, shader: shader);
           } else if (paint.style == PaintingStyle.stroke) {
             _strokeRect(
                 rect, paint.strokeWidth, pixels, width, height, r, g, b, a);
@@ -1800,7 +1817,8 @@ class _PureDartPicture implements Picture {
     if (pathPoints.length >= 2) {
       if (paint.style == PaintingStyle.fill) {
         if (pathPoints.length >= 3) {
-          _fillPolygon(pathPoints, pixels, width, height, r, g, b, a);
+          _fillPolygon(pathPoints, pixels, width, height, r, g, b, a,
+              shader: shader);
         }
       } else if (paint.style == PaintingStyle.stroke) {
         _strokePolyline(
@@ -1810,7 +1828,7 @@ class _PureDartPicture implements Picture {
   }
 
   void _renderPath(_PureDartPath path, Paint paint, Uint8List pixels, int width,
-      int height, int r, int g, int b, int a) {
+      int height, int r, int g, int b, int a, {Gradient? shader}) {
     // Process path commands to render the path
     // For this initial implementation, we'll handle the most common path operations
 
@@ -1822,7 +1840,7 @@ class _PureDartPicture implements Picture {
     if (_isSimpleRectanglePath(path)) {
       // Render as a rectangle for now
       if (paint.style == PaintingStyle.fill) {
-        _fillRect(bounds, pixels, width, height, r, g, b, a);
+        _fillRect(bounds, pixels, width, height, r, g, b, a, shader: shader);
       } else if (paint.style == PaintingStyle.stroke) {
         _strokeRect(
             bounds, paint.strokeWidth, pixels, width, height, r, g, b, a);
@@ -1830,7 +1848,8 @@ class _PureDartPicture implements Picture {
     } else {
       // For more complex paths, we'll implement a basic scanline rasterizer
       // For now, let's handle simple paths that are composed of basic operations
-      _rasterizeComplexPath(path, paint, pixels, width, height, r, g, b, a);
+      _rasterizeComplexPath(path, paint, pixels, width, height, r, g, b, a,
+          shader: shader);
     }
   }
 
