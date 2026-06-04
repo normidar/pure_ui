@@ -40,6 +40,10 @@ enum _DrawCommandType {
   drawPicture,
   drawAtlas,
   drawRawAtlas,
+  drawArc,
+  drawRRect,
+  drawDRRect,
+  drawImageNine,
 }
 
 class _PathCommand {
@@ -134,8 +138,8 @@ class _PureDartCanvas implements Canvas {
   @override
   void drawArc(Rect rect, double startAngle, double sweepAngle, bool useCenter,
       Paint paint) {
-    // For simplicity, draw as oval
-    drawOval(rect, paint);
+    _commands.add(_DrawCommand(_DrawCommandType.drawArc,
+        [rect, startAngle, sweepAngle, useCenter, paint]));
   }
 
   @override
@@ -158,8 +162,8 @@ class _PureDartCanvas implements Canvas {
 
   @override
   void drawDRRect(RRect outer, RRect inner, Paint paint) {
-    // For simplicity, just draw outer
-    drawRRect(outer, paint);
+    _commands
+        .add(_DrawCommand(_DrawCommandType.drawDRRect, [outer, inner, paint]));
   }
 
   @override
@@ -170,12 +174,8 @@ class _PureDartCanvas implements Canvas {
 
   @override
   void drawImageNine(Image image, Rect center, Rect dst, Paint paint) {
-    // For simplicity, draw as image rect
-    drawImageRect(
-        image,
-        Rect.fromLTWH(0, 0, image.width.toDouble(), image.height.toDouble()),
-        dst,
-        paint);
+    _commands.add(_DrawCommand(
+        _DrawCommandType.drawImageNine, [image, center, dst, paint]));
   }
 
   @override
@@ -245,8 +245,7 @@ class _PureDartCanvas implements Canvas {
 
   @override
   void drawRRect(RRect rrect, Paint paint) {
-    // For simplicity, draw as rectangle
-    drawRect(rrect.outerRect, paint);
+    _commands.add(_DrawCommand(_DrawCommandType.drawRRect, [rrect, paint]));
   }
 
   @override
@@ -1707,9 +1706,49 @@ class _PureDartPicture implements Picture {
           );
         }
         break;
-      // Add more command processing as needed
+      case _DrawCommandType.drawArc:
+        _drawArcToPixels(
+          command.args[0] as Rect,
+          command.args[1] as double,
+          command.args[2] as double,
+          command.args[3] as bool,
+          command.args[4] as Paint,
+          pixels,
+          width,
+          height,
+        );
+        break;
+      case _DrawCommandType.drawRRect:
+        _drawRRectToPixels(
+          command.args[0] as RRect,
+          command.args[1] as Paint,
+          pixels,
+          width,
+          height,
+        );
+        break;
+      case _DrawCommandType.drawDRRect:
+        _drawDRRectToPixels(
+          command.args[0] as RRect,
+          command.args[1] as RRect,
+          command.args[2] as Paint,
+          pixels,
+          width,
+          height,
+        );
+        break;
+      case _DrawCommandType.drawImageNine:
+        _drawImageNineToPixels(
+          command.args[0] as Image,
+          command.args[1] as Rect,
+          command.args[2] as Rect,
+          command.args[3] as Paint,
+          pixels,
+          width,
+          height,
+        );
+        break;
       default:
-        // Ignore unsupported commands for now
         break;
     }
   }
@@ -1764,6 +1803,95 @@ class _PureDartPicture implements Picture {
           } else if (paint.style == PaintingStyle.stroke) {
             _strokeRect(
                 rect, paint.strokeWidth, pixels, width, height, r, g, b, a);
+          }
+          break;
+        case _PathCommandType.addOval:
+          final oval = command.args[0] as Rect;
+          final ocx = (oval.left + oval.right) / 2.0;
+          final ocy = (oval.top + oval.bottom) / 2.0;
+          final orx = oval.width / 2.0;
+          final ory = oval.height / 2.0;
+          if (orx > 0 && ory > 0) {
+            const int ovalSegs = 32;
+            final ovalPts = <Offset>[
+              for (int s = 0; s <= ovalSegs; s++)
+                Offset(
+                    ocx + orx * math.cos(2 * math.pi * s / ovalSegs),
+                    ocy + ory * math.sin(2 * math.pi * s / ovalSegs)),
+            ];
+            if (paint.style == PaintingStyle.fill) {
+              _fillPolygon(ovalPts, pixels, width, height, r, g, b, a,
+                  shader: shader);
+            } else {
+              _strokePolyline(ovalPts, paint.strokeWidth, pixels, width,
+                  height, r, g, b, a);
+            }
+          }
+          break;
+        case _PathCommandType.addArc:
+          final arcOval = command.args[0] as Rect;
+          final arcStart = command.args[1] as double;
+          final arcSweep = command.args[2] as double;
+          final acx = (arcOval.left + arcOval.right) / 2.0;
+          final acy = (arcOval.top + arcOval.bottom) / 2.0;
+          final arx = arcOval.width / 2.0;
+          final ary = arcOval.height / 2.0;
+          if (arx > 0 && ary > 0) {
+            const int arcSegs = 16;
+            final arcPts = <Offset>[
+              for (int s = 0; s <= arcSegs; s++)
+                Offset(
+                    acx + arx * math.cos(arcStart + arcSweep * (s / arcSegs)),
+                    acy + ary * math.sin(arcStart + arcSweep * (s / arcSegs))),
+            ];
+            if (paint.style == PaintingStyle.fill) {
+              _fillPolygon(arcPts, pixels, width, height, r, g, b, a,
+                  shader: shader);
+            } else {
+              _strokePolyline(arcPts, paint.strokeWidth, pixels, width,
+                  height, r, g, b, a);
+            }
+          }
+          break;
+        case _PathCommandType.arcTo:
+          final atRect = command.args[0] as Rect;
+          final atStart = command.args[1] as double;
+          final atSweep = command.args[2] as double;
+          final forceMoveTo = command.args[3] as bool;
+          final atcx = (atRect.left + atRect.right) / 2.0;
+          final atcy = (atRect.top + atRect.bottom) / 2.0;
+          final atrx = atRect.width / 2.0;
+          final atry = atRect.height / 2.0;
+          if (atrx > 0 && atry > 0) {
+            const int atSegs = 16;
+            final firstPt = Offset(
+                atcx + atrx * math.cos(atStart),
+                atcy + atry * math.sin(atStart));
+            if (forceMoveTo || pathPoints.isEmpty) {
+              pathPoints.clear();
+              pathPoints.add(firstPt);
+            } else {
+              pathPoints.add(firstPt);
+            }
+            for (int s = 1; s <= atSegs; s++) {
+              final angle = atStart + atSweep * (s / atSegs);
+              pathPoints.add(Offset(
+                  atcx + atrx * math.cos(angle),
+                  atcy + atry * math.sin(angle)));
+            }
+            currentX = atcx + atrx * math.cos(atStart + atSweep);
+            currentY = atcy + atry * math.sin(atStart + atSweep);
+          }
+          break;
+        case _PathCommandType.addRRect:
+          final rrect = command.args[0] as RRect;
+          final rrectPts = _rrectToPolygon(rrect);
+          if (paint.style == PaintingStyle.fill) {
+            _fillPolys([rrectPts], pixels, width, height, r, g, b, a,
+                shader: shader);
+          } else {
+            _strokePolyline(rrectPts, paint.strokeWidth, pixels, width,
+                height, r, g, b, a);
           }
           break;
         case _PathCommandType.cubicTo:
@@ -1866,6 +1994,248 @@ class _PureDartPicture implements Picture {
     }
   }
 
+  // ── New rasterization helpers ──────────────────────────────────────────────
+
+  /// Generates polygon points for [rrect] going clockwise starting from the
+  /// top-right corner. Each rounded corner is approximated with
+  /// [cornerSegments] arc segments.
+  List<Offset> _rrectToPolygon(RRect rrect, {int cornerSegments = 8}) {
+    final pts = <Offset>[];
+
+    void addArc(
+        double cx, double cy, double rx, double ry, double startAngle) {
+      if (rx <= 0 || ry <= 0) {
+        pts.add(Offset(cx + rx * math.cos(startAngle),
+            cy + ry * math.sin(startAngle)));
+        return;
+      }
+      for (int i = 0; i <= cornerSegments; i++) {
+        final angle = startAngle + (math.pi / 2) * (i / cornerSegments);
+        pts.add(Offset(
+            cx + rx * math.cos(angle), cy + ry * math.sin(angle)));
+      }
+    }
+
+    // Clockwise: TR → BR → BL → TL
+    addArc(rrect.right - rrect.trRadiusX, rrect.top + rrect.trRadiusY,
+        rrect.trRadiusX, rrect.trRadiusY, -math.pi / 2);
+    addArc(rrect.right - rrect.brRadiusX, rrect.bottom - rrect.brRadiusY,
+        rrect.brRadiusX, rrect.brRadiusY, 0);
+    addArc(rrect.left + rrect.blRadiusX, rrect.bottom - rrect.blRadiusY,
+        rrect.blRadiusX, rrect.blRadiusY, math.pi / 2);
+    addArc(rrect.left + rrect.tlRadiusX, rrect.top + rrect.tlRadiusY,
+        rrect.tlRadiusX, rrect.tlRadiusY, math.pi);
+
+    if (pts.isNotEmpty) pts.add(pts.first);
+    return pts;
+  }
+
+  /// Scanline fill for multiple polygons using the even-odd rule.
+  ///
+  /// Passing [outerPoly, innerPoly] produces a ring (donut) fill because
+  /// even-odd counting naturally excludes the inner area.
+  void _fillPolys(
+      List<List<Offset>> polys,
+      Uint8List pixels,
+      int width,
+      int height,
+      int r,
+      int g,
+      int b,
+      int a, {
+      Gradient? shader}) {
+    if (polys.isEmpty) return;
+
+    double minY = double.infinity, maxY = double.negativeInfinity;
+    for (final poly in polys) {
+      for (final pt in poly) {
+        if (pt.dy < minY) minY = pt.dy;
+        if (pt.dy > maxY) maxY = pt.dy;
+      }
+    }
+
+    final startY = math.max(0, minY.floor());
+    final endY = math.min(height, maxY.ceil());
+
+    for (int y = startY; y < endY; y++) {
+      final intersections = <double>[];
+      for (final poly in polys) {
+        for (int i = 0; i < poly.length - 1; i++) {
+          final p1 = poly[i];
+          final p2 = poly[i + 1];
+          if ((p1.dy <= y && p2.dy > y) || (p2.dy <= y && p1.dy > y)) {
+            intersections
+                .add(p1.dx + (y - p1.dy) * (p2.dx - p1.dx) / (p2.dy - p1.dy));
+          }
+        }
+      }
+      intersections.sort();
+      for (int i = 0; i + 1 < intersections.length; i += 2) {
+        final startX = math.max(0, intersections[i].round());
+        final endX = math.min(width, intersections[i + 1].round());
+        for (int x = startX; x < endX; x++) {
+          final index = (y * width + x) * 4;
+          if (index < 0 || index + 3 >= pixels.length) continue;
+          if (shader != null) {
+            final c = _getGradientColor(shader, x.toDouble(), y.toDouble());
+            pixels[index] = (c.r * 255).round() & 0xff;
+            pixels[index + 1] = (c.g * 255).round() & 0xff;
+            pixels[index + 2] = (c.b * 255).round() & 0xff;
+            pixels[index + 3] = (c.a * 255).round() & 0xff;
+          } else {
+            pixels[index] = r;
+            pixels[index + 1] = g;
+            pixels[index + 2] = b;
+            pixels[index + 3] = a;
+          }
+        }
+      }
+    }
+  }
+
+  void _drawArcToPixels(Rect rect, double startAngle, double sweepAngle,
+      bool useCenter, Paint paint, Uint8List pixels, int width, int height) {
+    final cx = (rect.left + rect.right) / 2.0;
+    final cy = (rect.top + rect.bottom) / 2.0;
+    final rx = rect.width / 2.0;
+    final ry = rect.height / 2.0;
+    if (rx <= 0 || ry <= 0) return;
+
+    final absSweep = sweepAngle.abs();
+    final segments =
+        math.max(4, (absSweep / (math.pi / 16)).ceil()).clamp(4, 64);
+    final arcPts = <Offset>[
+      for (int i = 0; i <= segments; i++)
+        Offset(
+          cx + rx * math.cos(startAngle + sweepAngle * (i / segments)),
+          cy + ry * math.sin(startAngle + sweepAngle * (i / segments)),
+        ),
+    ];
+
+    final color = paint.color;
+    final r = (color.r * 255).round() & 0xff;
+    final g = (color.g * 255).round() & 0xff;
+    final b = (color.b * 255).round() & 0xff;
+    final a = (color.a * 255).round() & 0xff;
+
+    if (paint.style == PaintingStyle.fill) {
+      final polygon = useCenter ? [Offset(cx, cy), ...arcPts] : arcPts;
+      _fillPolygon(polygon, pixels, width, height, r, g, b, a);
+    } else {
+      _strokePolyline(
+          arcPts, paint.strokeWidth, pixels, width, height, r, g, b, a);
+      if (useCenter) {
+        _drawLine(Offset(cx, cy), arcPts.first, paint.strokeWidth, pixels,
+            width, height, r, g, b, a);
+        _drawLine(Offset(cx, cy), arcPts.last, paint.strokeWidth, pixels,
+            width, height, r, g, b, a);
+      }
+    }
+  }
+
+  void _drawRRectToPixels(
+      RRect rrect, Paint paint, Uint8List pixels, int width, int height) {
+    final color = paint.color;
+    final r = (color.r * 255).round() & 0xff;
+    final g = (color.g * 255).round() & 0xff;
+    final b = (color.b * 255).round() & 0xff;
+    final a = (color.a * 255).round() & 0xff;
+    final shader = paint.shader is Gradient ? paint.shader as Gradient : null;
+
+    final poly = _rrectToPolygon(rrect);
+    if (paint.style == PaintingStyle.fill) {
+      _fillPolys([poly], pixels, width, height, r, g, b, a, shader: shader);
+    } else {
+      _strokePolyline(
+          poly, paint.strokeWidth, pixels, width, height, r, g, b, a);
+    }
+  }
+
+  void _drawDRRectToPixels(RRect outer, RRect inner, Paint paint,
+      Uint8List pixels, int width, int height) {
+    final color = paint.color;
+    final r = (color.r * 255).round() & 0xff;
+    final g = (color.g * 255).round() & 0xff;
+    final b = (color.b * 255).round() & 0xff;
+    final a = (color.a * 255).round() & 0xff;
+    final shader = paint.shader is Gradient ? paint.shader as Gradient : null;
+
+    if (paint.style == PaintingStyle.fill) {
+      // Even-odd rule: outer fills the ring, inner creates the hole.
+      final outerPoly = _rrectToPolygon(outer);
+      final innerPoly = _rrectToPolygon(inner);
+      _fillPolys([outerPoly, innerPoly], pixels, width, height, r, g, b, a,
+          shader: shader);
+    } else {
+      final outerPoly = _rrectToPolygon(outer);
+      final innerPoly = _rrectToPolygon(inner);
+      _strokePolyline(
+          outerPoly, paint.strokeWidth, pixels, width, height, r, g, b, a);
+      _strokePolyline(
+          innerPoly, paint.strokeWidth, pixels, width, height, r, g, b, a);
+    }
+  }
+
+  void _drawImageNineToPixels(Image image, Rect center, Rect dst, Paint paint,
+      Uint8List pixels, int width, int height) {
+    if (image is! _PureDartImage) return;
+
+    final srcW = image._width.toDouble();
+    final srcH = image._height.toDouble();
+
+    // Source grid
+    final srcX0 = 0.0;
+    final srcX1 = center.left.clamp(0.0, srcW);
+    final srcX2 = center.right.clamp(srcX1, srcW);
+    final srcX3 = srcW;
+    final srcY0 = 0.0;
+    final srcY1 = center.top.clamp(0.0, srcH);
+    final srcY2 = center.bottom.clamp(srcY1, srcH);
+    final srcY3 = srcH;
+
+    // Destination grid – corners keep their source pixel sizes
+    final dstX0 = dst.left;
+    final dstX1 = dst.left + (srcX1 - srcX0);
+    final dstX2 = dst.right - (srcX3 - srcX2);
+    final dstX3 = dst.right;
+    final dstY0 = dst.top;
+    final dstY1 = dst.top + (srcY1 - srcY0);
+    final dstY2 = dst.bottom - (srcY3 - srcY2);
+    final dstY3 = dst.bottom;
+
+    if (dstX1 > dstX2 || dstY1 > dstY2) {
+      // Dst too small for corners – fall back to simple scale
+      _drawImageRectToPixels(
+          image, Rect.fromLTRB(srcX0, srcY0, srcX3, srcY3), dst, paint,
+          pixels, width, height);
+      return;
+    }
+
+    void slice(Rect src, Rect d) {
+      if (src.isEmpty || d.isEmpty) return;
+      _drawImageRectToPixels(image, src, d, paint, pixels, width, height);
+    }
+
+    slice(Rect.fromLTRB(srcX0, srcY0, srcX1, srcY1),
+        Rect.fromLTRB(dstX0, dstY0, dstX1, dstY1)); // TL
+    slice(Rect.fromLTRB(srcX1, srcY0, srcX2, srcY1),
+        Rect.fromLTRB(dstX1, dstY0, dstX2, dstY1)); // TC
+    slice(Rect.fromLTRB(srcX2, srcY0, srcX3, srcY1),
+        Rect.fromLTRB(dstX2, dstY0, dstX3, dstY1)); // TR
+    slice(Rect.fromLTRB(srcX0, srcY1, srcX1, srcY2),
+        Rect.fromLTRB(dstX0, dstY1, dstX1, dstY2)); // ML
+    slice(Rect.fromLTRB(srcX1, srcY1, srcX2, srcY2),
+        Rect.fromLTRB(dstX1, dstY1, dstX2, dstY2)); // MC
+    slice(Rect.fromLTRB(srcX2, srcY1, srcX3, srcY2),
+        Rect.fromLTRB(dstX2, dstY1, dstX3, dstY2)); // MR
+    slice(Rect.fromLTRB(srcX0, srcY2, srcX1, srcY3),
+        Rect.fromLTRB(dstX0, dstY2, dstX1, dstY3)); // BL
+    slice(Rect.fromLTRB(srcX1, srcY2, srcX2, srcY3),
+        Rect.fromLTRB(dstX1, dstY2, dstX2, dstY3)); // BC
+    slice(Rect.fromLTRB(srcX2, srcY2, srcX3, srcY3),
+        Rect.fromLTRB(dstX2, dstY2, dstX3, dstY3)); // BR
+  }
+
   /// Renders [paragraph] at [offset] into [pixels].
   ///
   /// Looks up the font family via [FontLoader], parses the TTF (cached in
@@ -1919,8 +2289,7 @@ class _PureDartPicture implements Picture {
 
         final polyKey =
             _glyphPolyCacheKey(glyph.fontKey, glyph.glyphId, glyph.fontSize);
-        final polys = _glyphPolyCache.putIfAbsent(
-            polyKey, () => _buildGlyphPolys(outline, scale));
+        final polys = _cachedGlyphPolys(polyKey, outline, scale);
         _rasterizePolys(
             polys, screenX, screenBaseline, pixels, width, height, r, g, b, a);
       }
@@ -1954,8 +2323,7 @@ class _PureDartPicture implements Picture {
 
     final polyKey =
         _glyphPolyCacheKey(glyph.fontKey, glyph.glyphId, glyph.fontSize);
-    final polys = _glyphPolyCache.putIfAbsent(
-        polyKey, () => _buildGlyphPolys(outline, scale));
+    final polys = _cachedGlyphPolys(polyKey, outline, scale);
     _rasterizePolys(
         polys, shadowX, shadowBaseline, pixels, imgWidth, imgHeight, r, g, b, a);
   }
@@ -2432,6 +2800,10 @@ class _PureDartCodec implements Codec {
 // Module-level TTF font cache (shared across all canvas instances).
 // Keys are "<family>_<weightIndex>_<styleIndex>"; values are TtfFont instances.
 // ─────────────────────────────────────────────────────────────────────────────
+// Maximum entries kept in each cache to prevent unbounded memory growth.
+const int _maxFontCacheEntries = 50;
+const int _maxGlyphCacheEntries = 5000;
+
 final Map<String, TtfFont> _pureDartFontCache = {};
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -2449,6 +2821,31 @@ final Map<String, List<List<Offset>>> _glyphPolyCache = {};
 /// Returns the glyph polygon cache key for [fontKey], [glyphId], [fontSize].
 String _glyphPolyCacheKey(String fontKey, int glyphId, double fontSize) =>
     '$fontKey/$glyphId/${fontSize.toStringAsFixed(2)}';
+
+/// Returns [TtfFont] for [cacheKey], building from [bytes] on miss.
+/// Evicts the oldest entry when the cache is full.
+TtfFont _cachedFont(String cacheKey, Uint8List bytes) {
+  if (!_pureDartFontCache.containsKey(cacheKey)) {
+    if (_pureDartFontCache.length >= _maxFontCacheEntries) {
+      _pureDartFontCache.remove(_pureDartFontCache.keys.first);
+    }
+    _pureDartFontCache[cacheKey] = TtfFont.load(bytes);
+  }
+  return _pureDartFontCache[cacheKey]!;
+}
+
+/// Returns tessellated glyph polygons for [key], building from [outline] on miss.
+/// Evicts the oldest entry when the cache is full.
+List<List<Offset>> _cachedGlyphPolys(
+    String key, GlyphOutline outline, double scale) {
+  if (!_glyphPolyCache.containsKey(key)) {
+    if (_glyphPolyCache.length >= _maxGlyphCacheEntries) {
+      _glyphPolyCache.remove(_glyphPolyCache.keys.first);
+    }
+    _glyphPolyCache[key] = _buildGlyphPolys(outline, scale);
+  }
+  return _glyphPolyCache[key]!;
+}
 
 /// Builds tessellated polygon subpaths for [outline] at [scale].
 ///
@@ -2742,8 +3139,7 @@ class _PureDartParagraph implements Paragraph {
         FontLoader.getFont(fontFamily, weight: fontWeight, style: fontStyle);
     if (fontBytes == null) return [];
     final cacheKey = _fontCacheKey(fontFamily, fontWeight, fontStyle);
-    final font = _pureDartFontCache.putIfAbsent(
-        cacheKey, () => TtfFont.load(fontBytes));
+    final font = _cachedFont(cacheKey, fontBytes);
     return shapeText(span.text, style, font);
   }
 

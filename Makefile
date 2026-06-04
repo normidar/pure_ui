@@ -9,7 +9,12 @@ help:
 
 # ci
 .PHONY: ci
-ci: analyze format
+ci: analyze format test
+
+# test
+.PHONY: test
+test: ## Run all tests
+	fvm dart test
 
 # analyze
 .PHONY: analyze
