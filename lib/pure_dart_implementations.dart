@@ -1845,8 +1845,9 @@ class _PureDartPicture implements Picture {
                     acy + ary * math.sin(arcStart + arcSweep * (s / arcSegs))),
             ];
             if (paint.style == PaintingStyle.fill) {
-              _fillPolygon(arcPts, pixels, width, height, r, g, b, a,
-                  shader: shader);
+              // Close the arc (chord fill): last point back to first.
+              _fillPolygon([...arcPts, arcPts.first], pixels, width, height,
+                  r, g, b, a, shader: shader);
             } else {
               _strokePolyline(arcPts, paint.strokeWidth, pixels, width,
                   height, r, g, b, a);
@@ -2119,7 +2120,13 @@ class _PureDartPicture implements Picture {
     final a = (color.a * 255).round() & 0xff;
 
     if (paint.style == PaintingStyle.fill) {
-      final polygon = useCenter ? [Offset(cx, cy), ...arcPts] : arcPts;
+      // Polygon must be closed (last point == first) for the scanline fill.
+      final List<Offset> polygon;
+      if (useCenter) {
+        polygon = [Offset(cx, cy), ...arcPts, Offset(cx, cy)];
+      } else {
+        polygon = [...arcPts, arcPts.first];
+      }
       _fillPolygon(polygon, pixels, width, height, r, g, b, a);
     } else {
       _strokePolyline(
