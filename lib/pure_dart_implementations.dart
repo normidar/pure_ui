@@ -2525,8 +2525,9 @@ class _PureDartPicture implements Picture {
       for (int dstX = dstLeft; dstX < dstRight; dstX++) {
         if (dstX < 0 || dstX >= width || dstY < 0 || dstY >= height) continue;
 
-        final srcX = (srcLeft + (dstX - dstLeft) * scaleX).round();
-        final srcY = (srcTop + (dstY - dstTop) * scaleY).round();
+        // Use floor() so the mapping never overshoots the src rect boundary.
+        final srcX = (srcLeft + (dstX - dstLeft) * scaleX).floor();
+        final srcY = (srcTop + (dstY - dstTop) * scaleY).floor();
 
         if (srcX < 0 || srcX >= srcWidth || srcY < 0 || srcY >= srcHeight) {
           continue;
