@@ -91,8 +91,7 @@ _LayoutResult layoutText(
     if (fontBytes == null) continue;
 
     final cacheKey = _fontCacheKey(fontFamily, fontWeight, fontStyle);
-    final font = _pureDartFontCache.putIfAbsent(
-        cacheKey, () => TtfFont.load(fontBytes));
+    final font = _cachedFont(cacheKey, fontBytes);
     final double fontSize = style?._fontSize ?? paraStyle._fontSize ?? 14.0;
     final effectiveStyle =
         style ?? TextStyle(fontSize: fontSize, fontFamily: fontFamily);
