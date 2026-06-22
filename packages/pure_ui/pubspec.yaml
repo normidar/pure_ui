@@ -9,7 +9,8 @@ dev_dependencies:
   test: ^1.24.0
 environment:
   sdk: ">=3.3.0 <4.0.0"
-homepage: https://github.com/normidar/pure_ui
+homepage: https://github.com/normidar/pure_ui/tree/main/packages/pure_ui
+repository: https://github.com/normidar/pure_ui/tree/main/packages/pure_ui
 name: pure_ui
 topics:
   - image

@@ -8,7 +8,7 @@ import 'dart:typed_data';
 import 'package:test/test.dart';
 import 'package:vector_math/vector_math_64.dart';
 
-import '../lib/pure_ui.dart';
+import '../../../lib/pure_ui.dart';
 
 /// Comprehensive test to verify that all the previously missing types and
 /// imports are now working correctly in the pure_ui library.
