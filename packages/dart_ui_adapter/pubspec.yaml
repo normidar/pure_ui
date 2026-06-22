@@ -1,0 +1,20 @@
+name: dart_ui_adapter
+description: >-
+  Adapts Flutter's engine-provided dart:ui to the dart_ui_interface UiBackend
+  contract. Provides DartUiBackend. Requires the Flutter SDK; this package is
+  intentionally NOT part of the Dart workspace.
+version: 0.1.0
+publish_to: 'none'
+environment:
+  sdk: ^3.5.0
+  flutter: '>=3.0.0'
+dependencies:
+  flutter:
+    sdk: flutter
+  dart_ui_interface:
+    path: ../dart_ui_interface
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  dart_ui_conformance:
+    path: ../dart_ui_conformance

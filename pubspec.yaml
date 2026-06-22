@@ -1,20 +1,66 @@
----
-dependencies:
-  meta: ">=1.16.0 <2.0.0"
-  collection: ^1.17.0
-  vector_math: ^2.1.4
-  image: ^4.1.7
-description: "'A pure Dart implementation of Canvas API compatible with dart:ui.'"
-dev_dependencies:
-  test: ^1.24.0
+name: pure_ui_monospace
+description: Root project for Melos
+version: 1.0.0
+publish_to: 'none'
+
 environment:
-  sdk: ">=3.3.0 <4.0.0"
-homepage: https://github.com/normidar/pure_ui
-name: pure_ui
-topics:
-  - image
-  - dart-ui
-  - canvas
-  - pure-dart
-  - ui
-version: 0.1.7
+  sdk: '>=3.11.0 <4.0.0' # ワークスペース機能を使うため3.5.0以上に変更
+
+dev_dependencies:
+  melos: any
+
+workspace:
+  - packages/pure_ui
+  - packages/dart_ui_interface
+  - packages/pure_ui_adapter
+  - packages/dart_ui_wrapper
+  - packages/dart_ui_conformance
+
+melos:
+  packages:
+    - packages/**
+  ignore:
+    # Flutter-only package: resolved with the Flutter SDK, not the Dart
+    # workspace. Kept out of `dart pub get` and the Dart-only CI path.
+    - packages/dart_ui_adapter
+
+  command:
+    bootstrap:
+      usePubspecOverrides: true
+
+  scripts:
+    analyze:
+      run: melos exec -- dart analyze .
+      description: Run dart analyze on all packages.
+
+    format:
+      run: melos exec -- dart format .
+      description: Run dart format on all packages.
+
+    fix:
+      run: melos exec -- dart fix --apply
+      description: Run dart fix on all packages.
+
+    test:
+      run: melos exec -- dart test
+      description: Run tests on all packages.
+      packageFilters:
+        dirExists: test
+
+    test:coverage:
+      run: melos exec -- dart test --coverage=coverage
+      description: Run tests with coverage on all packages.
+      packageFilters:
+        dirExists: test
+
+    lint:
+      run: melos run analyze && melos run format
+      description: Run analyze and format on all packages.
+
+    publish:dry-run:
+      run: melos publish --dry-run
+      description: Validate packages and check for any issues before publishing to pub.dev (does not actually upload).
+
+    publish:
+      run: melos publish
+      description: Publish all updated packages in the workspace to pub.dev.

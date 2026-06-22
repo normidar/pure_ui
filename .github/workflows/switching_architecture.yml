@@ -1,0 +1,61 @@
+name: Switching Architecture (Dart-only)
+
+# Fast, Flutter-free CI for the dart:ui <-> pure_ui switching architecture.
+# Covers the interface, the pure_ui backend adapter, the wrapper, and the
+# backend-agnostic conformance suite. The Flutter-only `dart_ui_adapter`
+# package is intentionally excluded (it needs the Flutter SDK).
+
+on:
+  push:
+    branches:
+      - main
+      - monorepo
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  dart:
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.draft == false
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: dart-lang/setup-dart@v1
+        with:
+          sdk: stable
+
+      - name: Resolve workspace
+        run: dart pub get
+
+      - name: Analyze
+        run: |
+          for pkg in dart_ui_interface pure_ui_adapter dart_ui_wrapper dart_ui_conformance; do
+            echo "== analyze $pkg =="
+            (cd packages/$pkg && dart analyze)
+          done
+
+      - name: Format check
+        run: |
+          dart format --set-exit-if-changed \
+            packages/dart_ui_interface \
+            packages/pure_ui_adapter \
+            packages/dart_ui_wrapper \
+            packages/dart_ui_conformance
+
+      - name: Test
+        run: |
+          for pkg in dart_ui_interface pure_ui_adapter dart_ui_conformance; do
+            echo "== test $pkg =="
+            (cd packages/$pkg && dart test)
+          done
+
+      - name: Forbid direct dart:ui import outside dart_ui_adapter (plan §6.3)
+        run: |
+          if grep -rEn "^[[:space:]]*import 'dart:ui'" \
+            packages/dart_ui_interface/lib \
+            packages/pure_ui_adapter/lib \
+            packages/dart_ui_wrapper/lib \
+            packages/dart_ui_conformance/lib; then
+            echo "::error::dart:ui must only be imported by dart_ui_adapter"
+            exit 1
+          fi
