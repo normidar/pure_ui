@@ -35,7 +35,8 @@ class _Logger {
   @Native<Void Function(Handle)>(symbol: 'DartRuntimeHooks::Logger_PrintString')
   external static void _printString(String? s);
 
-  @Native<Void Function(Handle)>(symbol: 'DartRuntimeHooks::Logger_PrintDebugString')
+  @Native<Void Function(Handle)>(
+      symbol: 'DartRuntimeHooks::Logger_PrintDebugString')
   external static void _printDebugString(String? s);
 }
 
@@ -78,7 +79,8 @@ Future<developer.ServiceExtensionResponse> _getImpellerEnabled(
   Map<String, String> parameters,
 ) async {
   return developer.ServiceExtensionResponse.result(
-    json.encode(<String, Object>{'type': 'Success', 'enabled': _impellerEnabled}),
+    json.encode(
+        <String, Object>{'type': 'Success', 'enabled': _impellerEnabled}),
   );
 }
 
@@ -90,7 +92,8 @@ external void _scheduleMicrotask(void Function() callback);
 @Native<Handle Function(Handle)>(symbol: 'DartRuntimeHooks::GetCallbackHandle')
 external int? _getCallbackHandle(Function closure);
 
-@Native<Handle Function(Int64)>(symbol: 'DartRuntimeHooks::GetCallbackFromHandle')
+@Native<Handle Function(Int64)>(
+    symbol: 'DartRuntimeHooks::GetCallbackFromHandle')
 external Function? _getCallbackFromHandle(int handle);
 
 typedef _PrintClosure = void Function(String line);

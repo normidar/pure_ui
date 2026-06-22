@@ -63,12 +63,15 @@ abstract final class IsolateNameServer {
     return _removePortNameMapping(name);
   }
 
-  @Native<Handle Function(Handle)>(symbol: 'IsolateNameServerNatives::LookupPortByName')
+  @Native<Handle Function(Handle)>(
+      symbol: 'IsolateNameServerNatives::LookupPortByName')
   external static SendPort? _lookupPortByName(String name);
 
-  @Native<Bool Function(Handle, Handle)>(symbol: 'IsolateNameServerNatives::RegisterPortWithName')
+  @Native<Bool Function(Handle, Handle)>(
+      symbol: 'IsolateNameServerNatives::RegisterPortWithName')
   external static bool _registerPortWithName(SendPort port, String name);
 
-  @Native<Bool Function(Handle)>(symbol: 'IsolateNameServerNatives::RemovePortNameMapping')
+  @Native<Bool Function(Handle)>(
+      symbol: 'IsolateNameServerNatives::RemovePortNameMapping')
   external static bool _removePortNameMapping(String name);
 }

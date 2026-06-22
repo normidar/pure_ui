@@ -76,8 +76,7 @@ void main() {
     test('single pushStyle + addText + pop does not crash', () {
       expect(
         () => _buildWith((b) {
-          b.pushStyle(
-              ui.TextStyle(fontFamily: _fontFamily, fontSize: 20));
+          b.pushStyle(ui.TextStyle(fontFamily: _fontFamily, fontSize: 20));
           b.addText('Hello');
           b.pop();
         }),
@@ -104,12 +103,10 @@ void main() {
 
     test('two adjacent spans produce positive height', () {
       final p = _buildWith((b) {
-        b.pushStyle(
-            ui.TextStyle(fontFamily: _fontFamily, fontSize: 18));
+        b.pushStyle(ui.TextStyle(fontFamily: _fontFamily, fontSize: 18));
         b.addText('Hello ');
         b.pop();
-        b.pushStyle(
-            ui.TextStyle(fontFamily: _fontFamily, fontSize: 18));
+        b.pushStyle(ui.TextStyle(fontFamily: _fontFamily, fontSize: 18));
         b.addText('World');
         b.pop();
       });
@@ -118,12 +115,10 @@ void main() {
 
     test('mixed styles produce positive longestLine', () {
       final p = _buildWith((b) {
-        b.pushStyle(
-            ui.TextStyle(fontFamily: _fontFamily, fontSize: 16));
+        b.pushStyle(ui.TextStyle(fontFamily: _fontFamily, fontSize: 16));
         b.addText('Small ');
         b.pop();
-        b.pushStyle(
-            ui.TextStyle(fontFamily: _fontFamily, fontSize: 28));
+        b.pushStyle(ui.TextStyle(fontFamily: _fontFamily, fontSize: 28));
         b.addText('Large');
         b.pop();
       });
@@ -138,11 +133,9 @@ void main() {
       // Inner push only sets color; fontFamily should be inherited from outer.
       expect(
         () => _buildWith((b) {
-          b.pushStyle(
-              ui.TextStyle(fontFamily: _fontFamily, fontSize: 20));
+          b.pushStyle(ui.TextStyle(fontFamily: _fontFamily, fontSize: 20));
           b.addText('Normal ');
-          b.pushStyle(
-              ui.TextStyle(color: const ui.Color(0xFFFF0000)));
+          b.pushStyle(ui.TextStyle(color: const ui.Color(0xFFFF0000)));
           b.addText('Red');
           b.pop();
           b.pop();
@@ -153,11 +146,9 @@ void main() {
 
     test('nested pushStyle produces ink', () async {
       final p = _buildWith((b) {
-        b.pushStyle(
-            ui.TextStyle(fontFamily: _fontFamily, fontSize: 20));
+        b.pushStyle(ui.TextStyle(fontFamily: _fontFamily, fontSize: 20));
         b.addText('Normal ');
-        b.pushStyle(
-            ui.TextStyle(color: const ui.Color(0xFFFF0000)));
+        b.pushStyle(ui.TextStyle(color: const ui.Color(0xFFFF0000)));
         b.addText('Red');
         b.pop();
         b.pop();
@@ -169,11 +160,9 @@ void main() {
     test('nested pushStyle: inner style does not pollute outer', () {
       // After the inner pop, the outer style should still be active.
       final p = _buildWith((b) {
-        b.pushStyle(
-            ui.TextStyle(fontFamily: _fontFamily, fontSize: 20));
+        b.pushStyle(ui.TextStyle(fontFamily: _fontFamily, fontSize: 20));
         b.addText('Outer1 ');
-        b.pushStyle(
-            ui.TextStyle(color: const ui.Color(0xFFFF0000)));
+        b.pushStyle(ui.TextStyle(color: const ui.Color(0xFFFF0000)));
         b.addText('Inner ');
         b.pop();
         b.addText('Outer2'); // should still use outer style (fontSize 20)
@@ -185,14 +174,11 @@ void main() {
     test('deep nesting (3 levels) does not crash', () {
       expect(
         () => _buildWith((b) {
-          b.pushStyle(
-              ui.TextStyle(fontFamily: _fontFamily, fontSize: 16));
+          b.pushStyle(ui.TextStyle(fontFamily: _fontFamily, fontSize: 16));
           b.addText('L1 ');
-          b.pushStyle(
-              ui.TextStyle(color: const ui.Color(0xFFFF0000)));
+          b.pushStyle(ui.TextStyle(color: const ui.Color(0xFFFF0000)));
           b.addText('L2 ');
-          b.pushStyle(
-              ui.TextStyle(color: const ui.Color(0xFF0000FF)));
+          b.pushStyle(ui.TextStyle(color: const ui.Color(0xFF0000FF)));
           b.addText('L3');
           b.pop();
           b.pop();
@@ -262,18 +248,15 @@ void main() {
   group('Multi-style – mixed font sizes', () {
     test('large font span makes longestLine wider than small-only', () {
       final pMixed = _buildWith((b) {
-        b.pushStyle(
-            ui.TextStyle(fontFamily: _fontFamily, fontSize: 12));
+        b.pushStyle(ui.TextStyle(fontFamily: _fontFamily, fontSize: 12));
         b.addText('Hi ');
         b.pop();
-        b.pushStyle(
-            ui.TextStyle(fontFamily: _fontFamily, fontSize: 32));
+        b.pushStyle(ui.TextStyle(fontFamily: _fontFamily, fontSize: 32));
         b.addText('Hi');
         b.pop();
       });
       final pSmall = _buildWith((b) {
-        b.pushStyle(
-            ui.TextStyle(fontFamily: _fontFamily, fontSize: 12));
+        b.pushStyle(ui.TextStyle(fontFamily: _fontFamily, fontSize: 12));
         b.addText('Hi Hi');
         b.pop();
       });
@@ -282,18 +265,15 @@ void main() {
 
     test('line height adjusts to the tallest glyph in the line', () {
       final pMixed = _buildWith((b) {
-        b.pushStyle(
-            ui.TextStyle(fontFamily: _fontFamily, fontSize: 12));
+        b.pushStyle(ui.TextStyle(fontFamily: _fontFamily, fontSize: 12));
         b.addText('small ');
         b.pop();
-        b.pushStyle(
-            ui.TextStyle(fontFamily: _fontFamily, fontSize: 40));
+        b.pushStyle(ui.TextStyle(fontFamily: _fontFamily, fontSize: 40));
         b.addText('BIG');
         b.pop();
       });
       final pSmall = _buildWith((b) {
-        b.pushStyle(
-            ui.TextStyle(fontFamily: _fontFamily, fontSize: 12));
+        b.pushStyle(ui.TextStyle(fontFamily: _fontFamily, fontSize: 12));
         b.addText('small BIG');
         b.pop();
       });
@@ -313,8 +293,7 @@ void main() {
               decoration: ui.TextDecoration.underline));
           b.addText('Underlined ');
           b.pop();
-          b.pushStyle(
-              ui.TextStyle(fontFamily: _fontFamily, fontSize: 20));
+          b.pushStyle(ui.TextStyle(fontFamily: _fontFamily, fontSize: 20));
           b.addText('Normal');
           b.pop();
         }),
@@ -343,8 +322,7 @@ void main() {
     test('wrapping works with two adjacent spans', () {
       final p = _buildWith(
         (b) {
-          b.pushStyle(
-              ui.TextStyle(fontFamily: _fontFamily, fontSize: 16));
+          b.pushStyle(ui.TextStyle(fontFamily: _fontFamily, fontSize: 16));
           b.addText('Hello world foo ');
           b.pop();
           b.pushStyle(ui.TextStyle(
@@ -362,8 +340,7 @@ void main() {
     test('multi-span wrapped paragraph has positive height', () {
       final p = _buildWith(
         (b) {
-          b.pushStyle(
-              ui.TextStyle(fontFamily: _fontFamily, fontSize: 20));
+          b.pushStyle(ui.TextStyle(fontFamily: _fontFamily, fontSize: 20));
           b.addText('One two three ');
           b.pop();
           b.pushStyle(ui.TextStyle(
@@ -413,8 +390,7 @@ void main() {
     test('normal + bold spans in same paragraph do not crash', () {
       expect(
         () => _buildWith((b) {
-          b.pushStyle(
-              ui.TextStyle(fontFamily: _fontFamily, fontSize: 20));
+          b.pushStyle(ui.TextStyle(fontFamily: _fontFamily, fontSize: 20));
           b.addText('Normal ');
           b.pop();
           b.pushStyle(ui.TextStyle(

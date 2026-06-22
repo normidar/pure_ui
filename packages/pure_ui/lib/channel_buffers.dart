@@ -18,8 +18,8 @@ part of dart.ui;
   'Migrate to ChannelCallback instead. '
   'This feature was deprecated after v3.11.0-20.0.pre.',
 )
-typedef DrainChannelCallback =
-    Future<void> Function(ByteData? data, PlatformMessageResponseCallback callback);
+typedef DrainChannelCallback = Future<void> Function(
+    ByteData? data, PlatformMessageResponseCallback callback);
 
 /// Signature for [ChannelBuffers.setListener]'s `callback` argument.
 ///
@@ -31,7 +31,8 @@ typedef DrainChannelCallback =
 /// See also:
 ///
 ///  * [PlatformMessageResponseCallback], the type used for replies.
-typedef ChannelCallback = void Function(ByteData? data, PlatformMessageResponseCallback callback);
+typedef ChannelCallback = void Function(
+    ByteData? data, PlatformMessageResponseCallback callback);
 
 /// The data and logic required to store and invoke a callback.
 ///
@@ -43,7 +44,8 @@ class _ChannelCallbackRecord {
 
   /// Call [callback] in [zone], using the given arguments.
   void invoke(ByteData? dataArg, PlatformMessageResponseCallback callbackArg) {
-    _invoke2<ByteData?, PlatformMessageResponseCallback>(_callback, _zone, dataArg, callbackArg);
+    _invoke2<ByteData?, PlatformMessageResponseCallback>(
+        _callback, _zone, dataArg, callbackArg);
   }
 }
 
@@ -77,7 +79,7 @@ class _StoredMessage {
 /// and the channel's callback, if any has been registered.
 class _Channel {
   _Channel([this._capacity = ChannelBuffers.kDefaultBufferSize])
-    : _queue = collection.ListQueue<_StoredMessage>(_capacity);
+      : _queue = collection.ListQueue<_StoredMessage>(_capacity);
 
   /// The underlying data for the buffered messages.
   final collection.ListQueue<_StoredMessage> _queue;
@@ -339,8 +341,10 @@ class ChannelBuffers {
   ///
   /// Channel names cannot contain the U+0000 NULL character, because they
   /// are passed through APIs that use null-terminated strings.
-  void push(String name, ByteData? data, PlatformMessageResponseCallback callback) {
-    assert(!name.contains('\u0000'), 'Channel names must not contain U+0000 NULL characters.');
+  void push(
+      String name, ByteData? data, PlatformMessageResponseCallback callback) {
+    assert(!name.contains('\u0000'),
+        'Channel names must not contain U+0000 NULL characters.');
     final _Channel channel = _channels.putIfAbsent(name, () => _Channel());
     if (channel.push(_StoredMessage(data, callback))) {
       _printDebug(
@@ -379,7 +383,8 @@ class ChannelBuffers {
   ///
   /// The draining stops if the listener is removed.
   void setListener(String name, ChannelCallback callback) {
-    assert(!name.contains('\u0000'), 'Channel names must not contain U+0000 NULL characters.');
+    assert(!name.contains('\u0000'),
+        'Channel names must not contain U+0000 NULL characters.');
     final _Channel channel = _channels.putIfAbsent(name, () => _Channel());
     channel.setListener(callback);
     sendChannelUpdate(name, listening: true);
@@ -399,7 +404,8 @@ class ChannelBuffers {
     }
   }
 
-  @Native<Void Function(Handle, Bool)>(symbol: 'PlatformConfigurationNativeApi::SendChannelUpdate')
+  @Native<Void Function(Handle, Bool)>(
+      symbol: 'PlatformConfigurationNativeApi::SendChannelUpdate')
   external static void _sendChannelUpdate(String name, bool listening);
 
   // TODO(matanlurey): have original authors document; see https://github.com/flutter/flutter/issues/151917.
@@ -471,16 +477,19 @@ class ChannelBuffers {
   void handleMessage(ByteData data) {
     // We hard-code the deserialization here because the StandardMethodCodec class
     // is part of the framework, not dart:ui.
-    final Uint8List bytes = data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
+    final Uint8List bytes =
+        data.buffer.asUint8List(data.offsetInBytes, data.lengthInBytes);
     if (bytes[0] == 0x07) {
       // 7 = value code for string
       final int methodNameLength = bytes[1];
       if (methodNameLength >= 254) {
         // lengths greater than 253 have more elaborate encoding
-        throw Exception('Unrecognized message sent to $kControlChannelName (method name too long)');
+        throw Exception(
+            'Unrecognized message sent to $kControlChannelName (method name too long)');
       }
       int index = 2; // where we are in reading the bytes
-      final String methodName = utf8.decode(bytes.sublist(index, index + methodNameLength));
+      final String methodName =
+          utf8.decode(bytes.sublist(index, index + methodNameLength));
       index += methodNameLength;
       switch (methodName) {
         case 'resize':
@@ -513,7 +522,8 @@ class ChannelBuffers {
             );
           }
           index += 1;
-          final String channelName = utf8.decode(bytes.sublist(index, index + channelNameLength));
+          final String channelName =
+              utf8.decode(bytes.sublist(index, index + channelNameLength));
           if (channelName.contains('\u0000')) {
             throw Exception(
               "Invalid arguments for 'resize' method sent to $kControlChannelName (channel name must not contain any null bytes)",
@@ -558,7 +568,8 @@ class ChannelBuffers {
             );
           }
           index += 1;
-          final String channelName = utf8.decode(bytes.sublist(index, index + channelNameLength));
+          final String channelName =
+              utf8.decode(bytes.sublist(index, index + channelNameLength));
           index += channelNameLength;
           if (bytes[index] != 0x01 && bytes[index] != 0x02) {
             // 1 = value code for true, 2 = value code for false
@@ -568,7 +579,8 @@ class ChannelBuffers {
           }
           allowOverflow(channelName, bytes[index] == 0x01);
         default:
-          throw Exception("Unrecognized method '$methodName' sent to $kControlChannelName");
+          throw Exception(
+              "Unrecognized method '$methodName' sent to $kControlChannelName");
       }
     } else {
       final List<String> parts = utf8.decode(bytes).split('\r');
@@ -577,7 +589,8 @@ class ChannelBuffers {
       } else {
         // If the message couldn't be decoded as UTF-8, a FormatException will
         // have been thrown by utf8.decode() above.
-        throw Exception('Unrecognized message $parts sent to $kControlChannelName.');
+        throw Exception(
+            'Unrecognized message $parts sent to $kControlChannelName.');
       }
     }
   }
@@ -597,7 +610,8 @@ class ChannelBuffers {
   void resize(String name, int newSize) {
     _Channel? channel = _channels[name];
     if (channel == null) {
-      assert(!name.contains('\u0000'), 'Channel names must not contain U+0000 NULL characters.');
+      assert(!name.contains('\u0000'),
+          'Channel names must not contain U+0000 NULL characters.');
       channel = _Channel(newSize);
       _channels[name] = channel;
     } else {
@@ -621,7 +635,8 @@ class ChannelBuffers {
     assert(() {
       _Channel? channel = _channels[name];
       if (channel == null && allowed) {
-        assert(!name.contains('\u0000'), 'Channel names must not contain U+0000 NULL characters.');
+        assert(!name.contains('\u0000'),
+            'Channel names must not contain U+0000 NULL characters.');
         channel = _Channel();
         _channels[name] = channel;
       }

@@ -29,7 +29,8 @@ part of dart.ui;
 /// This API is currently experimental.
 Future<R> runOnPlatformThread<R>(FutureOr<R> Function() computation) {
   if (!_platformIsolatesEnabled) {
-    throw UnsupportedError('Platform thread isolates are not supported by this platform.');
+    throw UnsupportedError(
+        'Platform thread isolates are not supported by this platform.');
   }
   if (isRunningOnPlatformThread) {
     return Future<R>(computation);
@@ -61,7 +62,8 @@ Future<SendPort> _spawnPlatformIsolate() {
       // shutdown unexpectedly, clear the singleton so we can create another.
       for (final Completer<Object?> completer in _pending.values) {
         completer.completeError(
-          RemoteError('PlatformIsolate shutdown unexpectedly', StackTrace.empty.toString()),
+          RemoteError('PlatformIsolate shutdown unexpectedly',
+              StackTrace.empty.toString()),
         );
       }
       _pending.clear();
@@ -81,7 +83,8 @@ Future<SendPort> _spawnPlatformIsolate() {
         } else {
           // onError handler message, uncaught async error.
           // Both values are strings, so calling `toString` is efficient.
-          final RemoteError error = RemoteError(remoteError!.toString(), remoteStack.toString());
+          final RemoteError error =
+              RemoteError(remoteError!.toString(), remoteStack.toString());
           resultCompleter.completeError(error, error.stackTrace);
         }
       } else {
@@ -90,11 +93,13 @@ Future<SendPort> _spawnPlatformIsolate() {
     } else {
       // We encountered an error while starting the new isolate.
       if (!sendPortCompleter.isCompleted) {
-        sendPortCompleter.completeError(IsolateSpawnException('Unable to spawn isolate: $message'));
+        sendPortCompleter.completeError(
+            IsolateSpawnException('Unable to spawn isolate: $message'));
         return;
       }
       // This shouldn't happen.
-      throw IsolateSpawnException("Internal error: unexpected message: '$message'");
+      throw IsolateSpawnException(
+          "Internal error: unexpected message: '$message'");
     }
   };
   final Isolate parentIsolate = Isolate.current;
@@ -108,7 +113,8 @@ Future<SendPort> _spawnPlatformIsolate() {
   return sendPortCompleter.future;
 }
 
-Future<R> _sendComputation<R>(SendPort port, FutureOr<R> Function() computation) {
+Future<R> _sendComputation<R>(
+    SendPort port, FutureOr<R> Function() computation) {
   final int id = ++_nextId;
   final Completer<R> resultCompleter = Completer<R>();
   _pending[id] = resultCompleter;
@@ -116,7 +122,8 @@ Future<R> _sendComputation<R>(SendPort port, FutureOr<R> Function() computation)
   return resultCompleter.future;
 }
 
-void _safeSend(SendPort sendPort, int id, Object? result, Object? error, Object? stackTrace) {
+void _safeSend(SendPort sendPort, int id, Object? result, Object? error,
+    Object? stackTrace) {
   try {
     sendPort.send(_ComputationResult(id, result, error, stackTrace));
   } catch (sendError, sendStack) {

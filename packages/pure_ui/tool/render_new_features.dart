@@ -3,8 +3,7 @@ import 'dart:io';
 import 'dart:math' as math;
 import 'package:pure_ui/pure_ui.dart' as ui;
 
-Future<void> saveImage(
-    ui.Picture picture, int w, int h, String path) async {
+Future<void> saveImage(ui.Picture picture, int w, int h, String path) async {
   final image = await picture.toImage(w, h);
   final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
   image.dispose();
@@ -149,7 +148,8 @@ Future<void> main() async {
     );
 
     srcImage.dispose();
-    await saveImage(rec.endRecording(), 300, 110, 'tool/renders/04_imagenine.png');
+    await saveImage(
+        rec.endRecording(), 300, 110, 'tool/renders/04_imagenine.png');
   }
 
   // ── 5. Path.addOval / addArc / addRRect via drawPath ─────────────────────
@@ -184,7 +184,8 @@ Future<void> main() async {
         ..style = ui.PaintingStyle.fill,
     );
 
-    await saveImage(rec.endRecording(), 300, 110, 'tool/renders/05_path_shapes.png');
+    await saveImage(
+        rec.endRecording(), 300, 110, 'tool/renders/05_path_shapes.png');
   }
 
   print('\nAll renders complete → tool/renders/');

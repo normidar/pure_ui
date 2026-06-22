@@ -70,17 +70,20 @@ _LayoutResult layoutText(
 
   for (final span in spans) {
     final style = span.style;
-    final String? spanFont =
-        style != null && style._fontFamily.isNotEmpty ? style._fontFamily : null;
+    final String? spanFont = style != null && style._fontFamily.isNotEmpty
+        ? style._fontFamily
+        : null;
     final String? fontFamily = spanFont ??
-        (paraStyle._fontFamily?.isNotEmpty == true ? paraStyle._fontFamily : null);
+        (paraStyle._fontFamily?.isNotEmpty == true
+            ? paraStyle._fontFamily
+            : null);
     if (fontFamily == null) continue;
 
     // Resolve font weight and style for variant lookup.
-    final FontWeight fontWeight = (style != null &&
-            (style._encoded[0] & (1 << 5)) != 0)
-        ? FontWeight.values[style._encoded[5]]
-        : FontWeight.normal;
+    final FontWeight fontWeight =
+        (style != null && (style._encoded[0] & (1 << 5)) != 0)
+            ? FontWeight.values[style._encoded[5]]
+            : FontWeight.normal;
     final FontStyle fontStyle =
         (style != null && (style._encoded[0] & (1 << 6)) != 0)
             ? FontStyle.values[style._encoded[6]]
@@ -96,8 +99,8 @@ _LayoutResult layoutText(
     final effectiveStyle =
         style ?? TextStyle(fontSize: fontSize, fontFamily: fontFamily);
 
-    allGlyphs.addAll(
-        shapeText(span.text, effectiveStyle, font, fontKey: cacheKey));
+    allGlyphs
+        .addAll(shapeText(span.text, effectiveStyle, font, fontKey: cacheKey));
   }
 
   if (allGlyphs.isEmpty) return const _LayoutResult([], false);

@@ -55,18 +55,18 @@ void main() {
     });
 
     test('I is narrower than W', () {
-      final i = ui.shapeText(
-          'I', ui.TextStyle(fontSize: 16, fontFamily: 'x'), _font);
-      final w = ui.shapeText(
-          'W', ui.TextStyle(fontSize: 16, fontFamily: 'x'), _font);
+      final i =
+          ui.shapeText('I', ui.TextStyle(fontSize: 16, fontFamily: 'x'), _font);
+      final w =
+          ui.shapeText('W', ui.TextStyle(fontSize: 16, fontFamily: 'x'), _font);
       expect(i.first.advance, lessThan(w.first.advance));
     });
 
     test('advance scales with fontSize', () {
-      final small = ui.shapeText(
-          'A', ui.TextStyle(fontSize: 12, fontFamily: 'x'), _font);
-      final large = ui.shapeText(
-          'A', ui.TextStyle(fontSize: 24, fontFamily: 'x'), _font);
+      final small =
+          ui.shapeText('A', ui.TextStyle(fontSize: 12, fontFamily: 'x'), _font);
+      final large =
+          ui.shapeText('A', ui.TextStyle(fontSize: 24, fontFamily: 'x'), _font);
       expect(large.first.advance,
           closeTo(small.first.advance * 2, small.first.advance * 0.1));
     });
@@ -76,25 +76,23 @@ void main() {
 
   group('shapeText – letterSpacing', () {
     test('letterSpacing increases advance width', () {
-      final base = ui.shapeText(
-          'A', ui.TextStyle(fontSize: 16, fontFamily: 'x'), _font);
+      final base =
+          ui.shapeText('A', ui.TextStyle(fontSize: 16, fontFamily: 'x'), _font);
       final spaced = ui.shapeText(
           'A',
           ui.TextStyle(fontSize: 16, fontFamily: 'x', letterSpacing: 10.0),
           _font);
-      expect(spaced.first.advance,
-          closeTo(base.first.advance + 10.0, 0.01));
+      expect(spaced.first.advance, closeTo(base.first.advance + 10.0, 0.01));
     });
 
     test('negative letterSpacing decreases advance width', () {
-      final base = ui.shapeText(
-          'A', ui.TextStyle(fontSize: 16, fontFamily: 'x'), _font);
+      final base =
+          ui.shapeText('A', ui.TextStyle(fontSize: 16, fontFamily: 'x'), _font);
       final tight = ui.shapeText(
           'A',
           ui.TextStyle(fontSize: 16, fontFamily: 'x', letterSpacing: -2.0),
           _font);
-      expect(tight.first.advance,
-          closeTo(base.first.advance - 2.0, 0.01));
+      expect(tight.first.advance, closeTo(base.first.advance - 2.0, 0.01));
     });
 
     test('letterSpacing applies to every glyph in a string', () {
@@ -118,10 +116,8 @@ void main() {
       const ws = 8.0;
       final base = ui.shapeText(
           'A B', ui.TextStyle(fontSize: 16, fontFamily: 'x'), _font);
-      final spaced = ui.shapeText(
-          'A B',
-          ui.TextStyle(fontSize: 16, fontFamily: 'x', wordSpacing: ws),
-          _font);
+      final spaced = ui.shapeText('A B',
+          ui.TextStyle(fontSize: 16, fontFamily: 'x', wordSpacing: ws), _font);
       // The space glyph (index 1) should have a larger advance.
       expect(spaced[1].advance, closeTo(base[1].advance + ws, 0.01));
     });
@@ -130,10 +126,8 @@ void main() {
       const ws = 8.0;
       final base = ui.shapeText(
           'AB', ui.TextStyle(fontSize: 16, fontFamily: 'x'), _font);
-      final spaced = ui.shapeText(
-          'AB',
-          ui.TextStyle(fontSize: 16, fontFamily: 'x', wordSpacing: ws),
-          _font);
+      final spaced = ui.shapeText('AB',
+          ui.TextStyle(fontSize: 16, fontFamily: 'x', wordSpacing: ws), _font);
       expect(spaced[0].advance, closeTo(base[0].advance, 0.01));
       expect(spaced[1].advance, closeTo(base[1].advance, 0.01));
     });
@@ -143,8 +137,8 @@ void main() {
 
   group('shapeText – colour', () {
     test('default colour is black when no colour specified', () {
-      final glyphs = ui.shapeText(
-          'A', ui.TextStyle(fontSize: 16, fontFamily: 'x'), _font);
+      final glyphs =
+          ui.shapeText('A', ui.TextStyle(fontSize: 16, fontFamily: 'x'), _font);
       expect(glyphs.first.color, equals(const ui.Color(0xFF000000)));
     });
 
@@ -152,9 +146,7 @@ void main() {
       final glyphs = ui.shapeText(
           'A',
           ui.TextStyle(
-              fontSize: 16,
-              fontFamily: 'x',
-              color: const ui.Color(0xFFFF0000)),
+              fontSize: 16, fontFamily: 'x', color: const ui.Color(0xFFFF0000)),
           _font);
       expect(glyphs.first.color, equals(const ui.Color(0xFFFF0000)));
     });
@@ -195,8 +187,8 @@ void main() {
         {double fontSize = 24,
         double? letterSpacing,
         double? wordSpacing}) async {
-      final style = ui.ParagraphStyle(
-          fontFamily: _fontFamily, fontSize: fontSize);
+      final style =
+          ui.ParagraphStyle(fontFamily: _fontFamily, fontSize: fontSize);
       final builder = ui.ParagraphBuilder(style)
         ..pushStyle(ui.TextStyle(
           color: const ui.Color(0xFF000000),
@@ -211,12 +203,10 @@ void main() {
         ..layout(const ui.ParagraphConstraints(width: 600));
 
       final recorder = ui.PictureRecorder();
-      ui.Canvas(recorder,
-              const ui.Rect.fromLTWH(0, 0, 600, 100))
+      ui.Canvas(recorder, const ui.Rect.fromLTWH(0, 0, 600, 100))
           .drawParagraph(para, const ui.Offset(0, 10));
       final image = await recorder.endRecording().toImage(600, 100);
-      final bd =
-          await image.toByteData(format: ui.ImageByteFormat.rawRgba);
+      final bd = await image.toByteData(format: ui.ImageByteFormat.rawRgba);
       final raw = bd?.buffer.asUint8List() ?? [];
       int count = 0;
       for (int i = 3; i < raw.length; i += 4) {

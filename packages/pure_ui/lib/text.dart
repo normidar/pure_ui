@@ -138,7 +138,9 @@ class FontWeight {
     if (a == null && b == null) {
       return null;
     }
-    return values[_lerpInt((a ?? normal).index, (b ?? normal).index, t).round().clamp(0, 8)];
+    return values[_lerpInt((a ?? normal).index, (b ?? normal).index, t)
+        .round()
+        .clamp(0, 8)];
   }
 
   @override
@@ -194,8 +196,9 @@ class FontFeature {
   ///
   /// See <https://docs.microsoft.com/en-us/typography/opentype/spec/featuretags>
   const FontFeature(this.feature, [this.value = 1])
-    : assert(feature.length == 4, 'Feature tag must be exactly four characters long.'),
-      assert(value >= 0, 'Feature value must be zero or a positive integer.');
+      : assert(feature.length == 4,
+            'Feature tag must be exactly four characters long.'),
+        assert(value >= 0, 'Feature value must be zero or a positive integer.');
 
   /// Create a [FontFeature] object that enables the feature with the given tag.
   const FontFeature.enable(String feature) : this(feature, 1);
@@ -267,7 +270,9 @@ class FontFeature {
   ///
   ///  * [FontFeature.fractions], which has a similar (but different) effect.
   ///  * <https://docs.microsoft.com/en-us/typography/opentype/spec/features_ae#afrc>
-  const FontFeature.alternativeFractions() : feature = 'afrc', value = 1;
+  const FontFeature.alternativeFractions()
+      : feature = 'afrc',
+        value = 1;
 
   /// Enable contextual alternates. (`calt`)
   ///
@@ -291,7 +296,9 @@ class FontFeature {
   ///  * [FontFeature.randomize], which is more a rarely supported but more
   ///    powerful way to get a similar effect.
   ///  * <https://docs.microsoft.com/en-us/typography/opentype/spec/features_ae#calt>
-  const FontFeature.contextualAlternates() : feature = 'calt', value = 1;
+  const FontFeature.contextualAlternates()
+      : feature = 'calt',
+        value = 1;
 
   /// Enable case-sensitive forms. (`case`)
   ///
@@ -324,7 +331,9 @@ class FontFeature {
   /// See also:
   ///
   ///  * <https://docs.microsoft.com/en-us/typography/opentype/spec/features_ae#case>
-  const FontFeature.caseSensitiveForms() : feature = 'case', value = 1;
+  const FontFeature.caseSensitiveForms()
+      : feature = 'case',
+        value = 1;
 
   /// Select a character variant. (`cv01` through `cv99`)
   ///
@@ -385,7 +394,9 @@ class FontFeature {
   /// See also:
   ///
   ///  * <https://docs.microsoft.com/en-us/typography/opentype/spec/features_ae#dnom>
-  const FontFeature.denominator() : feature = 'dnom', value = 1;
+  const FontFeature.denominator()
+      : feature = 'dnom',
+        value = 1;
 
   /// Use ligatures to represent fractions. (`afrc`)
   ///
@@ -412,7 +423,9 @@ class FontFeature {
   ///
   ///  * [FontFeature.alternativeFractions], which has a similar (but different) effect.
   ///  * <https://docs.microsoft.com/en-us/typography/opentype/spec/features_fj#frac>
-  const FontFeature.fractions() : feature = 'frac', value = 1;
+  const FontFeature.fractions()
+      : feature = 'frac',
+        value = 1;
 
   /// Use historical forms. (`hist`)
   ///
@@ -439,7 +452,9 @@ class FontFeature {
   /// See also:
   ///
   ///  * <https://docs.microsoft.com/en-us/typography/opentype/spec/features_fj#hist>
-  const FontFeature.historicalForms() : feature = 'hist', value = 1;
+  const FontFeature.historicalForms()
+      : feature = 'hist',
+        value = 1;
 
   /// Use historical ligatures. (`hlig`)
   ///
@@ -485,7 +500,9 @@ class FontFeature {
   /// See also:
   ///
   ///  * <https://docs.microsoft.com/en-us/typography/opentype/spec/features_fj#hlig>
-  const FontFeature.historicalLigatures() : feature = 'hlig', value = 1;
+  const FontFeature.historicalLigatures()
+      : feature = 'hlig',
+        value = 1;
 
   /// Use lining figures. (`lnum`)
   ///
@@ -511,7 +528,9 @@ class FontFeature {
   /// See also:
   ///
   ///  * <https://docs.microsoft.com/en-us/typography/opentype/spec/features_ko#lnum>
-  const FontFeature.liningFigures() : feature = 'lnum', value = 1;
+  const FontFeature.liningFigures()
+      : feature = 'lnum',
+        value = 1;
 
   /// Use locale-specific glyphs. (`locl`)
   ///
@@ -554,7 +573,9 @@ class FontFeature {
   ///  * <https://docs.microsoft.com/en-us/typography/opentype/spec/features_ko#locl>
   ///  * <https://en.wikipedia.org/wiki/Han_unification>
   ///  * <https://en.wikipedia.org/wiki/Cyrillic_script>
-  const FontFeature.localeAware({bool enable = true}) : feature = 'locl', value = enable ? 1 : 0;
+  const FontFeature.localeAware({bool enable = true})
+      : feature = 'locl',
+        value = enable ? 1 : 0;
 
   /// Display alternative glyphs for numerals (alternate annotation forms). (`nalt`)
   ///
@@ -585,7 +606,9 @@ class FontFeature {
   /// See also:
   ///
   ///  * <https://docs.microsoft.com/en-us/typography/opentype/spec/features_ko#nalt>
-  const FontFeature.notationalForms([this.value = 1]) : feature = 'nalt', assert(value >= 0);
+  const FontFeature.notationalForms([this.value = 1])
+      : feature = 'nalt',
+        assert(value >= 0);
 
   /// Display digits as numerators. (`numr`)
   ///
@@ -605,7 +628,9 @@ class FontFeature {
   /// See also:
   ///
   ///  * <https://docs.microsoft.com/en-us/typography/opentype/spec/features_ko#numr>
-  const FontFeature.numerators() : feature = 'numr', value = 1;
+  const FontFeature.numerators()
+      : feature = 'numr',
+        value = 1;
 
   /// Use old style figures. (`onum`)
   ///
@@ -632,7 +657,9 @@ class FontFeature {
   ///
   ///  * <https://docs.microsoft.com/en-us/typography/opentype/spec/features_ko#onum>
   ///  * <https://en.wikipedia.org/wiki/Text_figures>
-  const FontFeature.oldstyleFigures() : feature = 'onum', value = 1;
+  const FontFeature.oldstyleFigures()
+      : feature = 'onum',
+        value = 1;
 
   /// Use ordinal forms for alphabetic glyphs. (`ordn`)
   ///
@@ -654,7 +681,9 @@ class FontFeature {
   /// See also:
   ///
   ///  * <https://docs.microsoft.com/en-us/typography/opentype/spec/features_ko#ordn>
-  const FontFeature.ordinalForms() : feature = 'ordn', value = 1;
+  const FontFeature.ordinalForms()
+      : feature = 'ordn',
+        value = 1;
 
   /// Use proportional (varying width) figures. (`pnum`)
   ///
@@ -681,7 +710,9 @@ class FontFeature {
   /// See also:
   ///
   ///  * <https://docs.microsoft.com/en-us/typography/opentype/spec/features_pt#pnum>
-  const FontFeature.proportionalFigures() : feature = 'pnum', value = 1;
+  const FontFeature.proportionalFigures()
+      : feature = 'pnum',
+        value = 1;
 
   /// Randomize the alternate forms used in text. (`rand`)
   ///
@@ -697,7 +728,9 @@ class FontFeature {
   /// See also:
   ///
   ///  * <https://docs.microsoft.com/en-us/typography/opentype/spec/features_pt#rand>
-  const FontFeature.randomize() : feature = 'rand', value = 1;
+  const FontFeature.randomize()
+      : feature = 'rand',
+        value = 1;
 
   /// Enable stylistic alternates. (`salt`)
   ///
@@ -726,7 +759,9 @@ class FontFeature {
   ///
   ///  * [FontFeature.contextualAlternates], which is enables alternates specific to certain contexts.
   ///  * <https://docs.microsoft.com/en-us/typography/opentype/spec/features_pt#salt>
-  const FontFeature.stylisticAlternates() : feature = 'salt', value = 1;
+  const FontFeature.stylisticAlternates()
+      : feature = 'salt',
+        value = 1;
 
   /// Use scientific inferiors. (`sinf`)
   ///
@@ -749,7 +784,9 @@ class FontFeature {
   /// See also:
   ///
   ///  * <https://docs.microsoft.com/en-us/typography/opentype/spec/features_pt#sinf>
-  const FontFeature.scientificInferiors() : feature = 'sinf', value = 1;
+  const FontFeature.scientificInferiors()
+      : feature = 'sinf',
+        value = 1;
 
   /// Select a stylistic set. (`ss01` through `ss20`)
   ///
@@ -825,7 +862,9 @@ class FontFeature {
   ///  * [FontFeature.scientificInferiors], which is similar but intended specifically for
   ///    subscripts used in scientific contexts.
   ///  * [FontFeature.superscripts], which is similar but for subscripting.
-  const FontFeature.subscripts() : feature = 'subs', value = 1;
+  const FontFeature.subscripts()
+      : feature = 'subs',
+        value = 1;
 
   /// Enable superscripts. (`sups`)
   ///
@@ -854,7 +893,9 @@ class FontFeature {
   ///
   ///  * <https://docs.microsoft.com/en-us/typography/opentype/spec/features_pt#sups>
   ///  * [FontFeature.subscripts], which is similar but for subscripting.
-  const FontFeature.superscripts() : feature = 'sups', value = 1;
+  const FontFeature.superscripts()
+      : feature = 'sups',
+        value = 1;
 
   /// Enable swash glyphs. (`swsh`)
   ///
@@ -885,7 +926,9 @@ class FontFeature {
   ///
   ///  * <https://docs.microsoft.com/en-us/typography/opentype/spec/features_pt#swsh>
   ///  * <https://en.wikipedia.org/wiki/Swash_(typography)>
-  const FontFeature.swash([this.value = 1]) : feature = 'swsh', assert(value >= 0);
+  const FontFeature.swash([this.value = 1])
+      : feature = 'swsh',
+        assert(value >= 0);
 
   /// Use tabular (monospace) figures. (`tnum`)
   ///
@@ -912,7 +955,9 @@ class FontFeature {
   /// See also:
   ///
   ///  * <https://docs.microsoft.com/en-us/typography/opentype/spec/features_pt#tnum>
-  const FontFeature.tabularFigures() : feature = 'tnum', value = 1;
+  const FontFeature.tabularFigures()
+      : feature = 'tnum',
+        value = 1;
 
   /// Use the slashed zero. (`zero`)
   ///
@@ -934,7 +979,9 @@ class FontFeature {
   /// See also:
   ///
   ///  * <https://docs.microsoft.com/en-us/typography/opentype/spec/features_uz#zero>
-  const FontFeature.slashedZero() : feature = 'zero', value = 1;
+  const FontFeature.slashedZero()
+      : feature = 'zero',
+        value = 1;
 
   // ------------------------------------------------------------------------
   // End of feature tags list.
@@ -975,7 +1022,9 @@ class FontFeature {
     if (other.runtimeType != runtimeType) {
       return false;
     }
-    return other is FontFeature && other.feature == feature && other.value == value;
+    return other is FontFeature &&
+        other.feature == feature &&
+        other.value == value;
   }
 
   @override
@@ -1018,11 +1067,12 @@ class FontVariation {
   /// `value` is the value that the axis will be set to. The behavior
   /// depends on how the font implements the axis.
   const FontVariation(this.axis, this.value)
-    : assert(axis.length == 4, 'Axis tag must be exactly four characters long.'),
-      assert(
-        value >= -32768.0 && value < 32768.0,
-        'Value must be representable as a signed 16.16 fixed-point number, i.e. it must be in this range: -32768.0 ≤ value < 32768.0',
-      );
+      : assert(
+            axis.length == 4, 'Axis tag must be exactly four characters long.'),
+        assert(
+          value >= -32768.0 && value < 32768.0,
+          'Value must be representable as a signed 16.16 fixed-point number, i.e. it must be in this range: -32768.0 ≤ value < 32768.0',
+        );
 
   // Constructors below should be alphabetic by axis tag. This makes it easier
   // to determine when an axis is missing so that we avoid adding duplicates.
@@ -1045,9 +1095,9 @@ class FontVariation {
   ///
   ///  * <https://learn.microsoft.com/en-us/typography/opentype/spec/dvaraxistag_ital>
   const FontVariation.italic(this.value)
-    : assert(value >= 0.0),
-      assert(value <= 1.0),
-      axis = 'ital';
+      : assert(value >= 0.0),
+        assert(value <= 1.0),
+        axis = 'ital';
 
   /// Optical size optimization. (`opzs`)
   ///
@@ -1073,7 +1123,9 @@ class FontVariation {
   /// See also:
   ///
   ///  * <https://learn.microsoft.com/en-us/typography/opentype/spec/dvaraxistag_opsz>
-  const FontVariation.opticalSize(this.value) : assert(value > 0.0), axis = 'opsz';
+  const FontVariation.opticalSize(this.value)
+      : assert(value > 0.0),
+        axis = 'opsz';
 
   /// Variable font width. (`slnt`)
   ///
@@ -1092,9 +1144,9 @@ class FontVariation {
   ///
   ///  * <https://learn.microsoft.com/en-us/typography/opentype/spec/dvaraxistag_slnt>
   const FontVariation.slant(this.value)
-    : assert(value > -90.0),
-      assert(value < 90.0),
-      axis = 'slnt';
+      : assert(value > -90.0),
+        assert(value < 90.0),
+        axis = 'slnt';
 
   /// Variable font width. (`wdth`)
   ///
@@ -1107,7 +1159,9 @@ class FontVariation {
   /// See also:
   ///
   ///  * <https://learn.microsoft.com/en-us/typography/opentype/spec/dvaraxistag_wdth>
-  const FontVariation.width(this.value) : assert(value >= 0.0), axis = 'wdth';
+  const FontVariation.width(this.value)
+      : assert(value >= 0.0),
+        axis = 'wdth';
 
   /// Variable font weight. (`wght`)
   ///
@@ -1121,7 +1175,10 @@ class FontVariation {
   /// See also:
   ///
   ///  * <https://learn.microsoft.com/en-us/typography/opentype/spec/dvaraxistag_wght>
-  const FontVariation.weight(this.value) : assert(value >= 1), assert(value <= 1000), axis = 'wght';
+  const FontVariation.weight(this.value)
+      : assert(value >= 1),
+        assert(value <= 1000),
+        axis = 'wght';
 
   // ------------------------------------------------------------------------
   // End of axis tags list.
@@ -1199,7 +1256,8 @@ class FontVariation {
     }
     return FontVariation(
       a!.axis,
-      clampDouble(lerpDouble(a.value, b!.value, t)!, -32768.0, 32768.0 - 1.0 / 65536.0),
+      clampDouble(
+          lerpDouble(a.value, b!.value, t)!, -32768.0, 32768.0 - 1.0 / 65536.0),
     );
   }
 
@@ -1232,9 +1290,10 @@ final class GlyphInfo {
     int graphemeStart,
     int graphemeEnd,
     bool isLTR,
-  ) : graphemeClusterLayoutBounds = Rect.fromLTRB(left, top, right, bottom),
-      graphemeClusterCodeUnitRange = TextRange(start: graphemeStart, end: graphemeEnd),
-      writingDirection = isLTR ? TextDirection.ltr : TextDirection.rtl;
+  )   : graphemeClusterLayoutBounds = Rect.fromLTRB(left, top, right, bottom),
+        graphemeClusterCodeUnitRange =
+            TextRange(start: graphemeStart, end: graphemeEnd),
+        writingDirection = isLTR ? TextDirection.ltr : TextDirection.rtl;
 
   /// The layout bounding rect of the associated character, in the paragraph's
   /// coordinates.
@@ -1263,8 +1322,8 @@ final class GlyphInfo {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(graphemeClusterLayoutBounds, graphemeClusterCodeUnitRange, writingDirection);
+  int get hashCode => Object.hash(graphemeClusterLayoutBounds,
+      graphemeClusterCodeUnitRange, writingDirection);
 
   @override
   String toString() =>
@@ -1459,8 +1518,8 @@ class TextHeightBehavior {
   ///
   /// See [_encode] for the creation of the encoded form.
   const TextHeightBehavior._fromEncoded(int encoded, this.leadingDistribution)
-    : applyHeightToFirstAscent = (encoded & 0x1) == 0,
-      applyHeightToLastDescent = (encoded & 0x2) == 0;
+      : applyHeightToFirstAscent = (encoded & 0x1) == 0,
+        applyHeightToLastDescent = (encoded & 0x2) == 0;
 
   /// Whether to apply the [TextStyle.height] modifier to the ascent of the first
   /// line in the paragraph.
@@ -1501,7 +1560,8 @@ class TextHeightBehavior {
   /// Returns an encoded int representation of this object (excluding
   /// [leadingDistribution]).
   int _encode() {
-    return (applyHeightToFirstAscent ? 0 : 1 << 0) | (applyHeightToLastDescent ? 0 : 1 << 1);
+    return (applyHeightToFirstAscent ? 0 : 1 << 0) |
+        (applyHeightToLastDescent ? 0 : 1 << 1);
   }
 
   @override
@@ -1636,7 +1696,8 @@ Int32List _encodeTextStyle(
   if (decorationThickness != null) {
     result[0] |= 1 << 8;
   }
-  if (fontFamily != null || (fontFamilyFallback != null && fontFamilyFallback.isNotEmpty)) {
+  if (fontFamily != null ||
+      (fontFamilyFallback != null && fontFamilyFallback.isNotEmpty)) {
     result[0] |= 1 << 9;
     // Passed separately to native.
   }
@@ -1744,47 +1805,47 @@ class TextStyle {
     List<Shadow>? shadows,
     List<FontFeature>? fontFeatures,
     List<FontVariation>? fontVariations,
-  }) : assert(
-         color == null || foreground == null,
-         'Cannot provide both a color and a foreground\n'
-         'The color argument is just a shorthand for "foreground: Paint()..color = color".',
-       ),
-       _encoded = _encodeTextStyle(
-         color,
-         decoration,
-         decorationColor,
-         decorationStyle,
-         decorationThickness,
-         fontWeight,
-         fontStyle,
-         textBaseline,
-         fontFamily,
-         fontFamilyFallback,
-         fontSize,
-         letterSpacing,
-         wordSpacing,
-         height,
-         locale,
-         background,
-         foreground,
-         shadows,
-         fontFeatures,
-         fontVariations,
-       ),
-       _leadingDistribution = leadingDistribution,
-       _fontFamily = fontFamily ?? '',
-       _fontFamilyFallback = fontFamilyFallback,
-       _fontSize = fontSize,
-       _letterSpacing = letterSpacing,
-       _wordSpacing = wordSpacing,
-       _height = height,
-       _decorationThickness = decorationThickness,
-       _locale = locale,
-       _background = background,
-       _foreground = foreground,
-       _shadows = shadows,
-       _fontFeatures = fontFeatures,
-       _fontVariations = fontVariations;
+  })  : assert(
+          color == null || foreground == null,
+          'Cannot provide both a color and a foreground\n'
+          'The color argument is just a shorthand for "foreground: Paint()..color = color".',
+        ),
+        _encoded = _encodeTextStyle(
+          color,
+          decoration,
+          decorationColor,
+          decorationStyle,
+          decorationThickness,
+          fontWeight,
+          fontStyle,
+          textBaseline,
+          fontFamily,
+          fontFamilyFallback,
+          fontSize,
+          letterSpacing,
+          wordSpacing,
+          height,
+          locale,
+          background,
+          foreground,
+          shadows,
+          fontFeatures,
+          fontVariations,
+        ),
+        _leadingDistribution = leadingDistribution,
+        _fontFamily = fontFamily ?? '',
+        _fontFamilyFallback = fontFamilyFallback,
+        _fontSize = fontSize,
+        _letterSpacing = letterSpacing,
+        _wordSpacing = wordSpacing,
+        _height = height,
+        _decorationThickness = decorationThickness,
+        _locale = locale,
+        _background = background,
+        _foreground = foreground,
+        _shadows = shadows,
+        _fontFeatures = fontFeatures,
+        _fontVariations = fontVariations;
 
   final Int32List _encoded;
   final String _fontFamily;
@@ -2047,28 +2108,28 @@ class ParagraphStyle {
     StrutStyle? strutStyle,
     String? ellipsis,
     Locale? locale,
-  }) : _encoded = _encodeParagraphStyle(
-         textAlign,
-         textDirection,
-         maxLines,
-         fontFamily,
-         fontSize,
-         height,
-         textHeightBehavior,
-         fontWeight,
-         fontStyle,
-         strutStyle,
-         ellipsis,
-         locale,
-       ),
-       _fontFamily = fontFamily,
-       _fontSize = fontSize,
-       _height = height,
-       _strutStyle = strutStyle,
-       _ellipsis = ellipsis,
-       _locale = locale,
-       _leadingDistribution =
-           textHeightBehavior?.leadingDistribution ?? TextLeadingDistribution.proportional;
+  })  : _encoded = _encodeParagraphStyle(
+          textAlign,
+          textDirection,
+          maxLines,
+          fontFamily,
+          fontSize,
+          height,
+          textHeightBehavior,
+          fontWeight,
+          fontStyle,
+          strutStyle,
+          ellipsis,
+          locale,
+        ),
+        _fontFamily = fontFamily,
+        _fontSize = fontSize,
+        _height = height,
+        _strutStyle = strutStyle,
+        _ellipsis = ellipsis,
+        _locale = locale,
+        _leadingDistribution = textHeightBehavior?.leadingDistribution ??
+            TextLeadingDistribution.proportional;
 
   final Int32List _encoded;
   final String? _fontFamily;
@@ -2100,14 +2161,14 @@ class ParagraphStyle {
 
   @override
   int get hashCode => Object.hash(
-    Object.hashAll(_encoded),
-    _fontFamily,
-    _fontSize,
-    _height,
-    _ellipsis,
-    _locale,
-    _leadingDistribution,
-  );
+        Object.hashAll(_encoded),
+        _fontFamily,
+        _fontSize,
+        _height,
+        _ellipsis,
+        _locale,
+        _leadingDistribution,
+      );
 
   @override
   String toString() {
@@ -2175,7 +2236,8 @@ ByteData _encodeStrut(
     data.setInt8(byteCount, fontStyle.index);
     byteCount += 1;
   }
-  if (fontFamily != null || (fontFamilyFallback != null && fontFamilyFallback.isNotEmpty)) {
+  if (fontFamily != null ||
+      (fontFamilyFallback != null && fontFamilyFallback.isNotEmpty)) {
     bitmask |= 1 << 2;
     // passed separately to native
   }
@@ -2269,20 +2331,20 @@ class StrutStyle {
     FontWeight? fontWeight,
     FontStyle? fontStyle,
     bool? forceStrutHeight,
-  }) : _encoded = _encodeStrut(
-         fontFamily,
-         fontFamilyFallback,
-         fontSize,
-         height,
-         leadingDistribution,
-         leading,
-         fontWeight,
-         fontStyle,
-         forceStrutHeight,
-       ),
-       _leadingDistribution = leadingDistribution,
-       _fontFamily = fontFamily,
-       _fontFamilyFallback = fontFamilyFallback;
+  })  : _encoded = _encodeStrut(
+          fontFamily,
+          fontFamilyFallback,
+          fontSize,
+          height,
+          leadingDistribution,
+          leading,
+          fontWeight,
+          fontStyle,
+          forceStrutHeight,
+        ),
+        _leadingDistribution = leadingDistribution,
+        _fontFamily = fontFamily,
+        _fontFamilyFallback = fontFamilyFallback;
 
   final ByteData _encoded; // Most of the data for strut is encoded.
   final String? _fontFamily;
@@ -2303,12 +2365,13 @@ class StrutStyle {
         other._fontFamily == _fontFamily &&
         other._leadingDistribution == _leadingDistribution &&
         _listEquals<String>(other._fontFamilyFallback, _fontFamilyFallback) &&
-        _listEquals<int>(other._encoded.buffer.asInt8List(), _encoded.buffer.asInt8List());
+        _listEquals<int>(
+            other._encoded.buffer.asInt8List(), _encoded.buffer.asInt8List());
   }
 
   @override
-  int get hashCode =>
-      Object.hash(Object.hashAll(_encoded.buffer.asInt8List()), _fontFamily, _leadingDistribution);
+  int get hashCode => Object.hash(Object.hashAll(_encoded.buffer.asInt8List()),
+      _fontFamily, _leadingDistribution);
 }
 
 /// A direction in which text flows.
@@ -2409,7 +2472,8 @@ enum TextDirection {
 /// This is similar to [Rect] but includes an inherent [TextDirection].
 class TextBox {
   /// Creates an object that describes a box containing text.
-  const TextBox.fromLTRBD(this.left, this.top, this.right, this.bottom, this.direction);
+  const TextBox.fromLTRBD(
+      this.left, this.top, this.right, this.bottom, this.direction);
 
   /// The left edge of the text box, irrespective of direction.
   ///
@@ -2542,7 +2606,8 @@ class TextPosition {
   /// Creates an object representing a particular position in a string.
   ///
   /// The arguments must not be null (so the [offset] argument is required).
-  const TextPosition({required this.offset, this.affinity = TextAffinity.downstream});
+  const TextPosition(
+      {required this.offset, this.affinity = TextAffinity.downstream});
 
   /// The index of the character that immediately follows the position in the
   /// string representation of the text.
@@ -2566,7 +2631,9 @@ class TextPosition {
     if (other.runtimeType != runtimeType) {
       return false;
     }
-    return other is TextPosition && other.offset == offset && other.affinity == affinity;
+    return other is TextPosition &&
+        other.offset == offset &&
+        other.affinity == affinity;
   }
 
   @override
@@ -2591,13 +2658,16 @@ class TextRange {
   /// Instead of creating an empty text range, consider using the [empty]
   /// constant.
   const TextRange({required this.start, required this.end})
-    : assert(start >= -1),
-      assert(end >= -1);
+      : assert(start >= -1),
+        assert(end >= -1);
 
   /// A text range that starts and ends at offset.
   ///
   /// The [offset] argument must be non-null and greater than or equal to -1.
-  const TextRange.collapsed(int offset) : assert(offset >= -1), start = offset, end = offset;
+  const TextRange.collapsed(int offset)
+      : assert(offset >= -1),
+        start = offset,
+        end = offset;
 
   /// A text range that contains nothing and is not in the text.
   static const TextRange empty = TextRange(start: -1, end: -1);
@@ -2939,16 +3009,16 @@ class LineMetrics {
 
   @override
   int get hashCode => Object.hash(
-    hardBreak,
-    ascent,
-    descent,
-    unscaledAscent,
-    height,
-    width,
-    left,
-    baseline,
-    lineNumber,
-  );
+        hardBreak,
+        ascent,
+        descent,
+        unscaledAscent,
+        height,
+        width,
+        left,
+        baseline,
+        lineNumber,
+      );
 
   @override
   String toString() {
@@ -3149,7 +3219,8 @@ abstract class Paragraph {
   bool get debugDisposed;
 }
 
-base class _NativeParagraph extends NativeFieldWrapperClass1 implements Paragraph {
+base class _NativeParagraph extends NativeFieldWrapperClass1
+    implements Paragraph {
   /// This class is created by the engine, and should not be instantiated
   /// or extended directly.
   ///
@@ -3159,35 +3230,43 @@ base class _NativeParagraph extends NativeFieldWrapperClass1 implements Paragrap
   bool _needsLayout = true;
 
   @override
-  @Native<Double Function(Pointer<Void>)>(symbol: 'Paragraph::width', isLeaf: true)
+  @Native<Double Function(Pointer<Void>)>(
+      symbol: 'Paragraph::width', isLeaf: true)
   external double get width;
 
   @override
-  @Native<Double Function(Pointer<Void>)>(symbol: 'Paragraph::height', isLeaf: true)
+  @Native<Double Function(Pointer<Void>)>(
+      symbol: 'Paragraph::height', isLeaf: true)
   external double get height;
 
   @override
-  @Native<Double Function(Pointer<Void>)>(symbol: 'Paragraph::longestLine', isLeaf: true)
+  @Native<Double Function(Pointer<Void>)>(
+      symbol: 'Paragraph::longestLine', isLeaf: true)
   external double get longestLine;
 
   @override
-  @Native<Double Function(Pointer<Void>)>(symbol: 'Paragraph::minIntrinsicWidth', isLeaf: true)
+  @Native<Double Function(Pointer<Void>)>(
+      symbol: 'Paragraph::minIntrinsicWidth', isLeaf: true)
   external double get minIntrinsicWidth;
 
   @override
-  @Native<Double Function(Pointer<Void>)>(symbol: 'Paragraph::maxIntrinsicWidth', isLeaf: true)
+  @Native<Double Function(Pointer<Void>)>(
+      symbol: 'Paragraph::maxIntrinsicWidth', isLeaf: true)
   external double get maxIntrinsicWidth;
 
   @override
-  @Native<Double Function(Pointer<Void>)>(symbol: 'Paragraph::alphabeticBaseline', isLeaf: true)
+  @Native<Double Function(Pointer<Void>)>(
+      symbol: 'Paragraph::alphabeticBaseline', isLeaf: true)
   external double get alphabeticBaseline;
 
   @override
-  @Native<Double Function(Pointer<Void>)>(symbol: 'Paragraph::ideographicBaseline', isLeaf: true)
+  @Native<Double Function(Pointer<Void>)>(
+      symbol: 'Paragraph::ideographicBaseline', isLeaf: true)
   external double get ideographicBaseline;
 
   @override
-  @Native<Bool Function(Pointer<Void>)>(symbol: 'Paragraph::didExceedMaxLines', isLeaf: true)
+  @Native<Bool Function(Pointer<Void>)>(
+      symbol: 'Paragraph::didExceedMaxLines', isLeaf: true)
   external bool get didExceedMaxLines;
 
   @override
@@ -3199,7 +3278,8 @@ base class _NativeParagraph extends NativeFieldWrapperClass1 implements Paragrap
     }());
   }
 
-  @Native<Void Function(Pointer<Void>, Double)>(symbol: 'Paragraph::layout', isLeaf: true)
+  @Native<Void Function(Pointer<Void>, Double)>(
+      symbol: 'Paragraph::layout', isLeaf: true)
   external void _layout(double width);
 
   List<TextBox> _decodeTextBoxes(Float32List encoded) {
@@ -3236,28 +3316,34 @@ base class _NativeParagraph extends NativeFieldWrapperClass1 implements Paragrap
   @Native<Handle Function(Pointer<Void>, Uint32, Uint32, Uint32, Uint32)>(
     symbol: 'Paragraph::getRectsForRange',
   )
-  external Float32List _getBoxesForRange(int start, int end, int boxHeightStyle, int boxWidthStyle);
+  external Float32List _getBoxesForRange(
+      int start, int end, int boxHeightStyle, int boxWidthStyle);
 
   @override
   List<TextBox> getBoxesForPlaceholders() {
     return _decodeTextBoxes(_getBoxesForPlaceholders());
   }
 
-  @Native<Handle Function(Pointer<Void>)>(symbol: 'Paragraph::getRectsForPlaceholders')
+  @Native<Handle Function(Pointer<Void>)>(
+      symbol: 'Paragraph::getRectsForPlaceholders')
   external Float32List _getBoxesForPlaceholders();
 
   @override
   TextPosition getPositionForOffset(Offset offset) {
     final List<int> encoded = _getPositionForOffset(offset.dx, offset.dy);
-    return TextPosition(offset: encoded[0], affinity: TextAffinity.values[encoded[1]]);
+    return TextPosition(
+        offset: encoded[0], affinity: TextAffinity.values[encoded[1]]);
   }
 
-  @Native<Handle Function(Pointer<Void>, Double, Double)>(symbol: 'Paragraph::getPositionForOffset')
+  @Native<Handle Function(Pointer<Void>, Double, Double)>(
+      symbol: 'Paragraph::getPositionForOffset')
   external List<int> _getPositionForOffset(double dx, double dy);
 
   @override
-  GlyphInfo? getGlyphInfoAt(int codeUnitOffset) => _getGlyphInfoAt(codeUnitOffset, GlyphInfo._);
-  @Native<Handle Function(Pointer<Void>, Uint32, Handle)>(symbol: 'Paragraph::getGlyphInfoAt')
+  GlyphInfo? getGlyphInfoAt(int codeUnitOffset) =>
+      _getGlyphInfoAt(codeUnitOffset, GlyphInfo._);
+  @Native<Handle Function(Pointer<Void>, Uint32, Handle)>(
+      symbol: 'Paragraph::getGlyphInfoAt')
   external GlyphInfo? _getGlyphInfoAt(int codeUnitOffset, Function constructor);
 
   @override
@@ -3266,7 +3352,8 @@ base class _NativeParagraph extends NativeFieldWrapperClass1 implements Paragrap
   @Native<Handle Function(Pointer<Void>, Double, Double, Handle)>(
     symbol: 'Paragraph::getClosestGlyphInfo',
   )
-  external GlyphInfo? _getClosestGlyphInfoForOffset(double dx, double dy, Function constructor);
+  external GlyphInfo? _getClosestGlyphInfoForOffset(
+      double dx, double dy, Function constructor);
 
   @override
   TextRange getWordBoundary(TextPosition position) {
@@ -3281,7 +3368,8 @@ base class _NativeParagraph extends NativeFieldWrapperClass1 implements Paragrap
     return TextRange(start: boundary[0], end: boundary[1]);
   }
 
-  @Native<Handle Function(Pointer<Void>, Uint32)>(symbol: 'Paragraph::getWordBoundary')
+  @Native<Handle Function(Pointer<Void>, Uint32)>(
+      symbol: 'Paragraph::getWordBoundary')
   external List<int> _getWordBoundary(int offset);
 
   @override
@@ -3290,7 +3378,8 @@ base class _NativeParagraph extends NativeFieldWrapperClass1 implements Paragrap
     final TextRange line = TextRange(start: boundary[0], end: boundary[1]);
 
     final List<int> nextBoundary = _getLineBoundary(position.offset + 1);
-    final TextRange nextLine = TextRange(start: nextBoundary[0], end: nextBoundary[1]);
+    final TextRange nextLine =
+        TextRange(start: nextBoundary[0], end: nextBoundary[1]);
     // If there is no next line, because we're at the end of the field, return line.
     if (!nextLine.isValid) {
       return line;
@@ -3308,13 +3397,15 @@ base class _NativeParagraph extends NativeFieldWrapperClass1 implements Paragrap
     return line;
   }
 
-  @Native<Handle Function(Pointer<Void>, Uint32)>(symbol: 'Paragraph::getLineBoundary')
+  @Native<Handle Function(Pointer<Void>, Uint32)>(
+      symbol: 'Paragraph::getLineBoundary')
   external List<int> _getLineBoundary(int offset);
 
   // Redirecting the paint function in this way solves some dependency problems
   // in the C++ code. If we straighten out the C++ dependencies, we can remove
   // this indirection.
-  @Native<Void Function(Pointer<Void>, Pointer<Void>, Double, Double)>(symbol: 'Paragraph::paint')
+  @Native<Void Function(Pointer<Void>, Pointer<Void>, Double, Double)>(
+      symbol: 'Paragraph::paint')
   external void _paint(_NativeCanvas canvas, double x, double y);
 
   @override
@@ -3339,12 +3430,15 @@ base class _NativeParagraph extends NativeFieldWrapperClass1 implements Paragrap
     return metrics;
   }
 
-  @Native<Handle Function(Pointer<Void>)>(symbol: 'Paragraph::computeLineMetrics')
+  @Native<Handle Function(Pointer<Void>)>(
+      symbol: 'Paragraph::computeLineMetrics')
   external Float64List _computeLineMetrics();
 
   @override
-  LineMetrics? getLineMetricsAt(int lineNumber) => _getLineMetricsAt(lineNumber, LineMetrics._);
-  @Native<Handle Function(Pointer<Void>, Uint32, Handle)>(symbol: 'Paragraph::getLineMetricsAt')
+  LineMetrics? getLineMetricsAt(int lineNumber) =>
+      _getLineMetricsAt(lineNumber, LineMetrics._);
+  @Native<Handle Function(Pointer<Void>, Uint32, Handle)>(
+      symbol: 'Paragraph::getLineMetricsAt')
   external LineMetrics? _getLineMetricsAt(int lineNumber, Function constructor);
 
   @override
@@ -3357,7 +3451,8 @@ base class _NativeParagraph extends NativeFieldWrapperClass1 implements Paragrap
     return lineNumber < 0 ? null : lineNumber;
   }
 
-  @Native<Int32 Function(Pointer<Void>, Uint32)>(symbol: 'Paragraph::getLineNumberAt')
+  @Native<Int32 Function(Pointer<Void>, Uint32)>(
+      symbol: 'Paragraph::getLineNumberAt')
   external int _getLineNumber(int codeUnitOffset);
 
   @override
@@ -3520,9 +3615,10 @@ abstract class ParagraphBuilder {
 }
 
 // ignore: unused_element
-base class _NativeParagraphBuilder extends NativeFieldWrapperClass1 implements ParagraphBuilder {
+base class _NativeParagraphBuilder extends NativeFieldWrapperClass1
+    implements ParagraphBuilder {
   _NativeParagraphBuilder(ParagraphStyle style)
-    : _defaultLeadingDistribution = style._leadingDistribution {
+      : _defaultLeadingDistribution = style._leadingDistribution {
     List<String>? strutFontFamilies;
     final StrutStyle? strutStyle = style._strutStyle;
     final ByteData? encodedStrutStyle;
@@ -3555,7 +3651,9 @@ base class _NativeParagraphBuilder extends NativeFieldWrapperClass1 implements P
     );
   }
 
-  @Native<Void Function(Handle, Handle, Handle, Handle, Handle, Double, Double, Handle, Handle)>(
+  @Native<
+      Void Function(Handle, Handle, Handle, Handle, Handle, Double, Double,
+          Handle, Handle)>(
     symbol: 'ParagraphBuilder::Create',
   )
   external void _constructor(
@@ -3601,11 +3699,13 @@ base class _NativeParagraphBuilder extends NativeFieldWrapperClass1 implements P
     ByteData? encodedFontFeatures;
     final List<FontFeature>? fontFeatures = style._fontFeatures;
     if (fontFeatures != null) {
-      encodedFontFeatures = ByteData(fontFeatures.length * FontFeature._kEncodedSize);
+      encodedFontFeatures =
+          ByteData(fontFeatures.length * FontFeature._kEncodedSize);
       int byteOffset = 0;
       for (final FontFeature feature in fontFeatures) {
         feature._encode(
-          ByteData.view(encodedFontFeatures.buffer, byteOffset, FontFeature._kEncodedSize),
+          ByteData.view(encodedFontFeatures.buffer, byteOffset,
+              FontFeature._kEncodedSize),
         );
         byteOffset += FontFeature._kEncodedSize;
       }
@@ -3614,11 +3714,13 @@ base class _NativeParagraphBuilder extends NativeFieldWrapperClass1 implements P
     ByteData? encodedFontVariations;
     final List<FontVariation>? fontVariations = style._fontVariations;
     if (fontVariations != null) {
-      encodedFontVariations = ByteData(fontVariations.length * FontVariation._kEncodedSize);
+      encodedFontVariations =
+          ByteData(fontVariations.length * FontVariation._kEncodedSize);
       int byteOffset = 0;
       for (final FontVariation variation in fontVariations) {
         variation._encode(
-          ByteData.view(encodedFontVariations.buffer, byteOffset, FontVariation._kEncodedSize),
+          ByteData.view(encodedFontVariations.buffer, byteOffset,
+              FontVariation._kEncodedSize),
         );
         byteOffset += FontVariation._kEncodedSize;
       }
@@ -3644,25 +3746,24 @@ base class _NativeParagraphBuilder extends NativeFieldWrapperClass1 implements P
   }
 
   @Native<
-    Void Function(
-      Pointer<Void>,
-      Handle,
-      Handle,
-      Double,
-      Double,
-      Double,
-      Double,
-      Double,
-      Handle,
-      Handle,
-      Handle,
-      Handle,
-      Handle,
-      Handle,
-      Handle,
-      Handle,
-    )
-  >(symbol: 'ParagraphBuilder::pushStyle')
+      Void Function(
+        Pointer<Void>,
+        Handle,
+        Handle,
+        Double,
+        Double,
+        Double,
+        Double,
+        Double,
+        Handle,
+        Handle,
+        Handle,
+        Handle,
+        Handle,
+        Handle,
+        Handle,
+        Handle,
+      )>(symbol: 'ParagraphBuilder::pushStyle')
   external void _pushStyle(
     Int32List encoded,
     List<Object?> fontFamilies,
@@ -3684,7 +3785,8 @@ base class _NativeParagraphBuilder extends NativeFieldWrapperClass1 implements P
   static String _encodeLocale(Locale? locale) => locale?.toString() ?? '';
 
   @override
-  @Native<Void Function(Pointer<Void>)>(symbol: 'ParagraphBuilder::pop', isLeaf: true)
+  @Native<Void Function(Pointer<Void>)>(
+      symbol: 'ParagraphBuilder::pop', isLeaf: true)
   external void pop();
 
   @override
@@ -3695,7 +3797,8 @@ base class _NativeParagraphBuilder extends NativeFieldWrapperClass1 implements P
     }
   }
 
-  @Native<Handle Function(Pointer<Void>, Handle)>(symbol: 'ParagraphBuilder::addText')
+  @Native<Handle Function(Pointer<Void>, Handle)>(
+      symbol: 'ParagraphBuilder::addText')
   external String? _addText(String text);
 
   @override
@@ -3746,7 +3849,8 @@ base class _NativeParagraphBuilder extends NativeFieldWrapperClass1 implements P
     return paragraph;
   }
 
-  @Native<Void Function(Pointer<Void>, Handle)>(symbol: 'ParagraphBuilder::build')
+  @Native<Void Function(Pointer<Void>, Handle)>(
+      symbol: 'ParagraphBuilder::build')
   external void _build(_NativeParagraph outParagraph);
 
   @override
@@ -3781,9 +3885,12 @@ FutureOr<void> _sendFontChangeMessage() async {
       (ByteData? responseData) {},
     );
   } else {
-    channelBuffers.push(kSystemChannelName, _fontChangeMessage, (ByteData? responseData) {});
+    channelBuffers.push(
+        kSystemChannelName, _fontChangeMessage, (ByteData? responseData) {});
   }
 }
 
-@Native<Void Function(Handle, Handle, Handle)>(symbol: 'FontCollection::LoadFontFromList')
-external void _loadFontFromList(Uint8List list, _Callback<void> callback, String fontFamily);
+@Native<Void Function(Handle, Handle, Handle)>(
+    symbol: 'FontCollection::LoadFontFromList')
+external void _loadFontFromList(
+    Uint8List list, _Callback<void> callback, String fontFamily);

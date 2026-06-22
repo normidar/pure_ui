@@ -60,7 +60,8 @@ void _removeView(int viewId) {
 }
 
 @pragma('vm:entry-point')
-void _sendViewFocusEvent(int viewId, int viewFocusState, int viewFocusDirection) {
+void _sendViewFocusEvent(
+    int viewId, int viewFocusState, int viewFocusDirection) {
   final ViewFocusEvent viewFocusEvent = ViewFocusEvent(
     viewId: viewId,
     state: ViewFocusState.values[viewFocusState],
@@ -108,7 +109,8 @@ List<DisplayFeature> _decodeDisplayFeatures({
   required List<int> state,
   required double devicePixelRatio,
 }) {
-  assert(bounds.length / 4 == type.length, 'Bounds are rectangles, requiring 4 measurements each');
+  assert(bounds.length / 4 == type.length,
+      'Bounds are rectangles, requiring 4 measurements each');
   assert(type.length == state.length);
   final List<DisplayFeature> result = <DisplayFeature>[];
   for (int i = 0; i < type.length; i++) {
@@ -181,7 +183,8 @@ _ViewConfiguration _buildViewConfiguration(
       left: math.max(0.0, systemGestureInsetLeft),
     ),
     gestureSettings: GestureSettings(
-      physicalTouchSlop: physicalTouchSlop == _kUnsetGestureSetting ? null : physicalTouchSlop,
+      physicalTouchSlop:
+          physicalTouchSlop == _kUnsetGestureSetting ? null : physicalTouchSlop,
     ),
     displayFeatures: _decodeDisplayFeatures(
       bounds: displayFeaturesBounds,
@@ -245,7 +248,8 @@ void _updateWindowMetrics(
 typedef _LocaleClosure = String Function();
 
 @pragma('vm:entry-point')
-_LocaleClosure? _getLocaleClosure() => PlatformDispatcher.instance._localeClosure;
+_LocaleClosure? _getLocaleClosure() =>
+    PlatformDispatcher.instance._localeClosure;
 
 @pragma('vm:entry-point')
 void _updateLocales(List<String> locales) {
@@ -283,8 +287,10 @@ void _dispatchPointerDataPacket(ByteData packet) {
 }
 
 @pragma('vm:entry-point')
-void _dispatchSemanticsAction(int viewId, int nodeId, int action, ByteData? args) {
-  PlatformDispatcher.instance._dispatchSemanticsAction(viewId, nodeId, action, args);
+void _dispatchSemanticsAction(
+    int viewId, int nodeId, int action, ByteData? args) {
+  PlatformDispatcher.instance
+      ._dispatchSemanticsAction(viewId, nodeId, action, args);
 }
 
 @pragma('vm:entry-point')
@@ -305,13 +311,15 @@ void _drawFrame() {
 
 @pragma('vm:entry-point')
 bool _onError(Object error, StackTrace? stackTrace) {
-  return PlatformDispatcher.instance._dispatchError(error, stackTrace ?? StackTrace.empty);
+  return PlatformDispatcher.instance
+      ._dispatchError(error, stackTrace ?? StackTrace.empty);
 }
 
 typedef _ListStringArgFunction = Object? Function(List<String> args);
 
 @pragma('vm:entry-point')
-void _runMain(Function startMainIsolateFunction, Function userMainFunction, List<String> args) {
+void _runMain(Function startMainIsolateFunction, Function userMainFunction,
+    List<String> args) {
   // ignore: avoid_dynamic_calls
   startMainIsolateFunction(() {
     if (userMainFunction is _ListStringArgFunction) {
@@ -355,7 +363,8 @@ void _invoke1<A>(void Function(A a)? callback, Zone zone, A arg) {
 /// The 2 in the name refers to the number of arguments expected by
 /// the callback (and thus passed to this function, in addition to the
 /// callback itself and the zone in which the callback is executed).
-void _invoke2<A1, A2>(void Function(A1 a1, A2 a2)? callback, Zone zone, A1 arg1, A2 arg2) {
+void _invoke2<A1, A2>(
+    void Function(A1 a1, A2 a2)? callback, Zone zone, A1 arg1, A2 arg2) {
   if (callback == null) {
     return;
   }
@@ -410,7 +419,8 @@ bool _isLoopback(String host) {
 /// Zone override with 'flutter.io.allow_http' takes first priority.
 /// If zone override is not provided, engine setting is checked.
 @pragma('vm:entry-point')
-void Function(Uri) _getHttpConnectionHookClosure(bool mayInsecurelyConnectToAllDomains) {
+void Function(Uri) _getHttpConnectionHookClosure(
+    bool mayInsecurelyConnectToAllDomains) {
   return (Uri uri) {
     final Object? zoneOverride = Zone.current[#flutter.io.allow_http];
     if (zoneOverride == true) {

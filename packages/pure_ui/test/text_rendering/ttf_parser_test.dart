@@ -39,7 +39,10 @@ void main() {
 
     test('availableTables contains required TTF tables', () {
       final tables = parser.availableTables;
-      expect(tables, containsAll(['head', 'hhea', 'maxp', 'cmap', 'loca', 'glyf', 'hmtx']));
+      expect(
+          tables,
+          containsAll(
+              ['head', 'hhea', 'maxp', 'cmap', 'loca', 'glyf', 'hmtx']));
     });
 
     test('isTrueType is true for Roboto (glyf-based)', () {
@@ -84,7 +87,8 @@ void main() {
 
       test('contains ASCII letters A–Z', () {
         for (final cp in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.codeUnits) {
-          expect(cmap, contains(cp), reason: 'Missing codepoint $cp (${String.fromCharCode(cp)})');
+          expect(cmap, contains(cp),
+              reason: 'Missing codepoint $cp (${String.fromCharCode(cp)})');
         }
       });
 
@@ -118,7 +122,8 @@ void main() {
       test('unmapped codepoint returns null from TtfFont', () {
         final font = _loadRoboto();
         if (font == null) return; // no fixture
-        final id = font.getGlyphId(0xFFFFF); // Private Use Area – likely unmapped
+        final id =
+            font.getGlyphId(0xFFFFF); // Private Use Area – likely unmapped
         // Either null or a valid glyph ID (some fonts map PUA)
         if (id != null) expect(id, lessThan(parser.numGlyphs));
       });
@@ -135,7 +140,8 @@ void main() {
 
       test('every contour has at least one point', () {
         final cmap = parser.parseCmap();
-        for (final ch in 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('')) {
+        for (final ch in 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'
+            .split('')) {
           final glyphId = cmap[ch.codeUnitAt(0)];
           if (glyphId == null) continue;
           final contours = parser.parseGlyphContours(glyphId);
@@ -337,7 +343,8 @@ void main() {
 
     group('GlyphOutline coordinate validity', () {
       test('all glyph points have finite coordinates', () {
-        final chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        final chars =
+            'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
         for (final ch in chars.split('')) {
           final glyphId = font.getGlyphId(ch.codeUnitAt(0));
           if (glyphId == null) continue;
@@ -368,7 +375,8 @@ void main() {
           }
         }
         expect(maxX - minX, greaterThan(0), reason: 'Width should be positive');
-        expect(maxY - minY, greaterThan(0), reason: 'Height should be positive');
+        expect(maxY - minY, greaterThan(0),
+            reason: 'Height should be positive');
       });
     });
 
@@ -449,8 +457,7 @@ void main() {
 
   group('GlyphOutline', () {
     test('isEmpty is true for outline with no contours', () {
-      const outline = ui.GlyphOutline(
-          contours: [], advanceWidth: 500, lsb: 0);
+      const outline = ui.GlyphOutline(contours: [], advanceWidth: 500, lsb: 0);
       expect(outline.isEmpty, isTrue);
     });
 

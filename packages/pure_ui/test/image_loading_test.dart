@@ -137,8 +137,8 @@ void main() {
       final srcImage = frame.image;
 
       final recorder = ui.PictureRecorder();
-      final canvas = ui.Canvas(
-          recorder, const ui.Rect.fromLTWH(0, 0, 100, 100));
+      final canvas =
+          ui.Canvas(recorder, const ui.Rect.fromLTWH(0, 0, 100, 100));
       canvas.drawImage(srcImage, const ui.Offset(5, 5), ui.Paint());
 
       final picture = recorder.endRecording();
@@ -189,12 +189,12 @@ void main() {
       final srcImage = frame.image;
 
       final recorder = ui.PictureRecorder();
-      final canvas = ui.Canvas(
-          recorder, const ui.Rect.fromLTWH(0, 0, 200, 200));
+      final canvas =
+          ui.Canvas(recorder, const ui.Rect.fromLTWH(0, 0, 200, 200));
       canvas.drawImageRect(
         srcImage,
-        ui.Rect.fromLTWH(0, 0, srcImage.width.toDouble(),
-            srcImage.height.toDouble()),
+        ui.Rect.fromLTWH(
+            0, 0, srcImage.width.toDouble(), srcImage.height.toDouble()),
         const ui.Rect.fromLTWH(10, 10, 50, 50),
         ui.Paint(),
       );

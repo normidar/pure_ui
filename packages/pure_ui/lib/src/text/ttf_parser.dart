@@ -276,8 +276,7 @@ class TtfParser {
       (i) => _data.getUint16(base + 10 + i * 2),
     );
 
-    final instructionLength =
-        _data.getUint16(base + 10 + numberOfContours * 2);
+    final instructionLength = _data.getUint16(base + 10 + numberOfContours * 2);
     int pos = base + 10 + numberOfContours * 2 + 2 + instructionLength;
 
     final numPoints = endPts.last + 1;

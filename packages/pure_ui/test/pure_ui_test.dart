@@ -96,7 +96,6 @@ void main() {
       expect(image.width, equals(200));
       expect(image.height, equals(200));
 
-
       // Clean up
       nestedPicture.dispose();
       mainPicture.dispose();

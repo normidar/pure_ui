@@ -125,8 +125,8 @@ void main() {
 
       final topLeftInk = await inkInRegion(
           const ui.Offset(10, 30), const ui.Rect.fromLTWH(0, 0, 100, 100));
-      final bottomRightInk = await inkInRegion(const ui.Offset(10, 30),
-          const ui.Rect.fromLTWH(100, 100, 100, 100));
+      final bottomRightInk = await inkInRegion(
+          const ui.Offset(10, 30), const ui.Rect.fromLTWH(100, 100, 100, 100));
 
       expect(topLeftInk, greaterThan(0),
           reason: 'Expected ink in top-left region');

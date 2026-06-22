@@ -60,35 +60,40 @@ class SemanticsAction {
 
   /// The equivalent of a user pressing and holding the screen with the finger
   /// for a few seconds without moving it.
-  static const SemanticsAction longPress = SemanticsAction._(_kLongPressIndex, 'longPress');
+  static const SemanticsAction longPress =
+      SemanticsAction._(_kLongPressIndex, 'longPress');
 
   /// The equivalent of a user moving their finger across the screen from right
   /// to left.
   ///
   /// This action should be recognized by controls that are horizontally
   /// scrollable.
-  static const SemanticsAction scrollLeft = SemanticsAction._(_kScrollLeftIndex, 'scrollLeft');
+  static const SemanticsAction scrollLeft =
+      SemanticsAction._(_kScrollLeftIndex, 'scrollLeft');
 
   /// The equivalent of a user moving their finger across the screen from left
   /// to right.
   ///
   /// This action should be recognized by controls that are horizontally
   /// scrollable.
-  static const SemanticsAction scrollRight = SemanticsAction._(_kScrollRightIndex, 'scrollRight');
+  static const SemanticsAction scrollRight =
+      SemanticsAction._(_kScrollRightIndex, 'scrollRight');
 
   /// The equivalent of a user moving their finger across the screen from
   /// bottom to top.
   ///
   /// This action should be recognized by controls that are vertically
   /// scrollable.
-  static const SemanticsAction scrollUp = SemanticsAction._(_kScrollUpIndex, 'scrollUp');
+  static const SemanticsAction scrollUp =
+      SemanticsAction._(_kScrollUpIndex, 'scrollUp');
 
   /// The equivalent of a user moving their finger across the screen from top
   /// to bottom.
   ///
   /// This action should be recognized by controls that are vertically
   /// scrollable.
-  static const SemanticsAction scrollDown = SemanticsAction._(_kScrollDownIndex, 'scrollDown');
+  static const SemanticsAction scrollDown =
+      SemanticsAction._(_kScrollDownIndex, 'scrollDown');
 
   /// A request to scroll the scrollable container to a given scroll offset.
   ///
@@ -107,12 +112,14 @@ class SemanticsAction {
   /// A request to increase the value represented by the semantics node.
   ///
   /// For example, this action might be recognized by a slider control.
-  static const SemanticsAction increase = SemanticsAction._(_kIncreaseIndex, 'increase');
+  static const SemanticsAction increase =
+      SemanticsAction._(_kIncreaseIndex, 'increase');
 
   /// A request to decrease the value represented by the semantics node.
   ///
   /// For example, this action might be recognized by a slider control.
-  static const SemanticsAction decrease = SemanticsAction._(_kDecreaseIndex, 'decrease');
+  static const SemanticsAction decrease =
+      SemanticsAction._(_kDecreaseIndex, 'decrease');
 
   /// A request to fully show the semantics node on screen.
   ///
@@ -140,7 +147,8 @@ class SemanticsAction {
   ///
   /// The action includes a boolean argument, which indicates whether the cursor
   /// movement should extend (or start) a selection.
-  static const SemanticsAction moveCursorBackwardByCharacter = SemanticsAction._(
+  static const SemanticsAction moveCursorBackwardByCharacter =
+      SemanticsAction._(
     _kMoveCursorBackwardByCharacterIndex,
     'moveCursorBackwardByCharacter',
   );
@@ -151,7 +159,8 @@ class SemanticsAction {
   ///
   /// The action includes a string argument, which is the new text to
   /// replace.
-  static const SemanticsAction setText = SemanticsAction._(_kSetTextIndex, 'setText');
+  static const SemanticsAction setText =
+      SemanticsAction._(_kSetTextIndex, 'setText');
 
   /// Set the text selection to the given range.
   ///
@@ -228,7 +237,8 @@ class SemanticsAction {
   /// (with TalkBack) special hint text is spoken when focusing the node and
   /// a custom action is available in the local context menu. On iOS,
   /// (with VoiceOver) users can perform a standard gesture to dismiss it.
-  static const SemanticsAction dismiss = SemanticsAction._(_kDismissIndex, 'dismiss');
+  static const SemanticsAction dismiss =
+      SemanticsAction._(_kDismissIndex, 'dismiss');
 
   /// Move the cursor forward by one word.
   ///
@@ -332,7 +342,8 @@ class SemanticsAction {
 
   // TODO(matanlurey): have original authors document; see https://github.com/flutter/flutter/issues/151917.
   // ignore: public_member_api_docs
-  static List<SemanticsAction> get values => _kActionById.values.toList(growable: false);
+  static List<SemanticsAction> get values =>
+      _kActionById.values.toList(growable: false);
 
   // TODO(matanlurey): have original authors document; see https://github.com/flutter/flutter/issues/151917.
   // ignore: public_member_api_docs
@@ -665,7 +676,8 @@ class SemanticsFlag {
   ///   * [SemanticsFlag.hasCheckedState], which enables a checked state.
   /// {@endtemplate}
   ///
-  static const SemanticsFlag isChecked = SemanticsFlag._(_kIsCheckedIndex, 'isChecked');
+  static const SemanticsFlag isChecked =
+      SemanticsFlag._(_kIsCheckedIndex, 'isChecked');
 
   /// {@template dart.ui.semantics.isCheckStateMixed}
   /// Whether a tristate checkbox is in its mixed state.
@@ -708,7 +720,8 @@ class SemanticsFlag {
   ///
   /// For example, the active tab in a tab bar has [isSelected] set to true.
   /// {@endtemplate}
-  static const SemanticsFlag isSelected = SemanticsFlag._(_kIsSelectedIndex, 'isSelected');
+  static const SemanticsFlag isSelected =
+      SemanticsFlag._(_kIsSelectedIndex, 'isSelected');
 
   /// {@template dart.ui.semantics.isButton}
   /// Whether the semantic node represents a button.
@@ -717,7 +730,8 @@ class SemanticsFlag {
   /// and iOS's VoiceOver provides an additional hint when the focused object is
   /// a button.
   /// {@endtemplate}
-  static const SemanticsFlag isButton = SemanticsFlag._(_kIsButtonIndex, 'isButton');
+  static const SemanticsFlag isButton =
+      SemanticsFlag._(_kIsButtonIndex, 'isButton');
 
   /// {@template dart.ui.semantics.isTextField}
   /// Whether the semantic node represents a text field.
@@ -725,24 +739,28 @@ class SemanticsFlag {
   /// Text fields are announced as such and allow text input via accessibility
   /// affordances.
   /// {@endtemplate}
-  static const SemanticsFlag isTextField = SemanticsFlag._(_kIsTextFieldIndex, 'isTextField');
+  static const SemanticsFlag isTextField =
+      SemanticsFlag._(_kIsTextFieldIndex, 'isTextField');
 
   /// {@template dart.ui.semantics.isSlider}
   /// Whether the semantic node represents a slider.
   /// {@endtemplate}
-  static const SemanticsFlag isSlider = SemanticsFlag._(_kIsSliderIndex, 'isSlider');
+  static const SemanticsFlag isSlider =
+      SemanticsFlag._(_kIsSliderIndex, 'isSlider');
 
   /// {@template dart.ui.semantics.isKeyboardKey}
   /// Whether the semantic node represents a keyboard key.
   /// {@endtemplate}
-  static const SemanticsFlag isKeyboardKey = SemanticsFlag._(_kIsKeyboardKeyIndex, 'isKeyboardKey');
+  static const SemanticsFlag isKeyboardKey =
+      SemanticsFlag._(_kIsKeyboardKeyIndex, 'isKeyboardKey');
 
   /// {@template dart.ui.semantics.isReadOnly}
   /// Whether the semantic node is read only.
   ///
   /// Only applicable when [isTextField] is true.
   /// {@endtemplate}
-  static const SemanticsFlag isReadOnly = SemanticsFlag._(_kIsReadOnlyIndex, 'isReadOnly');
+  static const SemanticsFlag isReadOnly =
+      SemanticsFlag._(_kIsReadOnlyIndex, 'isReadOnly');
 
   /// {@template dart.ui.semantics.isLink}
   /// Whether the semantic node is an interactive link.
@@ -758,14 +776,16 @@ class SemanticsFlag {
   ///
   /// The focused element is usually the current receiver of keyboard inputs.
   /// {@endtemplate}
-  static const SemanticsFlag isFocusable = SemanticsFlag._(_kIsFocusableIndex, 'isFocusable');
+  static const SemanticsFlag isFocusable =
+      SemanticsFlag._(_kIsFocusableIndex, 'isFocusable');
 
   /// {@template dart.ui.semantics.isFocused}
   /// Whether the semantic node currently holds the user's focus.
   ///
   /// The focused element is usually the current receiver of keyboard inputs.
   /// {@endtemplate}
-  static const SemanticsFlag isFocused = SemanticsFlag._(_kIsFocusedIndex, 'isFocused');
+  static const SemanticsFlag isFocused =
+      SemanticsFlag._(_kIsFocusedIndex, 'isFocused');
 
   /// {@template dart.ui.semantics.hasEnabledState}
   /// The semantics node has the quality of either being "enabled" or
@@ -787,7 +807,8 @@ class SemanticsFlag {
   /// button that currently does not respond to user interaction should be
   /// marked as disabled.
   /// {@endtemplate}
-  static const SemanticsFlag isEnabled = SemanticsFlag._(_kIsEnabledIndex, 'isEnabled');
+  static const SemanticsFlag isEnabled =
+      SemanticsFlag._(_kIsEnabledIndex, 'isEnabled');
 
   /// {@template dart.ui.semantics.isInMutuallyExclusiveGroup}
   /// Whether a semantic node is in a mutually exclusive group.
@@ -807,7 +828,8 @@ class SemanticsFlag {
   /// sorted words into the sections A, B, C, etc. as can be found in many
   /// address book applications.
   /// {@endtemplate}
-  static const SemanticsFlag isHeader = SemanticsFlag._(_kIsHeaderIndex, 'isHeader');
+  static const SemanticsFlag isHeader =
+      SemanticsFlag._(_kIsHeaderIndex, 'isHeader');
 
   /// {@template dart.ui.semantics.isObscured}
   /// Whether the value of the semantics node is obscured.
@@ -815,7 +837,8 @@ class SemanticsFlag {
   /// This is usually used for text fields to indicate that its content
   /// is a password or contains other sensitive information.
   /// {@endtemplate}
-  static const SemanticsFlag isObscured = SemanticsFlag._(_kIsObscuredIndex, 'isObscured');
+  static const SemanticsFlag isObscured =
+      SemanticsFlag._(_kIsObscuredIndex, 'isObscured');
 
   /// {@template dart.ui.semantics.isMultiline}
   /// Whether the value of the semantics node is coming from a multi-line text
@@ -824,7 +847,8 @@ class SemanticsFlag {
   /// This is used for text fields to distinguish single-line text fields from
   /// multi-line ones.
   /// {@endtemplate}
-  static const SemanticsFlag isMultiline = SemanticsFlag._(_kIsMultilineIndex, 'isMultiline');
+  static const SemanticsFlag isMultiline =
+      SemanticsFlag._(_kIsMultilineIndex, 'isMultiline');
 
   /// {@template dart.ui.semantics.scopesRoute}
   /// Whether the semantics node is the root of a subtree for which a route name
@@ -851,7 +875,8 @@ class SemanticsFlag {
   /// This is used in widgets such as Routes, Drawers, and Dialogs to
   /// communicate significant changes in the visible screen.
   /// {@endtemplate}
-  static const SemanticsFlag scopesRoute = SemanticsFlag._(_kScopesRouteIndex, 'scopesRoute');
+  static const SemanticsFlag scopesRoute =
+      SemanticsFlag._(_kScopesRouteIndex, 'scopesRoute');
 
   /// {@template dart.ui.semantics.namesRoute}
   /// Whether the semantics node label is the name of a visually distinct
@@ -866,7 +891,8 @@ class SemanticsFlag {
   /// Updating this label within the same active route subtree will not cause
   /// additional announcements.
   /// {@endtemplate}
-  static const SemanticsFlag namesRoute = SemanticsFlag._(_kNamesRouteIndex, 'namesRoute');
+  static const SemanticsFlag namesRoute =
+      SemanticsFlag._(_kNamesRouteIndex, 'namesRoute');
 
   /// {@template dart.ui.semantics.isHidden}
   /// Whether the semantics node is considered hidden.
@@ -890,7 +916,8 @@ class SemanticsFlag {
   ///
   /// * [RenderObject.describeSemanticsClip]
   /// {@endtemplate}
-  static const SemanticsFlag isHidden = SemanticsFlag._(_kIsHiddenIndex, 'isHidden');
+  static const SemanticsFlag isHidden =
+      SemanticsFlag._(_kIsHiddenIndex, 'isHidden');
 
   /// {@template dart.ui.semantics.isImage}
   /// Whether the semantics node represents an image.
@@ -898,7 +925,8 @@ class SemanticsFlag {
   /// Both TalkBack and VoiceOver will inform the user the semantics node
   /// represents an image.
   /// {@endtemplate}
-  static const SemanticsFlag isImage = SemanticsFlag._(_kIsImageIndex, 'isImage');
+  static const SemanticsFlag isImage =
+      SemanticsFlag._(_kIsImageIndex, 'isImage');
 
   /// {@template dart.ui.semantics.isLiveRegion}
   /// Whether the semantics node is a live region.
@@ -914,7 +942,8 @@ class SemanticsFlag {
   /// announcing something else, such as reading the label of a focused
   /// widget or providing a system announcement.
   /// {@endtemplate}
-  static const SemanticsFlag isLiveRegion = SemanticsFlag._(_kIsLiveRegionIndex, 'isLiveRegion');
+  static const SemanticsFlag isLiveRegion =
+      SemanticsFlag._(_kIsLiveRegionIndex, 'isLiveRegion');
 
   /// {@template dart.ui.semantics.hasToggledState}
   /// The semantics node has the quality of either being "on" or "off".
@@ -942,7 +971,8 @@ class SemanticsFlag {
   ///
   ///   * [SemanticsFlag.hasToggledState], which enables a toggled state.
   /// {@endtemplate}
-  static const SemanticsFlag isToggled = SemanticsFlag._(_kIsToggledIndex, 'isToggled');
+  static const SemanticsFlag isToggled =
+      SemanticsFlag._(_kIsToggledIndex, 'isToggled');
 
   /// {@template dart.ui.semantics.hasImplicitScrolling}
   /// Whether the platform can scroll the semantics node when the user attempts
@@ -984,7 +1014,8 @@ class SemanticsFlag {
   ///
   ///   * [SemanticsFlag.hasExpandedState], which enables an expanded/collapsed state.
   /// {@endtemplate}
-  static const SemanticsFlag isExpanded = SemanticsFlag._(_kIsExpandedIndex, 'isExpanded');
+  static const SemanticsFlag isExpanded =
+      SemanticsFlag._(_kIsExpandedIndex, 'isExpanded');
 
   /// {@template dart.ui.semantics.hasRequiredState}
   /// The semantics node has the quality of either being required or not.
@@ -1010,7 +1041,8 @@ class SemanticsFlag {
   ///
   ///   * [SemanticsFlag.hasRequiredState], which enables a required state state.
   /// {@endtemplate}
-  static const SemanticsFlag isRequired = SemanticsFlag._(_kIsRequiredIndex, 'isRequired');
+  static const SemanticsFlag isRequired =
+      SemanticsFlag._(_kIsRequiredIndex, 'isRequired');
 
   /// The possible semantics flags.
   ///
@@ -1051,7 +1083,8 @@ class SemanticsFlag {
 
   // TODO(matanlurey): have original authors document; see https://github.com/flutter/flutter/issues/151917.
   // ignore: public_member_api_docs
-  static List<SemanticsFlag> get values => _kFlagById.values.toList(growable: false);
+  static List<SemanticsFlag> get values =>
+      _kFlagById.values.toList(growable: false);
 
   // TODO(matanlurey): have original authors document; see https://github.com/flutter/flutter/issues/151917.
   // ignore: public_member_api_docs
@@ -1139,41 +1172,40 @@ base class SemanticsFlags extends NativeFieldWrapperClass1 {
   }
 
   @Native<
-    Void Function(
-      Handle,
-      Bool,
-      Bool,
-      Bool,
-      Bool,
-      Bool,
-      Bool,
-      Bool,
-      Bool,
-      Bool,
-      Bool,
-      Bool,
-      Bool,
-      Bool,
-      Bool,
-      Bool,
-      Bool,
-      Bool,
-      Bool,
-      Bool,
-      Bool,
-      Bool,
-      Bool,
-      Bool,
-      Bool,
-      Bool,
-      Bool,
-      Bool,
-      Bool,
-      Bool,
-      Bool,
-      Bool,
-    )
-  >(symbol: 'NativeSemanticsFlags::initSemanticsFlags')
+      Void Function(
+        Handle,
+        Bool,
+        Bool,
+        Bool,
+        Bool,
+        Bool,
+        Bool,
+        Bool,
+        Bool,
+        Bool,
+        Bool,
+        Bool,
+        Bool,
+        Bool,
+        Bool,
+        Bool,
+        Bool,
+        Bool,
+        Bool,
+        Bool,
+        Bool,
+        Bool,
+        Bool,
+        Bool,
+        Bool,
+        Bool,
+        Bool,
+        Bool,
+        Bool,
+        Bool,
+        Bool,
+        Bool,
+      )>(symbol: 'NativeSemanticsFlags::initSemanticsFlags')
   external static void _initSemanticsFlags(
     SemanticsFlags instance,
     bool hasCheckedState,
@@ -1316,7 +1348,8 @@ base class SemanticsFlags extends NativeFieldWrapperClass1 {
       isFocused: isFocused || other.isFocused,
       hasEnabledState: hasEnabledState || other.hasEnabledState,
       isEnabled: isEnabled || other.isEnabled,
-      isInMutuallyExclusiveGroup: isInMutuallyExclusiveGroup || other.isInMutuallyExclusiveGroup,
+      isInMutuallyExclusiveGroup:
+          isInMutuallyExclusiveGroup || other.isInMutuallyExclusiveGroup,
       isHeader: isHeader || other.isHeader,
       isObscured: isObscured || other.isObscured,
       scopesRoute: scopesRoute || other.scopesRoute,
@@ -1385,7 +1418,8 @@ base class SemanticsFlags extends NativeFieldWrapperClass1 {
       isFocused: isFocused ?? this.isFocused,
       hasEnabledState: hasEnabledState ?? this.hasEnabledState,
       isEnabled: isEnabled ?? this.isEnabled,
-      isInMutuallyExclusiveGroup: isInMutuallyExclusiveGroup ?? this.isInMutuallyExclusiveGroup,
+      isInMutuallyExclusiveGroup:
+          isInMutuallyExclusiveGroup ?? this.isInMutuallyExclusiveGroup,
       isHeader: isHeader ?? this.isHeader,
       isObscured: isObscured ?? this.isObscured,
       scopesRoute: scopesRoute ?? this.scopesRoute,
@@ -1450,38 +1484,38 @@ base class SemanticsFlags extends NativeFieldWrapperClass1 {
 
   @override
   int get hashCode => Object.hashAll(<bool>[
-    hasCheckedState,
-    isChecked,
-    isSelected,
-    isButton,
-    isTextField,
-    isFocused,
-    hasEnabledState,
-    isEnabled,
-    isInMutuallyExclusiveGroup,
-    isHeader,
-    isObscured,
-    scopesRoute,
-    namesRoute,
-    isHidden,
-    isImage,
-    isLiveRegion,
-    hasToggledState,
-    isToggled,
-    hasImplicitScrolling,
-    isMultiline,
-    isReadOnly,
-    isFocusable,
-    isLink,
-    isSlider,
-    isKeyboardKey,
-    isCheckStateMixed,
-    hasExpandedState,
-    isExpanded,
-    hasSelectedState,
-    hasRequiredState,
-    isRequired,
-  ]);
+        hasCheckedState,
+        isChecked,
+        isSelected,
+        isButton,
+        isTextField,
+        isFocused,
+        hasEnabledState,
+        isEnabled,
+        isInMutuallyExclusiveGroup,
+        isHeader,
+        isObscured,
+        scopesRoute,
+        namesRoute,
+        isHidden,
+        isImage,
+        isLiveRegion,
+        hasToggledState,
+        isToggled,
+        hasImplicitScrolling,
+        isMultiline,
+        isReadOnly,
+        isFocusable,
+        isLink,
+        isSlider,
+        isKeyboardKey,
+        isCheckStateMixed,
+        hasExpandedState,
+        isExpanded,
+        hasSelectedState,
+        hasRequiredState,
+        isRequired,
+      ]);
 
   /// Convert flags to a list of string.
   List<String> toStrings() {
@@ -1662,8 +1696,10 @@ base class LocaleStringAttribute extends StringAttribute {
   /// Creates a string attribute that denotes the text in [range] must be
   /// treated as the language specified by the [locale] when the assistive
   /// technologies announce the string.
-  LocaleStringAttribute({required TextRange range, required this.locale}) : super._(range: range) {
-    _initLocaleStringAttribute(this, range.start, range.end, locale.toLanguageTag());
+  LocaleStringAttribute({required TextRange range, required this.locale})
+      : super._(range: range) {
+    _initLocaleStringAttribute(
+        this, range.start, range.end, locale.toLanguageTag());
   }
 
   /// The language of this attribute.
@@ -1862,7 +1898,8 @@ abstract class SemanticsUpdateBuilder {
   /// For overridden standard actions, `overrideId` corresponds with a
   /// [SemanticsAction.index] value. For custom actions this argument should not be
   /// provided.
-  void updateCustomAction({required int id, String? label, String? hint, int overrideId = -1});
+  void updateCustomAction(
+      {required int id, String? label, String? hint, int overrideId = -1});
 
   /// Creates a [SemanticsUpdate] object that encapsulates the updates recorded
   /// by this object.
@@ -1975,51 +2012,50 @@ base class _NativeSemanticsUpdateBuilder extends NativeFieldWrapperClass1
   }
 
   @Native<
-    Void Function(
-      Pointer<Void>,
-      Int32,
-      Handle,
-      Int32,
-      Int32,
-      Int32,
-      Int32,
-      Int32,
-      Int32,
-      Int32,
-      Int32,
-      Double,
-      Double,
-      Double,
-      Double,
-      Double,
-      Double,
-      Double,
-      Handle,
-      Handle,
-      Handle,
-      Handle,
-      Handle,
-      Handle,
-      Handle,
-      Handle,
-      Handle,
-      Handle,
-      Handle,
-      Handle,
-      Int32,
-      Handle,
-      Handle,
-      Handle,
-      Handle,
-      Int32,
-      Handle,
-      Int32,
-      Handle,
-      Int32,
-      Int32,
-      Handle,
-    )
-  >(symbol: 'SemanticsUpdateBuilder::updateNode')
+      Void Function(
+        Pointer<Void>,
+        Int32,
+        Handle,
+        Int32,
+        Int32,
+        Int32,
+        Int32,
+        Int32,
+        Int32,
+        Int32,
+        Int32,
+        Double,
+        Double,
+        Double,
+        Double,
+        Double,
+        Double,
+        Double,
+        Handle,
+        Handle,
+        Handle,
+        Handle,
+        Handle,
+        Handle,
+        Handle,
+        Handle,
+        Handle,
+        Handle,
+        Handle,
+        Handle,
+        Int32,
+        Handle,
+        Handle,
+        Handle,
+        Handle,
+        Int32,
+        Handle,
+        Int32,
+        Handle,
+        Int32,
+        Int32,
+        Handle,
+      )>(symbol: 'SemanticsUpdateBuilder::updateNode')
   external void _updateNode(
     int id,
     SemanticsFlags flags,
@@ -2065,14 +2101,16 @@ base class _NativeSemanticsUpdateBuilder extends NativeFieldWrapperClass1
   );
 
   @override
-  void updateCustomAction({required int id, String? label, String? hint, int overrideId = -1}) {
+  void updateCustomAction(
+      {required int id, String? label, String? hint, int overrideId = -1}) {
     _updateCustomAction(id, label ?? '', hint ?? '', overrideId);
   }
 
   @Native<Void Function(Pointer<Void>, Int32, Handle, Handle, Int32)>(
     symbol: 'SemanticsUpdateBuilder::updateCustomAction',
   )
-  external void _updateCustomAction(int id, String label, String hint, int overrideId);
+  external void _updateCustomAction(
+      int id, String label, String hint, int overrideId);
 
   @override
   SemanticsUpdate build() {
@@ -2081,7 +2119,8 @@ base class _NativeSemanticsUpdateBuilder extends NativeFieldWrapperClass1
     return semanticsUpdate;
   }
 
-  @Native<Void Function(Pointer<Void>, Handle)>(symbol: 'SemanticsUpdateBuilder::build')
+  @Native<Void Function(Pointer<Void>, Handle)>(
+      symbol: 'SemanticsUpdateBuilder::build')
   external void _build(_NativeSemanticsUpdate outSemanticsUpdate);
 
   @override
@@ -2105,7 +2144,8 @@ abstract class SemanticsUpdate {
   void dispose();
 }
 
-base class _NativeSemanticsUpdate extends NativeFieldWrapperClass1 implements SemanticsUpdate {
+base class _NativeSemanticsUpdate extends NativeFieldWrapperClass1
+    implements SemanticsUpdate {
   /// This class is created by the engine, and should not be instantiated
   /// or extended directly.
   ///

@@ -416,7 +416,8 @@ class PointerData {
   }
 
   @override
-  String toString() => 'PointerData(viewId: $viewId, x: $physicalX, y: $physicalY)';
+  String toString() =>
+      'PointerData(viewId: $viewId, x: $physicalX, y: $physicalY)';
 
   /// Returns a complete textual description of the information in this object.
   String toStringFull() {

@@ -5,7 +5,8 @@ void main() {
   group('drawArc', () {
     test('filled pie slice has ink at center', () async {
       final recorder = ui.PictureRecorder();
-      final canvas = ui.Canvas(recorder, const ui.Rect.fromLTWH(0, 0, 100, 100));
+      final canvas =
+          ui.Canvas(recorder, const ui.Rect.fromLTWH(0, 0, 100, 100));
 
       final paint = ui.Paint()
         ..color = const ui.Color(0xFFFF0000)
@@ -29,7 +30,8 @@ void main() {
 
     test('filled arc (useCenter=false) has ink inside chord', () async {
       final recorder = ui.PictureRecorder();
-      final canvas = ui.Canvas(recorder, const ui.Rect.fromLTWH(0, 0, 100, 100));
+      final canvas =
+          ui.Canvas(recorder, const ui.Rect.fromLTWH(0, 0, 100, 100));
 
       final paint = ui.Paint()
         ..color = const ui.Color(0xFF0000FF)
@@ -58,7 +60,8 @@ void main() {
 
     test('stroked arc produces ink along edge', () async {
       final recorder = ui.PictureRecorder();
-      final canvas = ui.Canvas(recorder, const ui.Rect.fromLTWH(0, 0, 100, 100));
+      final canvas =
+          ui.Canvas(recorder, const ui.Rect.fromLTWH(0, 0, 100, 100));
 
       final paint = ui.Paint()
         ..color = const ui.Color(0xFF00FF00)
@@ -85,15 +88,15 @@ void main() {
   group('drawRRect', () {
     test('filled RRect has ink at center', () async {
       final recorder = ui.PictureRecorder();
-      final canvas = ui.Canvas(recorder, const ui.Rect.fromLTWH(0, 0, 100, 100));
+      final canvas =
+          ui.Canvas(recorder, const ui.Rect.fromLTWH(0, 0, 100, 100));
 
       final paint = ui.Paint()
         ..color = const ui.Color(0xFFFF8800)
         ..style = ui.PaintingStyle.fill;
 
       canvas.drawRRect(
-        ui.RRect.fromRectXY(
-            const ui.Rect.fromLTWH(10, 10, 80, 80), 10, 10),
+        ui.RRect.fromRectXY(const ui.Rect.fromLTWH(10, 10, 80, 80), 10, 10),
         paint,
       );
 
@@ -106,7 +109,8 @@ void main() {
 
     test('filled RRect has no ink at sharp corners (rounded off)', () async {
       final recorder = ui.PictureRecorder();
-      final canvas = ui.Canvas(recorder, const ui.Rect.fromLTWH(0, 0, 100, 100));
+      final canvas =
+          ui.Canvas(recorder, const ui.Rect.fromLTWH(0, 0, 100, 100));
 
       final paint = ui.Paint()
         ..color = const ui.Color(0xFFFF0000)
@@ -114,8 +118,7 @@ void main() {
 
       // Large corner radius (20px) should round off the corners significantly
       canvas.drawRRect(
-        ui.RRect.fromRectXY(
-            const ui.Rect.fromLTWH(10, 10, 80, 80), 20, 20),
+        ui.RRect.fromRectXY(const ui.Rect.fromLTWH(10, 10, 80, 80), 20, 20),
         paint,
       );
 
@@ -129,7 +132,8 @@ void main() {
 
     test('stroked RRect has no fill', () async {
       final recorder = ui.PictureRecorder();
-      final canvas = ui.Canvas(recorder, const ui.Rect.fromLTWH(0, 0, 100, 100));
+      final canvas =
+          ui.Canvas(recorder, const ui.Rect.fromLTWH(0, 0, 100, 100));
 
       final paint = ui.Paint()
         ..color = const ui.Color(0xFF0000FF)
@@ -137,8 +141,7 @@ void main() {
         ..strokeWidth = 3;
 
       canvas.drawRRect(
-        ui.RRect.fromRectXY(
-            const ui.Rect.fromLTWH(20, 20, 60, 60), 8, 8),
+        ui.RRect.fromRectXY(const ui.Rect.fromLTWH(20, 20, 60, 60), 8, 8),
         paint,
       );
 
@@ -154,16 +157,17 @@ void main() {
   group('drawDRRect', () {
     test('filled DRRect has ink in ring, not in hole', () async {
       final recorder = ui.PictureRecorder();
-      final canvas = ui.Canvas(recorder, const ui.Rect.fromLTWH(0, 0, 100, 100));
+      final canvas =
+          ui.Canvas(recorder, const ui.Rect.fromLTWH(0, 0, 100, 100));
 
       final paint = ui.Paint()
         ..color = const ui.Color(0xFFFFFF00)
         ..style = ui.PaintingStyle.fill;
 
-      final outer = ui.RRect.fromRectXY(
-          const ui.Rect.fromLTWH(5, 5, 90, 90), 5, 5);
-      final inner = ui.RRect.fromRectXY(
-          const ui.Rect.fromLTWH(25, 25, 50, 50), 5, 5);
+      final outer =
+          ui.RRect.fromRectXY(const ui.Rect.fromLTWH(5, 5, 90, 90), 5, 5);
+      final inner =
+          ui.RRect.fromRectXY(const ui.Rect.fromLTWH(25, 25, 50, 50), 5, 5);
 
       canvas.drawDRRect(outer, inner, paint);
 
@@ -225,7 +229,8 @@ void main() {
     test('drawImageNine does not crash', () async {
       final src = _make3x3Image();
       final recorder = ui.PictureRecorder();
-      final canvas = ui.Canvas(recorder, const ui.Rect.fromLTWH(0, 0, 100, 100));
+      final canvas =
+          ui.Canvas(recorder, const ui.Rect.fromLTWH(0, 0, 100, 100));
 
       canvas.drawImageNine(
         src,
@@ -247,14 +252,14 @@ void main() {
   group('Path addOval / addArc / addRRect', () {
     test('Path.addOval fills correctly', () async {
       final recorder = ui.PictureRecorder();
-      final canvas = ui.Canvas(recorder, const ui.Rect.fromLTWH(0, 0, 100, 100));
+      final canvas =
+          ui.Canvas(recorder, const ui.Rect.fromLTWH(0, 0, 100, 100));
 
       final paint = ui.Paint()
         ..color = const ui.Color(0xFFAA00AA)
         ..style = ui.PaintingStyle.fill;
 
-      final path = ui.Path()
-        ..addOval(const ui.Rect.fromLTWH(20, 20, 60, 60));
+      final path = ui.Path()..addOval(const ui.Rect.fromLTWH(20, 20, 60, 60));
       canvas.drawPath(path, paint);
 
       final image = await recorder.endRecording().toImage(100, 100);
@@ -267,7 +272,8 @@ void main() {
 
     test('Path.addRRect fills correctly', () async {
       final recorder = ui.PictureRecorder();
-      final canvas = ui.Canvas(recorder, const ui.Rect.fromLTWH(0, 0, 100, 100));
+      final canvas =
+          ui.Canvas(recorder, const ui.Rect.fromLTWH(0, 0, 100, 100));
 
       final paint = ui.Paint()
         ..color = const ui.Color(0xFF007700)
@@ -288,7 +294,8 @@ void main() {
 
     test('Path.addArc fills correctly', () async {
       final recorder = ui.PictureRecorder();
-      final canvas = ui.Canvas(recorder, const ui.Rect.fromLTWH(0, 0, 100, 100));
+      final canvas =
+          ui.Canvas(recorder, const ui.Rect.fromLTWH(0, 0, 100, 100));
 
       final paint = ui.Paint()
         ..color = const ui.Color(0xFF0000CC)

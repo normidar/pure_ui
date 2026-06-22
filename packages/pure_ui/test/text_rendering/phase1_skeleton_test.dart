@@ -111,13 +111,13 @@ void main() {
     });
 
     test('minIntrinsicWidth is non-negative', () {
-      expect(buildParagraph('Hello').minIntrinsicWidth,
-          greaterThanOrEqualTo(0));
+      expect(
+          buildParagraph('Hello').minIntrinsicWidth, greaterThanOrEqualTo(0));
     });
 
     test('maxIntrinsicWidth is non-negative', () {
-      expect(buildParagraph('Hello').maxIntrinsicWidth,
-          greaterThanOrEqualTo(0));
+      expect(
+          buildParagraph('Hello').maxIntrinsicWidth, greaterThanOrEqualTo(0));
     });
 
     test('alphabeticBaseline is non-negative', () {
@@ -126,8 +126,8 @@ void main() {
     });
 
     test('ideographicBaseline is non-negative', () {
-      expect(buildParagraph('Hello').ideographicBaseline,
-          greaterThanOrEqualTo(0));
+      expect(
+          buildParagraph('Hello').ideographicBaseline, greaterThanOrEqualTo(0));
     });
 
     test('didExceedMaxLines returns bool', () {
@@ -158,8 +158,7 @@ void main() {
 
     test('getClosestGlyphInfoForOffset returns null or GlyphInfo', () {
       final para = buildParagraph('Hello');
-      final result =
-          para.getClosestGlyphInfoForOffset(const ui.Offset(10, 10));
+      final result = para.getClosestGlyphInfoForOffset(const ui.Offset(10, 10));
       expect(result, anyOf(isNull, isA<ui.GlyphInfo>()));
     });
 

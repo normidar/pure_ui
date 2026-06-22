@@ -1,0 +1,58 @@
+name: pure_ui_monospace
+description: Root project for Melos
+version: 1.0.0
+publish_to: 'none'
+
+environment:
+  sdk: '>=3.11.0 <4.0.0' # ワークスペース機能を使うため3.5.0以上に変更
+
+dev_dependencies:
+  melos: any
+
+workspace:
+  - packages/*
+
+melos:
+  packages:
+    - packages/**
+
+  command:
+    bootstrap:
+      usePubspecOverrides: true
+
+  scripts:
+    analyze:
+      run: melos exec -- dart analyze .
+      description: Run dart analyze on all packages.
+
+    format:
+      run: melos exec -- dart format .
+      description: Run dart format on all packages.
+
+    fix:
+      run: melos exec -- dart fix --apply
+      description: Run dart fix on all packages.
+
+    test:
+      run: melos exec -- dart test
+      description: Run tests on all packages.
+      packageFilters:
+        dirExists: test
+
+    test:coverage:
+      run: melos exec -- dart test --coverage=coverage
+      description: Run tests with coverage on all packages.
+      packageFilters:
+        dirExists: test
+
+    lint:
+      run: melos run analyze && melos run format
+      description: Run analyze and format on all packages.
+
+    publish:dry-run:
+      run: melos publish --dry-run
+      description: Validate packages and check for any issues before publishing to pub.dev (does not actually upload).
+
+    publish:
+      run: melos publish
+      description: Publish all updated packages in the workspace to pub.dev.

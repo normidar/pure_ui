@@ -1374,7 +1374,8 @@ class _PureDartPicture implements Picture {
   }
 
   void _fillPolygon(List<Offset> points, Uint8List pixels, int width,
-      int height, int r, int g, int b, int a, {Gradient? shader}) {
+      int height, int r, int g, int b, int a,
+      {Gradient? shader}) {
     // Simple polygon fill using scanline algorithm
     if (points.length < 3) return;
 
@@ -1435,7 +1436,8 @@ class _PureDartPicture implements Picture {
   }
 
   void _fillRect(Rect rect, Uint8List pixels, int width, int height, int r,
-      int g, int b, int a, {Gradient? shader}) {
+      int g, int b, int a,
+      {Gradient? shader}) {
     final left = math.max(0, rect.left.round());
     final top = math.max(0, rect.top.round());
     final right = math.min(width, rect.right.round());
@@ -1774,7 +1776,8 @@ class _PureDartPicture implements Picture {
   }
 
   void _rasterizeComplexPath(_PureDartPath path, Paint paint, Uint8List pixels,
-      int width, int height, int r, int g, int b, int a, {Gradient? shader}) {
+      int width, int height, int r, int g, int b, int a,
+      {Gradient? shader}) {
     // For now, implement a basic path rasterizer that handles common path operations
     // This is a simplified version that will handle basic shapes and can be extended
 
@@ -1815,16 +1818,15 @@ class _PureDartPicture implements Picture {
             const int ovalSegs = 32;
             final ovalPts = <Offset>[
               for (int s = 0; s <= ovalSegs; s++)
-                Offset(
-                    ocx + orx * math.cos(2 * math.pi * s / ovalSegs),
+                Offset(ocx + orx * math.cos(2 * math.pi * s / ovalSegs),
                     ocy + ory * math.sin(2 * math.pi * s / ovalSegs)),
             ];
             if (paint.style == PaintingStyle.fill) {
               _fillPolygon(ovalPts, pixels, width, height, r, g, b, a,
                   shader: shader);
             } else {
-              _strokePolyline(ovalPts, paint.strokeWidth, pixels, width,
-                  height, r, g, b, a);
+              _strokePolyline(ovalPts, paint.strokeWidth, pixels, width, height,
+                  r, g, b, a);
             }
           }
           break;
@@ -1846,11 +1848,12 @@ class _PureDartPicture implements Picture {
             ];
             if (paint.style == PaintingStyle.fill) {
               // Close the arc (chord fill): last point back to first.
-              _fillPolygon([...arcPts, arcPts.first], pixels, width, height,
-                  r, g, b, a, shader: shader);
+              _fillPolygon(
+                  [...arcPts, arcPts.first], pixels, width, height, r, g, b, a,
+                  shader: shader);
             } else {
-              _strokePolyline(arcPts, paint.strokeWidth, pixels, width,
-                  height, r, g, b, a);
+              _strokePolyline(
+                  arcPts, paint.strokeWidth, pixels, width, height, r, g, b, a);
             }
           }
           break;
@@ -1865,8 +1868,7 @@ class _PureDartPicture implements Picture {
           final atry = atRect.height / 2.0;
           if (atrx > 0 && atry > 0) {
             const int atSegs = 16;
-            final firstPt = Offset(
-                atcx + atrx * math.cos(atStart),
+            final firstPt = Offset(atcx + atrx * math.cos(atStart),
                 atcy + atry * math.sin(atStart));
             if (forceMoveTo || pathPoints.isEmpty) {
               pathPoints.clear();
@@ -1876,8 +1878,7 @@ class _PureDartPicture implements Picture {
             }
             for (int s = 1; s <= atSegs; s++) {
               final angle = atStart + atSweep * (s / atSegs);
-              pathPoints.add(Offset(
-                  atcx + atrx * math.cos(angle),
+              pathPoints.add(Offset(atcx + atrx * math.cos(angle),
                   atcy + atry * math.sin(angle)));
             }
             currentX = atcx + atrx * math.cos(atStart + atSweep);
@@ -1891,8 +1892,8 @@ class _PureDartPicture implements Picture {
             _fillPolys([rrectPts], pixels, width, height, r, g, b, a,
                 shader: shader);
           } else {
-            _strokePolyline(rrectPts, paint.strokeWidth, pixels, width,
-                height, r, g, b, a);
+            _strokePolyline(
+                rrectPts, paint.strokeWidth, pixels, width, height, r, g, b, a);
           }
           break;
         case _PathCommandType.cubicTo:
@@ -1957,7 +1958,8 @@ class _PureDartPicture implements Picture {
   }
 
   void _renderPath(_PureDartPath path, Paint paint, Uint8List pixels, int width,
-      int height, int r, int g, int b, int a, {Gradient? shader}) {
+      int height, int r, int g, int b, int a,
+      {Gradient? shader}) {
     // Process path commands to render the path
     // For this initial implementation, we'll handle the most common path operations
 
@@ -2003,17 +2005,15 @@ class _PureDartPicture implements Picture {
   List<Offset> _rrectToPolygon(RRect rrect, {int cornerSegments = 8}) {
     final pts = <Offset>[];
 
-    void addArc(
-        double cx, double cy, double rx, double ry, double startAngle) {
+    void addArc(double cx, double cy, double rx, double ry, double startAngle) {
       if (rx <= 0 || ry <= 0) {
-        pts.add(Offset(cx + rx * math.cos(startAngle),
-            cy + ry * math.sin(startAngle)));
+        pts.add(Offset(
+            cx + rx * math.cos(startAngle), cy + ry * math.sin(startAngle)));
         return;
       }
       for (int i = 0; i <= cornerSegments; i++) {
         final angle = startAngle + (math.pi / 2) * (i / cornerSegments);
-        pts.add(Offset(
-            cx + rx * math.cos(angle), cy + ry * math.sin(angle)));
+        pts.add(Offset(cx + rx * math.cos(angle), cy + ry * math.sin(angle)));
       }
     }
 
@@ -2035,16 +2035,9 @@ class _PureDartPicture implements Picture {
   ///
   /// Passing [outerPoly, innerPoly] produces a ring (donut) fill because
   /// even-odd counting naturally excludes the inner area.
-  void _fillPolys(
-      List<List<Offset>> polys,
-      Uint8List pixels,
-      int width,
-      int height,
-      int r,
-      int g,
-      int b,
-      int a, {
-      Gradient? shader}) {
+  void _fillPolys(List<List<Offset>> polys, Uint8List pixels, int width,
+      int height, int r, int g, int b, int a,
+      {Gradient? shader}) {
     if (polys.isEmpty) return;
 
     double minY = double.infinity, maxY = double.negativeInfinity;
@@ -2134,8 +2127,8 @@ class _PureDartPicture implements Picture {
       if (useCenter) {
         _drawLine(Offset(cx, cy), arcPts.first, paint.strokeWidth, pixels,
             width, height, r, g, b, a);
-        _drawLine(Offset(cx, cy), arcPts.last, paint.strokeWidth, pixels,
-            width, height, r, g, b, a);
+        _drawLine(Offset(cx, cy), arcPts.last, paint.strokeWidth, pixels, width,
+            height, r, g, b, a);
       }
     }
   }
@@ -2212,9 +2205,8 @@ class _PureDartPicture implements Picture {
 
     if (dstX1 > dstX2 || dstY1 > dstY2) {
       // Dst too small for corners – fall back to simple scale
-      _drawImageRectToPixels(
-          image, Rect.fromLTRB(srcX0, srcY0, srcX3, srcY3), dst, paint,
-          pixels, width, height);
+      _drawImageRectToPixels(image, Rect.fromLTRB(srcX0, srcY0, srcX3, srcY3),
+          dst, paint, pixels, width, height);
       return;
     }
 
@@ -2302,8 +2294,7 @@ class _PureDartPicture implements Picture {
       }
 
       // ── Pass 3: decorations ───────────────────────────────────────────────
-      _drawLineDecorations(
-          line, offset, screenBaseline, pixels, width, height);
+      _drawLineDecorations(line, offset, screenBaseline, pixels, width, height);
     }
   }
 
@@ -2331,8 +2322,8 @@ class _PureDartPicture implements Picture {
     final polyKey =
         _glyphPolyCacheKey(glyph.fontKey, glyph.glyphId, glyph.fontSize);
     final polys = _cachedGlyphPolys(polyKey, outline, scale);
-    _rasterizePolys(
-        polys, shadowX, shadowBaseline, pixels, imgWidth, imgHeight, r, g, b, a);
+    _rasterizePolys(polys, shadowX, shadowBaseline, pixels, imgWidth, imgHeight,
+        r, g, b, a);
   }
 
   /// Rasterises pre-tessellated [polys] into [pixels] at screen offset
@@ -2376,8 +2367,7 @@ class _PureDartPicture implements Picture {
           if ((p1y <= y && p2y > y) || (p2y <= y && p1y > y)) {
             final p1x = sp[k].dx + dx;
             final p2x = sp[k + 1].dx + dx;
-            intersections
-                .add(p1x + (y - p1y) * (p2x - p1x) / (p2y - p1y));
+            intersections.add(p1x + (y - p1y) * (p2x - p1x) / (p2y - p1y));
           }
         }
       }
@@ -2402,12 +2392,10 @@ class _PureDartPicture implements Picture {
                   ((r * a + pixels[idx] * dstA * (255 - a) ~/ 255) ~/ outA)
                       .clamp(0, 255);
               pixels[idx + 1] =
-                  ((g * a + pixels[idx + 1] * dstA * (255 - a) ~/ 255) ~/
-                          outA)
+                  ((g * a + pixels[idx + 1] * dstA * (255 - a) ~/ 255) ~/ outA)
                       .clamp(0, 255);
               pixels[idx + 2] =
-                  ((b * a + pixels[idx + 2] * dstA * (255 - a) ~/ 255) ~/
-                          outA)
+                  ((b * a + pixels[idx + 2] * dstA * (255 - a) ~/ 255) ~/ outA)
                       .clamp(0, 255);
               pixels[idx + 3] = outA;
             }
@@ -2484,8 +2472,8 @@ class _PureDartPicture implements Picture {
         final srcIndex = (y * srcWidth + x) * 4;
         final dstIndex = (py * width + px) * 4;
 
-        if (srcIndex + 3 >= srcPixels.length ||
-            dstIndex + 3 >= pixels.length) continue;
+        if (srcIndex + 3 >= srcPixels.length || dstIndex + 3 >= pixels.length)
+          continue;
 
         final srcA = srcPixels[srcIndex + 3];
         if (srcA > 0) {
@@ -2536,8 +2524,8 @@ class _PureDartPicture implements Picture {
         final srcIndex = (srcY * srcWidth + srcX) * 4;
         final dstIndex = (dstY * width + dstX) * 4;
 
-        if (srcIndex + 3 >= srcPixels.length ||
-            dstIndex + 3 >= pixels.length) continue;
+        if (srcIndex + 3 >= srcPixels.length || dstIndex + 3 >= pixels.length)
+          continue;
 
         final srcA = srcPixels[srcIndex + 3];
         if (srcA > 0) {
@@ -2733,8 +2721,7 @@ class _PureDartImageDescriptor implements ImageDescriptor {
   }
 
   @override
-  Future<Codec> instantiateCodec(
-      {int? targetWidth, int? targetHeight}) async {
+  Future<Codec> instantiateCodec({int? targetWidth, int? targetHeight}) async {
     return _PureDartCodec(
       _rgbaPixels,
       _width,
@@ -2778,8 +2765,9 @@ class _PureDartCodec implements Codec {
   Future<FrameInfo> getNextFrame() async {
     final targetW =
         (_targetWidth != null && _targetWidth > 0) ? _targetWidth : _srcWidth;
-    final targetH =
-        (_targetHeight != null && _targetHeight > 0) ? _targetHeight : _srcHeight;
+    final targetH = (_targetHeight != null && _targetHeight > 0)
+        ? _targetHeight
+        : _srcHeight;
 
     if (targetW == _srcWidth && targetH == _srcHeight) {
       return FrameInfo._(
@@ -2792,8 +2780,8 @@ class _PureDartCodec implements Codec {
     for (int y = 0; y < _srcHeight; y++) {
       for (int x = 0; x < _srcWidth; x++) {
         final i = (y * _srcWidth + x) * 4;
-        src.setPixelRgba(
-            x, y, _rgbaPixels[i], _rgbaPixels[i + 1], _rgbaPixels[i + 2], _rgbaPixels[i + 3]);
+        src.setPixelRgba(x, y, _rgbaPixels[i], _rgbaPixels[i + 1],
+            _rgbaPixels[i + 2], _rgbaPixels[i + 3]);
       }
     }
     final resized = img.copyResize(src, width: targetW, height: targetH);
@@ -2989,9 +2977,8 @@ TextStyle _mergeTextStyle(TextStyle parent, TextStyle child) {
   }
 
   // String / nullable-scalar properties.
-  final String fontFamily = child._fontFamily.isNotEmpty
-      ? child._fontFamily
-      : parent._fontFamily;
+  final String fontFamily =
+      child._fontFamily.isNotEmpty ? child._fontFamily : parent._fontFamily;
 
   return TextStyle(
     color: color,
@@ -3083,9 +3070,8 @@ class _PureDartParagraph implements Paragraph {
     double maxWordWidth = 0.0;
     for (final span in _spans) {
       double wordWidth = 0.0;
-      for (final g in (span.style != null
-          ? _glyphsForSpan(span)
-          : <ShapedGlyph>[])) {
+      for (final g
+          in (span.style != null ? _glyphsForSpan(span) : <ShapedGlyph>[])) {
         if (g.isSpace || g.isNewline) {
           if (wordWidth > maxWordWidth) maxWordWidth = wordWidth;
           wordWidth = 0.0;
@@ -3108,8 +3094,7 @@ class _PureDartParagraph implements Paragraph {
   }
 
   @override
-  double get alphabeticBaseline =>
-      _lines.isEmpty ? 0.0 : _lines.first.baseline;
+  double get alphabeticBaseline => _lines.isEmpty ? 0.0 : _lines.first.baseline;
 
   @override
   double get ideographicBaseline => alphabeticBaseline;
@@ -3135,14 +3120,12 @@ class _PureDartParagraph implements Paragraph {
         ? style._fontFamily
         : (_paragraphStyle._fontFamily ?? '');
     if (fontFamily.isEmpty) return [];
-    final FontWeight fontWeight =
-        (style._encoded[0] & (1 << 5)) != 0
-            ? FontWeight.values[style._encoded[5]]
-            : FontWeight.normal;
-    final FontStyle fontStyle =
-        (style._encoded[0] & (1 << 6)) != 0
-            ? FontStyle.values[style._encoded[6]]
-            : FontStyle.normal;
+    final FontWeight fontWeight = (style._encoded[0] & (1 << 5)) != 0
+        ? FontWeight.values[style._encoded[5]]
+        : FontWeight.normal;
+    final FontStyle fontStyle = (style._encoded[0] & (1 << 6)) != 0
+        ? FontStyle.values[style._encoded[6]]
+        : FontStyle.normal;
     final fontBytes =
         FontLoader.getFont(fontFamily, weight: fontWeight, style: fontStyle);
     if (fontBytes == null) return [];
@@ -3247,9 +3230,8 @@ class _PureDartParagraphBuilder implements ParagraphBuilder {
   /// enclosing span.
   @override
   void pushStyle(TextStyle style) {
-    final merged = _styleStack.isEmpty
-        ? style
-        : _mergeTextStyle(_styleStack.last, style);
+    final merged =
+        _styleStack.isEmpty ? style : _mergeTextStyle(_styleStack.last, style);
     _styleStack.add(merged);
   }
 

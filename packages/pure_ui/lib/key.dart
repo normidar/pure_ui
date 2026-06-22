@@ -146,7 +146,9 @@ class KeyData {
     // Equivalent to assert(divisorForValueMask == (1 << valueMaskWidth)).
     const int firstDivisorWidth = 28;
     assert(
-      divisorForValueMask == (1 << firstDivisorWidth) * (1 << (valueMaskWidth - firstDivisorWidth)),
+      divisorForValueMask ==
+          (1 << firstDivisorWidth) *
+              (1 << (valueMaskWidth - firstDivisorWidth)),
     );
 
     // JS only supports up to 2^53 - 1, therefore non-value bits can only

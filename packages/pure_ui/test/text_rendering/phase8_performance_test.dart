@@ -52,7 +52,8 @@ void main() {
           ..pushStyle(ui.TextStyle(fontFamily: _fontFamily, fontSize: 20))
           ..addText(text)
           ..pop();
-        final para = p.build()..layout(const ui.ParagraphConstraints(width: 400));
+        final para = p.build()
+          ..layout(const ui.ParagraphConstraints(width: 400));
         final recorder = ui.PictureRecorder();
         ui.Canvas(recorder, const ui.Rect.fromLTWH(0, 0, 400, 100))
             .drawParagraph(para, ui.Offset.zero);
@@ -66,19 +67,19 @@ void main() {
       }
 
       expect(await hasInk('Hello'), isTrue);
-      expect(await hasInk('Hello'), isTrue, reason: 'Second render (cache hit)');
+      expect(await hasInk('Hello'), isTrue,
+          reason: 'Second render (cache hit)');
     });
 
     test('rendering same text 10 times produces ink every time', () async {
       for (int iter = 0; iter < 10; iter++) {
         final p = ui.ParagraphBuilder(
             ui.ParagraphStyle(fontFamily: _fontFamily, fontSize: 20))
-          ..pushStyle(
-              ui.TextStyle(fontFamily: _fontFamily, fontSize: 20))
+          ..pushStyle(ui.TextStyle(fontFamily: _fontFamily, fontSize: 20))
           ..addText('Cache test $iter')
           ..pop();
-        final para =
-            p.build()..layout(const ui.ParagraphConstraints(width: 500));
+        final para = p.build()
+          ..layout(const ui.ParagraphConstraints(width: 500));
         final recorder = ui.PictureRecorder();
         ui.Canvas(recorder, const ui.Rect.fromLTWH(0, 0, 500, 100))
             .drawParagraph(para, ui.Offset.zero);
@@ -104,8 +105,8 @@ void main() {
           ..pushStyle(ui.TextStyle(fontFamily: _fontFamily, fontSize: fontSize))
           ..addText('Aa')
           ..pop();
-        final para =
-            p.build()..layout(const ui.ParagraphConstraints(width: 400));
+        final para = p.build()
+          ..layout(const ui.ParagraphConstraints(width: 400));
         final recorder = ui.PictureRecorder();
         ui.Canvas(recorder, const ui.Rect.fromLTWH(0, 0, 400, 100))
             .drawParagraph(para, ui.Offset.zero);
@@ -135,8 +136,8 @@ void main() {
               ui.TextStyle(fontFamily: _fontFamily, fontSize: 20, color: color))
           ..addText('Hi')
           ..pop();
-        final para =
-            p.build()..layout(const ui.ParagraphConstraints(width: 400));
+        final para = p.build()
+          ..layout(const ui.ParagraphConstraints(width: 400));
         final recorder = ui.PictureRecorder();
         ui.Canvas(recorder, const ui.Rect.fromLTWH(0, 0, 400, 100))
             .drawParagraph(para, ui.Offset.zero);
@@ -198,13 +199,13 @@ void main() {
         () {
           for (int i = 0; i < 3; i++) {
             (ui.ParagraphBuilder(
-                ui.ParagraphStyle(fontFamily: _fontFamily, fontSize: 16))
-              ..pushStyle(
-                  ui.TextStyle(fontFamily: _fontFamily, fontSize: 16))
-              ..addText('Font cache test')
-              ..pop())
-              .build()
-              .layout(const ui.ParagraphConstraints(width: 400));
+                    ui.ParagraphStyle(fontFamily: _fontFamily, fontSize: 16))
+                  ..pushStyle(
+                      ui.TextStyle(fontFamily: _fontFamily, fontSize: 16))
+                  ..addText('Font cache test')
+                  ..pop())
+                .build()
+                .layout(const ui.ParagraphConstraints(width: 400));
           }
         },
         returnsNormally,

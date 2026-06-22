@@ -140,10 +140,8 @@ void main() {
     });
 
     test('longestLine does not exceed constraint width', () {
-      final p = _build(
-          'A fairly long piece of text to force wrapping.',
-          width: 100,
-          fontSize: 16);
+      final p = _build('A fairly long piece of text to force wrapping.',
+          width: 100, fontSize: 16);
       // Allow a small rounding tolerance.
       expect(p.longestLine, lessThanOrEqualTo(100 + 5));
     });
@@ -213,8 +211,8 @@ void main() {
 
     test('right-aligned line has left > 0 for short text in wide paragraph',
         () {
-      final p = _build('Hi',
-          width: 400, textAlign: ui.TextAlign.right, fontSize: 20);
+      final p =
+          _build('Hi', width: 400, textAlign: ui.TextAlign.right, fontSize: 20);
       expect(p.computeLineMetrics().first.left, greaterThan(0));
     });
 
@@ -274,8 +272,8 @@ void main() {
     });
 
     test('text aligned right renders ink on the right side', () async {
-      final p = _build('Hi',
-          width: 400, textAlign: ui.TextAlign.right, fontSize: 30);
+      final p =
+          _build('Hi', width: 400, textAlign: ui.TextAlign.right, fontSize: 30);
       final raw = await _renderToPixels(p, imgWidth: 400, imgHeight: 100);
 
       // Count ink in left half vs right half
@@ -283,7 +281,10 @@ void main() {
       for (int y = 0; y < 100; y++) {
         for (int x = 0; x < 400; x++) {
           if (raw[(y * 400 + x) * 4 + 3] > 0) {
-            if (x < 200) leftInk++; else rightInk++;
+            if (x < 200)
+              leftInk++;
+            else
+              rightInk++;
           }
         }
       }

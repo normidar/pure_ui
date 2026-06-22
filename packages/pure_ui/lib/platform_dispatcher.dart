@@ -42,7 +42,8 @@ typedef PointerDataPacketCallback = void Function(PointerDataPacket packet);
 typedef KeyDataCallback = bool Function(KeyData data);
 
 /// Signature for [PlatformDispatcher.onSemanticsActionEvent].
-typedef SemanticsActionEventCallback = void Function(SemanticsActionEvent action);
+typedef SemanticsActionEventCallback = void Function(
+    SemanticsActionEvent action);
 
 /// Signature for responses to platform messages.
 ///
@@ -57,8 +58,8 @@ typedef PlatformMessageResponseCallback = void Function(ByteData? data);
   'Migrate to ChannelBuffers.setListener instead. '
   'This feature was deprecated after v3.11.0-20.0.pre.',
 )
-typedef PlatformMessageCallback =
-    void Function(String name, ByteData? data, PlatformMessageResponseCallback? callback);
+typedef PlatformMessageCallback = void Function(
+    String name, ByteData? data, PlatformMessageResponseCallback? callback);
 
 // Signature for _setNeedsReportTimings.
 typedef _SetNeedsReportTimingsFunc = void Function(bool value);
@@ -82,7 +83,8 @@ const double _kUnsetGestureSetting = -1.0;
 const String _kFlutterKeyDataChannel = 'flutter/keydata';
 
 @pragma('vm:entry-point')
-ByteData? _wrapUnmodifiableByteData(ByteData? byteData) => byteData?.asUnmodifiableView();
+ByteData? _wrapUnmodifiableByteData(ByteData? byteData) =>
+    byteData?.asUnmodifiableView();
 
 /// A token that represents a root isolate.
 class RootIsolateToken {
@@ -98,7 +100,8 @@ class RootIsolateToken {
     return token == 0 ? null : RootIsolateToken._(token);
   }();
 
-  @Native<Int64 Function()>(symbol: 'PlatformConfigurationNativeApi::GetRootIsolateToken')
+  @Native<Int64 Function()>(
+      symbol: 'PlatformConfigurationNativeApi::GetRootIsolateToken')
   external static int __getRootIsolateToken();
 }
 
@@ -155,7 +158,8 @@ class PlatformDispatcher {
   ///
   /// The engine invokes this callback in the same zone in which the callback
   /// was set.
-  VoidCallback? get onPlatformConfigurationChanged => _onPlatformConfigurationChanged;
+  VoidCallback? get onPlatformConfigurationChanged =>
+      _onPlatformConfigurationChanged;
   VoidCallback? _onPlatformConfigurationChanged;
   Zone _onPlatformConfigurationChangedZone = Zone.root;
   set onPlatformConfigurationChanged(VoidCallback? callback) {
@@ -402,7 +406,8 @@ class PlatformDispatcher {
   @Native<Void Function(Int64, Int64, Int64)>(
     symbol: 'PlatformConfigurationNativeApi::RequestViewFocusChange',
   )
-  external static void _requestViewFocusChange(int viewId, int state, int direction);
+  external static void _requestViewFocusChange(
+      int viewId, int state, int direction);
 
   /// A callback invoked when any view begins a frame.
   ///
@@ -424,7 +429,8 @@ class PlatformDispatcher {
 
   // Called from the engine, via hooks.dart
   void _beginFrame(int microseconds) {
-    _invoke1<Duration>(onBeginFrame, _onBeginFrameZone, Duration(microseconds: microseconds));
+    _invoke1<Duration>(
+        onBeginFrame, _onBeginFrameZone, Duration(microseconds: microseconds));
   }
 
   /// A callback that is invoked for each frame after [onBeginFrame] has
@@ -489,20 +495,28 @@ class PlatformDispatcher {
         PointerData(
           // The unpacking code must match the struct in pointer_data.h.
           embedderId: packet.getInt64(kStride * offset++, _kFakeHostEndian),
-          timeStamp: Duration(microseconds: packet.getInt64(kStride * offset++, _kFakeHostEndian)),
-          change: PointerChange.values[packet.getInt64(kStride * offset++, _kFakeHostEndian)],
-          kind: PointerDeviceKind.values[packet.getInt64(kStride * offset++, _kFakeHostEndian)],
-          signalKind:
-              PointerSignalKind.values[packet.getInt64(kStride * offset++, _kFakeHostEndian)],
+          timeStamp: Duration(
+              microseconds:
+                  packet.getInt64(kStride * offset++, _kFakeHostEndian)),
+          change: PointerChange
+              .values[packet.getInt64(kStride * offset++, _kFakeHostEndian)],
+          kind: PointerDeviceKind
+              .values[packet.getInt64(kStride * offset++, _kFakeHostEndian)],
+          signalKind: PointerSignalKind
+              .values[packet.getInt64(kStride * offset++, _kFakeHostEndian)],
           device: packet.getInt64(kStride * offset++, _kFakeHostEndian),
-          pointerIdentifier: packet.getInt64(kStride * offset++, _kFakeHostEndian),
+          pointerIdentifier:
+              packet.getInt64(kStride * offset++, _kFakeHostEndian),
           physicalX: packet.getFloat64(kStride * offset++, _kFakeHostEndian),
           physicalY: packet.getFloat64(kStride * offset++, _kFakeHostEndian),
-          physicalDeltaX: packet.getFloat64(kStride * offset++, _kFakeHostEndian),
-          physicalDeltaY: packet.getFloat64(kStride * offset++, _kFakeHostEndian),
+          physicalDeltaX:
+              packet.getFloat64(kStride * offset++, _kFakeHostEndian),
+          physicalDeltaY:
+              packet.getFloat64(kStride * offset++, _kFakeHostEndian),
           buttons: packet.getInt64(kStride * offset++, _kFakeHostEndian),
           obscured: packet.getInt64(kStride * offset++, _kFakeHostEndian) != 0,
-          synthesized: packet.getInt64(kStride * offset++, _kFakeHostEndian) != 0,
+          synthesized:
+              packet.getInt64(kStride * offset++, _kFakeHostEndian) != 0,
           pressure: packet.getFloat64(kStride * offset++, _kFakeHostEndian),
           pressureMin: packet.getFloat64(kStride * offset++, _kFakeHostEndian),
           pressureMax: packet.getFloat64(kStride * offset++, _kFakeHostEndian),
@@ -532,7 +546,8 @@ class PlatformDispatcher {
     return PointerDataPacket(data: data);
   }
 
-  static ChannelCallback _keyDataListener(KeyDataCallback onKeyData, Zone zone) =>
+  static ChannelCallback _keyDataListener(
+          KeyDataCallback onKeyData, Zone zone) =>
       (ByteData? packet, PlatformMessageResponseCallback callback) {
         _invoke1<KeyData>(
           (KeyData keyData) {
@@ -558,7 +573,8 @@ class PlatformDispatcher {
   set onKeyData(KeyDataCallback? callback) {
     _onKeyData = callback;
     if (callback != null) {
-      channelBuffers.setListener(_kFlutterKeyDataChannel, _keyDataListener(callback, Zone.current));
+      channelBuffers.setListener(
+          _kFlutterKeyDataChannel, _keyDataListener(callback, Zone.current));
     } else {
       channelBuffers.clearListener(_kFlutterKeyDataChannel);
     }
@@ -575,16 +591,20 @@ class PlatformDispatcher {
     const int kStride = Int64List.bytesPerElement;
 
     int offset = 0;
-    final int charDataSize = packet.getUint64(kStride * offset++, _kFakeHostEndian);
+    final int charDataSize =
+        packet.getUint64(kStride * offset++, _kFakeHostEndian);
     final String? character = charDataSize == 0
         ? null
         : utf8.decoder.convert(
-            packet.buffer.asUint8List(kStride * (offset + _kKeyDataFieldCount), charDataSize),
+            packet.buffer.asUint8List(
+                kStride * (offset + _kKeyDataFieldCount), charDataSize),
           );
 
     final KeyData keyData = KeyData(
-      timeStamp: Duration(microseconds: packet.getUint64(kStride * offset++, _kFakeHostEndian)),
-      type: KeyEventType.values[packet.getInt64(kStride * offset++, _kFakeHostEndian)],
+      timeStamp: Duration(
+          microseconds: packet.getUint64(kStride * offset++, _kFakeHostEndian)),
+      type: KeyEventType
+          .values[packet.getInt64(kStride * offset++, _kFakeHostEndian)],
       physical: packet.getUint64(kStride * offset++, _kFakeHostEndian),
       logical: packet.getUint64(kStride * offset++, _kFakeHostEndian),
       character: character,
@@ -628,9 +648,11 @@ class PlatformDispatcher {
 
   late _SetNeedsReportTimingsFunc _setNeedsReportTimings;
 
-  void _nativeSetNeedsReportTimings(bool value) => __nativeSetNeedsReportTimings(value);
+  void _nativeSetNeedsReportTimings(bool value) =>
+      __nativeSetNeedsReportTimings(value);
 
-  @Native<Void Function(Bool)>(symbol: 'PlatformConfigurationNativeApi::SetNeedsReportTimings')
+  @Native<Void Function(Bool)>(
+      symbol: 'PlatformConfigurationNativeApi::SetNeedsReportTimings')
   external static void __nativeSetNeedsReportTimings(bool value);
 
   // Called from the engine, via hooks.dart
@@ -638,7 +660,8 @@ class PlatformDispatcher {
     assert(timings.length % FrameTiming._dataLength == 0);
     final List<FrameTiming> frameTimings = <FrameTiming>[];
     for (int i = 0; i < timings.length; i += FrameTiming._dataLength) {
-      frameTimings.add(FrameTiming._(timings.sublist(i, i + FrameTiming._dataLength)));
+      frameTimings
+          .add(FrameTiming._(timings.sublist(i, i + FrameTiming._dataLength)));
     }
     _invoke1(onReportTimings, _onReportTimingsZone, frameTimings);
   }
@@ -652,7 +675,8 @@ class PlatformDispatcher {
   ///
   /// The framework invokes [callback] in the same zone in which this method was
   /// called.
-  void sendPlatformMessage(String name, ByteData? data, PlatformMessageResponseCallback? callback) {
+  void sendPlatformMessage(
+      String name, ByteData? data, PlatformMessageResponseCallback? callback) {
     final String? error = _sendPlatformMessage(
       name,
       _zonedPlatformMessageResponseCallback(callback),
@@ -667,7 +691,8 @@ class PlatformDispatcher {
     String name,
     PlatformMessageResponseCallback? callback,
     ByteData? data,
-  ) => __sendPlatformMessage(name, callback, data);
+  ) =>
+      __sendPlatformMessage(name, callback, data);
 
   @Native<Handle Function(Handle, Handle, Handle)>(
     symbol: 'PlatformConfigurationNativeApi::SendPlatformMessage',
@@ -686,14 +711,17 @@ class PlatformDispatcher {
   /// of the channel communication will happen on. The [data] parameter is the
   /// payload of the message. The [identifier] parameter is a unique integer
   /// assigned to the message.
-  void sendPortPlatformMessage(String name, ByteData? data, int identifier, SendPort port) {
-    final String? error = _sendPortPlatformMessage(name, identifier, port.nativePort, data);
+  void sendPortPlatformMessage(
+      String name, ByteData? data, int identifier, SendPort port) {
+    final String? error =
+        _sendPortPlatformMessage(name, identifier, port.nativePort, data);
     if (error != null) {
       throw Exception(error);
     }
   }
 
-  String? _sendPortPlatformMessage(String name, int identifier, int port, ByteData? data) =>
+  String? _sendPortPlatformMessage(
+          String name, int identifier, int port, ByteData? data) =>
       __sendPortPlatformMessage(name, identifier, port, data);
 
   @Native<Handle Function(Handle, Handle, Handle, Handle)>(
@@ -714,7 +742,8 @@ class PlatformDispatcher {
     __registerBackgroundIsolate(token._token);
   }
 
-  @Native<Void Function(Int64)>(symbol: 'PlatformConfigurationNativeApi::RegisterBackgroundIsolate')
+  @Native<Void Function(Int64)>(
+      symbol: 'PlatformConfigurationNativeApi::RegisterBackgroundIsolate')
   external static void __registerBackgroundIsolate(int rootIsolateId);
 
   /// Deprecated. Migrate to [ChannelBuffers.setListener] instead.
@@ -755,7 +784,8 @@ class PlatformDispatcher {
   @Native<Void Function(IntPtr, Handle)>(
     symbol: 'PlatformConfigurationNativeApi::RespondToPlatformMessage',
   )
-  external static void __respondToPlatformMessage(int responseId, ByteData? data);
+  external static void __respondToPlatformMessage(
+      int responseId, ByteData? data);
 
   /// Wraps the given [callback] in another callback that ensures that the
   /// original callback is called in the zone it was registered in.
@@ -814,7 +844,8 @@ class PlatformDispatcher {
   /// Note that this does not rename any child isolates of the root.
   void setIsolateDebugName(String name) => _setIsolateDebugName(name);
 
-  @Native<Void Function(Handle)>(symbol: 'PlatformConfigurationNativeApi::SetIsolateDebugName')
+  @Native<Void Function(Handle)>(
+      symbol: 'PlatformConfigurationNativeApi::SetIsolateDebugName')
   external static void _setIsolateDebugName(String name);
 
   /// Requests the Dart VM to adjusts the GC heuristics based on the requested `performance_mode`.
@@ -827,7 +858,8 @@ class PlatformDispatcher {
     _requestDartPerformanceMode(mode.index);
   }
 
-  @Native<Int Function(Int)>(symbol: 'PlatformConfigurationNativeApi::RequestDartPerformanceMode')
+  @Native<Int Function(Int)>(
+      symbol: 'PlatformConfigurationNativeApi::RequestDartPerformanceMode')
   external static int _requestDartPerformanceMode(int mode);
 
   /// The embedder can specify data that the isolate can request synchronously
@@ -841,7 +873,8 @@ class PlatformDispatcher {
   /// platform channel may be used.
   ByteData? getPersistentIsolateData() => _getPersistentIsolateData();
 
-  @Native<Handle Function()>(symbol: 'PlatformConfigurationNativeApi::GetPersistentIsolateData')
+  @Native<Handle Function()>(
+      symbol: 'PlatformConfigurationNativeApi::GetPersistentIsolateData')
   external static ByteData? _getPersistentIsolateData();
 
   /// Requests that, at the next appropriate opportunity, the [onBeginFrame] and
@@ -855,7 +888,8 @@ class PlatformDispatcher {
   ///    frames.
   void scheduleFrame() => _scheduleFrame();
 
-  @Native<Void Function()>(symbol: 'PlatformConfigurationNativeApi::ScheduleFrame')
+  @Native<Void Function()>(
+      symbol: 'PlatformConfigurationNativeApi::ScheduleFrame')
   external static void _scheduleFrame();
 
   /// Schedule a frame to run as soon as possible, rather than waiting for the
@@ -880,7 +914,8 @@ class PlatformDispatcher {
   ///    introduces the warm up frame in more details.
   ///  * [scheduleFrame], which schedules the frame at the next appropriate
   ///    opportunity and should be used to render regular frames.
-  void scheduleWarmUpFrame({required VoidCallback beginFrame, required VoidCallback drawFrame}) {
+  void scheduleWarmUpFrame(
+      {required VoidCallback beginFrame, required VoidCallback drawFrame}) {
     // We use timers here to ensure that microtasks flush in between.
     Timer.run(beginFrame);
     Timer.run(() {
@@ -889,18 +924,21 @@ class PlatformDispatcher {
     });
   }
 
-  @Native<Void Function()>(symbol: 'PlatformConfigurationNativeApi::EndWarmUpFrame')
+  @Native<Void Function()>(
+      symbol: 'PlatformConfigurationNativeApi::EndWarmUpFrame')
   external static void _endWarmUpFrame();
 
   /// Additional accessibility features that may be enabled by the platform.
-  AccessibilityFeatures get accessibilityFeatures => _configuration.accessibilityFeatures;
+  AccessibilityFeatures get accessibilityFeatures =>
+      _configuration.accessibilityFeatures;
 
   /// A callback that is invoked when the value of [accessibilityFeatures]
   /// changes.
   ///
   /// The framework invokes this callback in the same zone in which the callback
   /// was set.
-  VoidCallback? get onAccessibilityFeaturesChanged => _onAccessibilityFeaturesChanged;
+  VoidCallback? get onAccessibilityFeaturesChanged =>
+      _onAccessibilityFeaturesChanged;
   VoidCallback? _onAccessibilityFeaturesChanged;
   Zone _onAccessibilityFeaturesChangedZone = Zone.root;
   set onAccessibilityFeaturesChanged(VoidCallback? callback) {
@@ -915,9 +953,12 @@ class PlatformDispatcher {
     if (newFeatures == previousConfiguration.accessibilityFeatures) {
       return;
     }
-    _configuration = previousConfiguration.copyWith(accessibilityFeatures: newFeatures);
-    _invoke(onPlatformConfigurationChanged, _onPlatformConfigurationChangedZone);
-    _invoke(onAccessibilityFeaturesChanged, _onAccessibilityFeaturesChangedZone);
+    _configuration =
+        previousConfiguration.copyWith(accessibilityFeatures: newFeatures);
+    _invoke(
+        onPlatformConfigurationChanged, _onPlatformConfigurationChangedZone);
+    _invoke(
+        onAccessibilityFeaturesChanged, _onAccessibilityFeaturesChangedZone);
   }
 
   /// Change the retained semantics data about this platform dispatcher.
@@ -942,7 +983,8 @@ class PlatformDispatcher {
   @Native<Void Function(Int64, Pointer<Void>)>(
     symbol: 'PlatformConfigurationNativeApi::UpdateSemantics',
   )
-  external static void _updateSemantics(int viewId, _NativeSemanticsUpdate update);
+  external static void _updateSemantics(
+      int viewId, _NativeSemanticsUpdate update);
 
   /// The system-reported default locale of the device.
   ///
@@ -955,7 +997,8 @@ class PlatformDispatcher {
   /// This is equivalent to `locales.first`, except that it will provide an
   /// undefined (using the language tag "und") non-null locale if the [locales]
   /// list has not been set or is empty.
-  Locale get locale => locales.isEmpty ? const Locale.fromSubtags() : locales.first;
+  Locale get locale =>
+      locales.isEmpty ? const Locale.fromSubtags() : locales.first;
 
   /// The full system-reported supported locales of the device.
   ///
@@ -990,7 +1033,8 @@ class PlatformDispatcher {
       supportedLocalesData.add(locale.scriptCode);
     }
 
-    final List<String> result = _computePlatformResolvedLocale(supportedLocalesData);
+    final List<String> result =
+        _computePlatformResolvedLocale(supportedLocalesData);
 
     if (result.isNotEmpty) {
       return Locale.fromSubtags(
@@ -1002,13 +1046,15 @@ class PlatformDispatcher {
     return null;
   }
 
-  List<String> _computePlatformResolvedLocale(List<String?> supportedLocalesData) =>
+  List<String> _computePlatformResolvedLocale(
+          List<String?> supportedLocalesData) =>
       __computePlatformResolvedLocale(supportedLocalesData);
 
   @Native<Handle Function(Handle)>(
     symbol: 'PlatformConfigurationNativeApi::ComputePlatformResolvedLocale',
   )
-  external static List<String> __computePlatformResolvedLocale(List<String?> supportedLocalesData);
+  external static List<String> __computePlatformResolvedLocale(
+      List<String?> supportedLocalesData);
 
   /// A callback that is invoked whenever [locale] changes value.
   ///
@@ -1045,7 +1091,9 @@ class PlatformDispatcher {
           scriptCode: scriptCode.isEmpty ? null : scriptCode,
         ),
       );
-      if (!localesDiffer && newLocales[localeIndex] != previousConfiguration.locales[localeIndex]) {
+      if (!localesDiffer &&
+          newLocales[localeIndex] !=
+              previousConfiguration.locales[localeIndex]) {
         localesDiffer = true;
       }
     }
@@ -1053,7 +1101,8 @@ class PlatformDispatcher {
       return;
     }
     _configuration = previousConfiguration.copyWith(locales: newLocales);
-    _invoke(onPlatformConfigurationChanged, _onPlatformConfigurationChangedZone);
+    _invoke(
+        onPlatformConfigurationChanged, _onPlatformConfigurationChangedZone);
     _invoke(onLocaleChanged, _onLocaleChangedZone);
   }
 
@@ -1137,7 +1186,8 @@ class PlatformDispatcher {
   /// This option is used by [AdaptiveTextSelectionToolbar] to decide whether
   /// to show system context menu, or to fallback to the default Flutter context
   /// menu.
-  bool get supportsShowingSystemContextMenu => _supportsShowingSystemContextMenu;
+  bool get supportsShowingSystemContextMenu =>
+      _supportsShowingSystemContextMenu;
   bool _supportsShowingSystemContextMenu = false;
 
   /// Whether briefly displaying the characters as you type in obscured text
@@ -1194,14 +1244,16 @@ class PlatformDispatcher {
 
   // Called from the engine, via hooks.dart
   void _updateUserSettingsData(String jsonData) {
-    final Map<String, Object?> data = json.decode(jsonData) as Map<String, Object?>;
+    final Map<String, Object?> data =
+        json.decode(jsonData) as Map<String, Object?>;
     if (data.isEmpty) {
       return;
     }
 
     final double textScaleFactor = (data['textScaleFactor']! as num).toDouble();
     final bool alwaysUse24HourFormat = data['alwaysUse24HourFormat']! as bool;
-    final bool? nativeSpellCheckServiceDefined = data['nativeSpellCheckServiceDefined'] as bool?;
+    final bool? nativeSpellCheckServiceDefined =
+        data['nativeSpellCheckServiceDefined'] as bool?;
     if (nativeSpellCheckServiceDefined != null) {
       _nativeSpellCheckServiceDefined = nativeSpellCheckServiceDefined;
     } else {
@@ -1224,17 +1276,20 @@ class PlatformDispatcher {
     final Brightness platformBrightness = switch (data['platformBrightness']) {
       'dark' => Brightness.dark,
       'light' => Brightness.light,
-      final Object? value => throw StateError('$value is not a valid platformBrightness.'),
+      final Object? value =>
+        throw StateError('$value is not a valid platformBrightness.'),
     };
     final String? systemFontFamily = data['systemFontFamily'] as String?;
     final int? configurationId = data['configurationId'] as int?;
     final _PlatformConfiguration previousConfiguration = _configuration;
     final bool platformBrightnessChanged =
         previousConfiguration.platformBrightness != platformBrightness;
-    final bool textScaleFactorChanged = previousConfiguration.textScaleFactor != textScaleFactor;
+    final bool textScaleFactorChanged =
+        previousConfiguration.textScaleFactor != textScaleFactor;
     final bool alwaysUse24HourFormatChanged =
         previousConfiguration.alwaysUse24HourFormat != alwaysUse24HourFormat;
-    final bool systemFontFamilyChanged = previousConfiguration.systemFontFamily != systemFontFamily;
+    final bool systemFontFamilyChanged =
+        previousConfiguration.systemFontFamily != systemFontFamily;
     if (!platformBrightnessChanged &&
         !textScaleFactorChanged &&
         !alwaysUse24HourFormatChanged &&
@@ -1249,7 +1304,8 @@ class PlatformDispatcher {
       systemFontFamily: systemFontFamily,
       configurationId: configurationId,
     );
-    _invoke(onPlatformConfigurationChanged, _onPlatformConfigurationChangedZone);
+    _invoke(
+        onPlatformConfigurationChanged, _onPlatformConfigurationChangedZone);
     if (textScaleFactorChanged) {
       _cachedFontSizes = null;
       _invoke(onTextScaleFactorChanged, _onTextScaleFactorChangedZone);
@@ -1288,7 +1344,8 @@ class PlatformDispatcher {
       return;
     }
     _configuration = previousConfiguration.copyWith(semanticsEnabled: enabled);
-    _invoke(onPlatformConfigurationChanged, _onPlatformConfigurationChangedZone);
+    _invoke(
+        onPlatformConfigurationChanged, _onPlatformConfigurationChangedZone);
     _invoke(onSemanticsEnabledChanged, _onSemanticsEnabledChangedZone);
   }
 
@@ -1300,7 +1357,8 @@ class PlatformDispatcher {
   ///
   /// The framework invokes this callback in the same zone in which the
   /// callback was set.
-  SemanticsActionEventCallback? get onSemanticsActionEvent => _onSemanticsActionEvent;
+  SemanticsActionEventCallback? get onSemanticsActionEvent =>
+      _onSemanticsActionEvent;
   SemanticsActionEventCallback? _onSemanticsActionEvent;
   Zone _onSemanticsActionEventZone = Zone.root;
   set onSemanticsActionEvent(SemanticsActionEventCallback? callback) {
@@ -1332,7 +1390,8 @@ class PlatformDispatcher {
   }
 
   // Called from the engine, via hooks.dart
-  void _dispatchSemanticsAction(int viewId, int nodeId, int action, ByteData? args) {
+  void _dispatchSemanticsAction(
+      int viewId, int nodeId, int action, ByteData? args) {
     _invoke1<SemanticsActionEvent>(
       onSemanticsActionEvent,
       _onSemanticsActionEventZone,
@@ -1380,7 +1439,8 @@ class PlatformDispatcher {
       return _onError!(error, stackTrace);
     } else {
       try {
-        return _onErrorZone!.runBinary<bool, Object, StackTrace>(_onError!, error, stackTrace);
+        return _onErrorZone!
+            .runBinary<bool, Object, StackTrace>(_onError!, error, stackTrace);
       } catch (e, s) {
         _onErrorZone!.handleUncaughtError(e, s);
         return false;
@@ -1420,7 +1480,8 @@ class PlatformDispatcher {
   ///    requests from the embedder.
   String get defaultRouteName => _defaultRouteName();
 
-  @Native<Handle Function()>(symbol: 'PlatformConfigurationNativeApi::DefaultRouteName')
+  @Native<Handle Function()>(
+      symbol: 'PlatformConfigurationNativeApi::DefaultRouteName')
   external static String _defaultRouteName();
 
   /// Computes the scaled font size from the given `unscaledFontSize`, according
@@ -1452,14 +1513,18 @@ class PlatformDispatcher {
     final int unscaledCeil = unscaledFontSize.ceil();
     if (unscaledFloor == unscaledCeil) {
       // No need to interpolate if the input value is an integer.
-      return _scaleAndMemoize(unscaledFloor) ?? unscaledFontSize * textScaleFactor;
+      return _scaleAndMemoize(unscaledFloor) ??
+          unscaledFontSize * textScaleFactor;
     }
     assert(
       unscaledCeil - unscaledFloor == 1,
       'Unexpected interpolation range: $unscaledFloor - $unscaledCeil.',
     );
 
-    return switch ((_scaleAndMemoize(unscaledFloor), _scaleAndMemoize(unscaledCeil))) {
+    return switch ((
+      _scaleAndMemoize(unscaledFloor),
+      _scaleAndMemoize(unscaledCeil)
+    )) {
       (null, _) || (_, null) => unscaledFontSize * textScaleFactor,
       (final double lower, final double upper) =>
         lower + (upper - lower) * (unscaledFontSize - unscaledFloor),
@@ -1488,15 +1553,18 @@ class PlatformDispatcher {
       configurationId,
     );
     if (fontSize >= 0) {
-      return (_cachedFontSizes ??= <int, double>{})[unscaledFontSize] = fontSize;
+      return (_cachedFontSizes ??= <int, double>{})[unscaledFontSize] =
+          fontSize;
     }
     switch (fontSize) {
       case -1:
         // Invalid configuration id. This error can be unrecoverable as the
         // _getScaledFontSize function can be destructive.
-        assert(false, 'Flutter Error: incorrect configuration id: $configurationId.');
+        assert(false,
+            'Flutter Error: incorrect configuration id: $configurationId.');
       case final double errorCode:
-        assert(false, 'Unknown error: GetScaledFontSize failed with $errorCode.');
+        assert(
+            false, 'Unknown error: GetScaledFontSize failed with $errorCode.');
     }
     return null;
   }
@@ -1520,8 +1588,10 @@ class PlatformDispatcher {
   // the capability will never send a `configurationId` to [PlatformDispatcher],
   // and should not call this method. This method returns -1 when the specified
   // configurationId does not match any configuration.
-  @Native<Double Function(Double, Int)>(symbol: 'PlatformConfigurationNativeApi::GetScaledFontSize')
-  external static double _getScaledFontSize(double unscaledFontSize, int configurationId);
+  @Native<Double Function(Double, Int)>(
+      symbol: 'PlatformConfigurationNativeApi::GetScaledFontSize')
+  external static double _getScaledFontSize(
+      double unscaledFontSize, int configurationId);
 }
 
 /// A color specified in the operating system UI color palette.
@@ -1615,7 +1685,8 @@ final class SystemColor {
   static bool get platformProvidesSystemColors => false;
 
   /// A palette of system colors for light mode.
-  static final SystemColorPalette light = SystemColorPalette._(Brightness.light);
+  static final SystemColorPalette light =
+      SystemColorPalette._(Brightness.light);
 
   /// A palette of system colors for dark mode.
   static final SystemColorPalette dark = SystemColorPalette._(Brightness.dark);
@@ -1632,7 +1703,8 @@ final class SystemColorPalette {
   final Brightness brightness;
 
   static UnsupportedError _systemColorUnsupportedError() {
-    return UnsupportedError('SystemColor not supported on the current platform.');
+    return UnsupportedError(
+        'SystemColor not supported on the current platform.');
   }
 
   /// Returns system color named "AccentColor".
@@ -1797,8 +1869,10 @@ class _PlatformConfiguration {
     int? configurationId,
   }) {
     return _PlatformConfiguration(
-      accessibilityFeatures: accessibilityFeatures ?? this.accessibilityFeatures,
-      alwaysUse24HourFormat: alwaysUse24HourFormat ?? this.alwaysUse24HourFormat,
+      accessibilityFeatures:
+          accessibilityFeatures ?? this.accessibilityFeatures,
+      alwaysUse24HourFormat:
+          alwaysUse24HourFormat ?? this.alwaysUse24HourFormat,
       semanticsEnabled: semanticsEnabled ?? this.semanticsEnabled,
       platformBrightness: platformBrightness ?? this.platformBrightness,
       textScaleFactor: textScaleFactor ?? this.textScaleFactor,
@@ -2061,15 +2135,18 @@ class FrameTiming {
   /// To get the [FrameTiming] of your app, see [PlatformDispatcher.onReportTimings].
   FrameTiming._(this._data) : assert(_data.length == _dataLength);
 
-  static final int _dataLength = FramePhase.values.length + _FrameTimingInfo.values.length;
+  static final int _dataLength =
+      FramePhase.values.length + _FrameTimingInfo.values.length;
 
   /// This is a raw timestamp in microseconds from some epoch. The epoch in all
   /// [FrameTiming] is the same, but it may not match [DateTime]'s epoch.
   int timestampInMicroseconds(FramePhase phase) => _data[phase.index];
 
-  Duration _rawDuration(FramePhase phase) => Duration(microseconds: _data[phase.index]);
+  Duration _rawDuration(FramePhase phase) =>
+      Duration(microseconds: _data[phase.index]);
 
-  int _rawInfo(_FrameTimingInfo info) => _data[FramePhase.values.length + info.index];
+  int _rawInfo(_FrameTimingInfo info) =>
+      _data[FramePhase.values.length + info.index];
 
   /// The duration to build the frame on the UI thread.
   ///
@@ -2088,14 +2165,16 @@ class FrameTiming {
   /// That's about 16ms for 60fps, and 8ms for 120fps.
   /// {@endtemplate}
   Duration get buildDuration =>
-      _rawDuration(FramePhase.buildFinish) - _rawDuration(FramePhase.buildStart);
+      _rawDuration(FramePhase.buildFinish) -
+      _rawDuration(FramePhase.buildStart);
 
   /// The duration to rasterize the frame on the raster thread.
   ///
   /// {@macro dart.ui.FrameTiming.fps_smoothness_milliseconds}
   /// {@macro dart.ui.FrameTiming.fps_milliseconds}
   Duration get rasterDuration =>
-      _rawDuration(FramePhase.rasterFinish) - _rawDuration(FramePhase.rasterStart);
+      _rawDuration(FramePhase.rasterFinish) -
+      _rawDuration(FramePhase.rasterStart);
 
   /// The duration between receiving the vsync signal and starting building the
   /// frame.
@@ -2110,7 +2189,8 @@ class FrameTiming {
   ///
   /// See also [vsyncOverhead], [buildDuration] and [rasterDuration].
   Duration get totalSpan =>
-      _rawDuration(FramePhase.rasterFinish) - _rawDuration(FramePhase.vsyncStart);
+      _rawDuration(FramePhase.rasterFinish) -
+      _rawDuration(FramePhase.vsyncStart);
 
   /// The number of layers stored in the raster cache during the frame.
   ///
@@ -2145,7 +2225,8 @@ class FrameTiming {
   /// The frame key associated with this frame measurement.
   int get frameNumber => _data.last;
 
-  final List<int> _data; // some elements in microseconds, some in bytes, some are counts
+  final List<int>
+      _data; // some elements in microseconds, some in bytes, some are counts
 
   String _formatMS(Duration duration) => '${duration.inMicroseconds * 0.001}ms';
 
@@ -2371,7 +2452,8 @@ class ViewPadding {
   final double bottom;
 
   /// A view padding that has zeros for each edge.
-  static const ViewPadding zero = ViewPadding._(left: 0.0, top: 0.0, right: 0.0, bottom: 0.0);
+  static const ViewPadding zero =
+      ViewPadding._(left: 0.0, top: 0.0, right: 0.0, bottom: 0.0);
 
   @override
   String toString() {
@@ -2416,10 +2498,10 @@ class ViewConstraints {
 
   /// Creates view constraints that is respected only by the given size.
   ViewConstraints.tight(Size size)
-    : minWidth = size.width,
-      maxWidth = size.width,
-      minHeight = size.height,
-      maxHeight = size.height;
+      : minWidth = size.width,
+        maxWidth = size.width,
+        minHeight = size.height,
+        maxHeight = size.height;
 
   /// The minimum width that satisfies the constraints.
   final double minWidth;
@@ -2526,11 +2608,12 @@ class ViewConstraints {
 class DisplayFeature {
   // TODO(matanlurey): have original authors document; see https://github.com/flutter/flutter/issues/151917.
   // ignore: public_member_api_docs
-  const DisplayFeature({required this.bounds, required this.type, required this.state})
-    : assert(
-        !identical(type, DisplayFeatureType.cutout) ||
-            identical(state, DisplayFeatureState.unknown),
-      );
+  const DisplayFeature(
+      {required this.bounds, required this.type, required this.state})
+      : assert(
+          !identical(type, DisplayFeatureType.cutout) ||
+              identical(state, DisplayFeatureState.unknown),
+        );
 
   /// The area of the flutter view occupied by this display feature, measured in logical pixels.
   ///
@@ -2689,8 +2772,8 @@ class Locale {
   ///  * [Locale.fromSubtags], which also allows a [scriptCode] to be
   ///    specified.
   const Locale(this._languageCode, [this._countryCode])
-    : assert(_languageCode != ''),
-      scriptCode = null;
+      : assert(_languageCode != ''),
+        scriptCode = null;
 
   /// Creates a new Locale object.
   ///
@@ -2712,12 +2795,13 @@ class Locale {
   ///
   /// Validity is not checked by default, but some methods may throw away
   /// invalid data.
-  const Locale.fromSubtags({String languageCode = 'und', this.scriptCode, String? countryCode})
-    : assert(languageCode != ''),
-      _languageCode = languageCode,
-      assert(scriptCode != ''),
-      assert(countryCode != ''),
-      _countryCode = countryCode;
+  const Locale.fromSubtags(
+      {String languageCode = 'und', this.scriptCode, String? countryCode})
+      : assert(languageCode != ''),
+        _languageCode = languageCode,
+        assert(scriptCode != ''),
+        assert(countryCode != ''),
+        _countryCode = countryCode;
 
   /// The primary language subtag for the locale.
   ///
@@ -2742,12 +2826,14 @@ class Locale {
   ///
   ///  * [Locale.fromSubtags], which describes the conventions for creating
   ///    [Locale] objects.
-  String get languageCode => _deprecatedLanguageSubtagMap[_languageCode] ?? _languageCode;
+  String get languageCode =>
+      _deprecatedLanguageSubtagMap[_languageCode] ?? _languageCode;
   final String _languageCode;
 
   // This map is generated by //flutter/tools/gen_locale.dart
   // Mappings generated for language subtag registry as of 2019-02-27.
-  static const Map<String, String> _deprecatedLanguageSubtagMap = <String, String>{
+  static const Map<String, String> _deprecatedLanguageSubtagMap =
+      <String, String>{
     'in': 'id', // Indonesian; deprecated 1989-01-01
     'iw': 'he', // Hebrew; deprecated 1989-01-01
     'ji': 'yi', // Yiddish; deprecated 1989-01-01
@@ -2861,12 +2947,14 @@ class Locale {
   ///
   ///  * [Locale.fromSubtags], which describes the conventions for creating
   ///    [Locale] objects.
-  String? get countryCode => _deprecatedRegionSubtagMap[_countryCode] ?? _countryCode;
+  String? get countryCode =>
+      _deprecatedRegionSubtagMap[_countryCode] ?? _countryCode;
   final String? _countryCode;
 
   // This map is generated by //flutter/tools/gen_locale.dart
   // Mappings generated for language subtag registry as of 2019-02-27.
-  static const Map<String, String> _deprecatedRegionSubtagMap = <String, String>{
+  static const Map<String, String> _deprecatedRegionSubtagMap =
+      <String, String>{
     'BU': 'MM', // Burma; deprecated 1989-12-05
     'DD': 'DE', // German Democratic Republic; deprecated 1990-10-30
     'FX': 'FR', // Metropolitan France; deprecated 1997-07-14
@@ -2886,18 +2974,21 @@ class Locale {
     final String? thisCountryCode = countryCode;
     final String? otherCountryCode = other.countryCode;
     return other.languageCode == languageCode &&
-        other.scriptCode ==
-            scriptCode // scriptCode cannot be ''
-            &&
-        (other.countryCode ==
-                thisCountryCode // Treat '' as equal to null.
-                ||
-            otherCountryCode != null && otherCountryCode.isEmpty && thisCountryCode == null ||
-            thisCountryCode != null && thisCountryCode.isEmpty && other.countryCode == null);
+        other.scriptCode == scriptCode // scriptCode cannot be ''
+        &&
+        (other.countryCode == thisCountryCode // Treat '' as equal to null.
+            ||
+            otherCountryCode != null &&
+                otherCountryCode.isEmpty &&
+                thisCountryCode == null ||
+            thisCountryCode != null &&
+                thisCountryCode.isEmpty &&
+                other.countryCode == null);
   }
 
   @override
-  int get hashCode => Object.hash(languageCode, scriptCode, countryCode == '' ? null : countryCode);
+  int get hashCode => Object.hash(
+      languageCode, scriptCode, countryCode == '' ? null : countryCode);
 
   static Locale? _cachedLocale;
   static String? _cachedLocaleString;
@@ -3001,7 +3092,8 @@ class SemanticsActionEvent {
       type: type ?? this.type,
       viewId: viewId ?? this.viewId,
       nodeId: nodeId ?? this.nodeId,
-      arguments: arguments == _noArgumentPlaceholder ? this.arguments : arguments,
+      arguments:
+          arguments == _noArgumentPlaceholder ? this.arguments : arguments,
     );
   }
 }
@@ -3015,7 +3107,8 @@ typedef ViewFocusChangeCallback = void Function(ViewFocusEvent viewFocusEvent);
 /// callback.
 final class ViewFocusEvent {
   /// Creates a [ViewFocusChange].
-  const ViewFocusEvent({required this.viewId, required this.state, required this.direction});
+  const ViewFocusEvent(
+      {required this.viewId, required this.state, required this.direction});
 
   /// The ID of the [FlutterView] that experienced a focus change.
   final int viewId;

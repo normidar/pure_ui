@@ -48,9 +48,7 @@ class GlyphContour {
 
   GlyphContour transformed(double a, double b, double c, double d) =>
       GlyphContour(
-        points
-            .map((p) => p.transformed(a, b, c, d))
-            .toList(growable: false),
+        points.map((p) => p.transformed(a, b, c, d)).toList(growable: false),
       );
 
   @override
@@ -86,7 +84,6 @@ class GlyphOutline {
   bool get isEmpty => contours.isEmpty;
 
   @override
-  String toString() =>
-      'GlyphOutline(${contours.length} contours, '
+  String toString() => 'GlyphOutline(${contours.length} contours, '
       'advanceWidth: $advanceWidth, lsb: $lsb)';
 }
