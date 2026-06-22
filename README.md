@@ -55,6 +55,37 @@ See [`docs/switching_architecture.md`](docs/switching_architecture.md) and
 [`docs/api_inventory.md`](docs/api_inventory.md) for the full design and
 coverage status. `pure_ui` itself remains an unchanged standalone drop-in.
 
+### Use cases
+
+The point of swapping one backend instead of one import is that the **same
+drawing code runs in two worlds** — the Flutter engine on device, and plain
+Dart everywhere else. That unlocks:
+
+- **Server-side / serverless image generation.** Render OG share images,
+  certificates, tickets, invoices/receipts, charts, QR-with-branding, or PDF
+  page bitmaps from a Dart backend or cloud function — no Flutter engine, no
+  headless browser. Use `dart:ui` in the app and `pure_ui` on the server with
+  one codebase.
+- **Write-once rendering libraries.** Ship a charting / diagram / signature-pad
+  / barcode package that draws identically for Flutter consumers (`dart:ui`)
+  and pure-Dart consumers (CLI, server) without forking the rendering code.
+- **Fast, engine-free golden tests.** Run your painting logic under plain
+  `dart test` by selecting `PureUiBackend` (optionally scoped with
+  `UiBackend.runWith`), instead of the slower `flutter test` + engine. Great
+  for CI and deterministic, reproducible snapshots.
+- **Batch / offline rendering pipelines.** Pre-generate thumbnails, sprite
+  atlases, map tiles, or report pages in a build step or worker isolate, then
+  ship the PNGs.
+- **Gradual migration & dual-target code.** Move existing Flutter `Canvas`
+  code behind `dart_ui_wrapper` once; afterwards you switch engines by changing
+  a single line at startup, not your imports.
+
+| You want to… | Backend | How |
+|---|---|---|
+| Draw on screen in a Flutter app | `dart:ui` | `UiBackend.instance = const DartUiBackend();` |
+| Generate images on a server / CLI | `pure_ui` | `installPureUiBackend();` |
+| Golden-test painting without Flutter | `pure_ui` | `UiBackend.runWith(const PureUiBackend(), () { … });` |
+
 ## Migrating from dart:ui
 
 Migrating Flutter Canvas code to Pure UI requires minimal changes:
