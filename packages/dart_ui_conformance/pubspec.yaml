@@ -1,0 +1,14 @@
+name: dart_ui_conformance
+description: >-
+  Backend-agnostic conformance / parity test suite for the dart:ui ↔ pure_ui
+  switching architecture. Dev tooling only.
+version: 0.1.0
+publish_to: 'none'
+environment:
+  sdk: ^3.5.0
+resolution: workspace
+dependencies:
+  dart_ui_interface:
+  test: ^1.24.0
+dev_dependencies:
+  pure_ui_adapter:

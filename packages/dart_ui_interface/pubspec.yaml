@@ -1,0 +1,11 @@
+name: dart_ui_interface
+description: >-
+  Backend-agnostic contract layer (value types, enums, UiBackend, abstract
+  resource types) for the dart:ui / pure_ui switching architecture.
+version: 0.1.0
+publish_to: 'none'
+environment:
+  sdk: ^3.5.0
+resolution: workspace
+dev_dependencies:
+  test: ^1.24.0

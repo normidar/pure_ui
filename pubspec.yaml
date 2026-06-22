@@ -10,11 +10,19 @@ dev_dependencies:
   melos: any
 
 workspace:
-  - packages/*
+  - packages/pure_ui
+  - packages/dart_ui_interface
+  - packages/pure_ui_adapter
+  - packages/dart_ui_wrapper
+  - packages/dart_ui_conformance
 
 melos:
   packages:
     - packages/**
+  ignore:
+    # Flutter-only package: resolved with the Flutter SDK, not the Dart
+    # workspace. Kept out of `dart pub get` and the Dart-only CI path.
+    - packages/dart_ui_adapter
 
   command:
     bootstrap:

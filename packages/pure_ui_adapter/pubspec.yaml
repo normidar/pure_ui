@@ -1,0 +1,14 @@
+name: pure_ui_adapter
+description: >-
+  Adapts the pure-Dart pure_ui implementation to the dart_ui_interface
+  UiBackend contract. Provides PureUiBackend, the default non-Flutter backend.
+version: 0.1.0
+publish_to: 'none'
+environment:
+  sdk: ^3.5.0
+resolution: workspace
+dependencies:
+  dart_ui_interface:
+  pure_ui:
+dev_dependencies:
+  test: ^1.24.0
