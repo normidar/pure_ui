@@ -1,0 +1,5 @@
+analyzer:
+  exclude:
+    # Flutter-only package. Analyse with `cd packages/dart_ui_adapter && flutter analyze`.
+    # Excluded here so `dart analyze` from the workspace root succeeds.
+    - packages/dart_ui_adapter/**

@@ -6,6 +6,10 @@ import 'package:test/test.dart';
 
 void main() {
   group('Complex Canvas Tests', () {
+    setUpAll(() async {
+      await Directory('test_output').create(recursive: true);
+    });
+
     test('Complex geometric shapes composition', () async {
       final recorder = ui.PictureRecorder();
       final canvas =

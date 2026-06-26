@@ -1,9 +1,10 @@
 name: Switching Architecture (Dart-only)
 
 # Fast, Flutter-free CI for the dart:ui <-> pure_ui switching architecture.
-# Covers the interface, the pure_ui backend adapter, the wrapper, and the
-# backend-agnostic conformance suite. The Flutter-only `dart_ui_adapter`
-# package is intentionally excluded (it needs the Flutter SDK).
+# Covers the pure_ui core, the interface, the pure_ui backend adapter, the
+# wrapper, and the backend-agnostic conformance suite. The Flutter-only
+# `dart_ui_adapter` package is intentionally excluded (it needs the Flutter
+# SDK).
 
 on:
   push:
@@ -29,7 +30,7 @@ jobs:
 
       - name: Analyze
         run: |
-          for pkg in dart_ui_interface pure_ui_adapter dart_ui_wrapper dart_ui_conformance; do
+          for pkg in pure_ui dart_ui_interface pure_ui_adapter dart_ui_wrapper dart_ui_conformance; do
             echo "== analyze $pkg =="
             (cd packages/$pkg && dart analyze)
           done
@@ -37,6 +38,7 @@ jobs:
       - name: Format check
         run: |
           dart format --set-exit-if-changed \
+            packages/pure_ui \
             packages/dart_ui_interface \
             packages/pure_ui_adapter \
             packages/dart_ui_wrapper \
@@ -44,7 +46,7 @@ jobs:
 
       - name: Test
         run: |
-          for pkg in dart_ui_interface pure_ui_adapter dart_ui_conformance; do
+          for pkg in pure_ui dart_ui_interface pure_ui_adapter dart_ui_conformance; do
             echo "== test $pkg =="
             (cd packages/$pkg && dart test)
           done

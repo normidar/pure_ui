@@ -440,8 +440,7 @@ p.Shadow shadowToPure(i.Shadow s) => p.Shadow(
     );
 
 p.ParagraphStyle paragraphStyleToPure(i.ParagraphStyle s) => p.ParagraphStyle(
-      textAlign:
-          s.textAlign == null ? null : textAlignToPure(s.textAlign!),
+      textAlign: s.textAlign == null ? null : textAlignToPure(s.textAlign!),
       textDirection: s.textDirection == null
           ? null
           : textDirectionToPure(s.textDirection!),
@@ -449,8 +448,7 @@ p.ParagraphStyle paragraphStyleToPure(i.ParagraphStyle s) => p.ParagraphStyle(
       fontFamily: s.fontFamily,
       fontSize: s.fontSize,
       height: s.height,
-      fontWeight:
-          s.fontWeight == null ? null : fontWeightToPure(s.fontWeight!),
+      fontWeight: s.fontWeight == null ? null : fontWeightToPure(s.fontWeight!),
       fontStyle: s.fontStyle == null ? null : fontStyleToPure(s.fontStyle!),
       ellipsis: s.ellipsis,
     );
@@ -459,19 +457,16 @@ p.TextStyle textStyleToPure(i.TextStyle s) => p.TextStyle(
       color: s.color == null ? null : colorToPure(s.color!),
       decoration:
           s.decoration == null ? null : textDecorationToPure(s.decoration!),
-      decorationColor: s.decorationColor == null
-          ? null
-          : colorToPure(s.decorationColor!),
+      decorationColor:
+          s.decorationColor == null ? null : colorToPure(s.decorationColor!),
       decorationStyle: s.decorationStyle == null
           ? null
           : textDecorationStyleToPure(s.decorationStyle!),
       decorationThickness: s.decorationThickness,
-      fontWeight:
-          s.fontWeight == null ? null : fontWeightToPure(s.fontWeight!),
+      fontWeight: s.fontWeight == null ? null : fontWeightToPure(s.fontWeight!),
       fontStyle: s.fontStyle == null ? null : fontStyleToPure(s.fontStyle!),
-      textBaseline: s.textBaseline == null
-          ? null
-          : textBaselineToPure(s.textBaseline!),
+      textBaseline:
+          s.textBaseline == null ? null : textBaselineToPure(s.textBaseline!),
       fontFamily: s.fontFamily,
       fontFamilyFallback: s.fontFamilyFallback,
       fontSize: s.fontSize,

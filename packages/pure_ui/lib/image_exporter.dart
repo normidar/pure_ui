@@ -12,6 +12,7 @@ Future<void> exportImage({
   final picture = recorder.endRecording();
   final image = await picture.toImage(size.width.toInt(), size.height.toInt());
   final byteData = await image.toByteData(format: imageByteFormat);
+  await exportFile.parent.create(recursive: true);
   await exportFile.writeAsBytes(byteData!.buffer.asUint8List());
   image.dispose();
   picture.dispose();

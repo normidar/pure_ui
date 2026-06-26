@@ -47,12 +47,19 @@ class FontWeight {
   static const FontWeight bold = w700;
 
   static const List<FontWeight> values = <FontWeight>[
-    w100, w200, w300, w400, w500, w600, w700, w800, w900,
+    w100,
+    w200,
+    w300,
+    w400,
+    w500,
+    w600,
+    w700,
+    w800,
+    w900,
   ];
 
   @override
-  bool operator ==(Object other) =>
-      other is FontWeight && other.index == index;
+  bool operator ==(Object other) => other is FontWeight && other.index == index;
 
   @override
   int get hashCode => index.hashCode;
@@ -359,6 +366,5 @@ class FontLoader {
     FontWeight weight = FontWeight.normal,
     FontStyle style = FontStyle.normal,
   }) =>
-      UiBackend.instance
-          .loadFont(family, bytes, weight: weight, style: style);
+      UiBackend.instance.loadFont(family, bytes, weight: weight, style: style);
 }

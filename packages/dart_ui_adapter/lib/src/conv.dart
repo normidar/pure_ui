@@ -57,6 +57,7 @@ i.PaintingStyle paintingStyleFromUi(ui.PaintingStyle v) {
     case ui.PaintingStyle.stroke:
       return i.PaintingStyle.stroke;
   }
+  throw StateError('Unhandled dart:ui PaintingStyle: $v');
 }
 
 ui.StrokeCap strokeCapToUi(i.StrokeCap v) {
@@ -79,6 +80,7 @@ i.StrokeCap strokeCapFromUi(ui.StrokeCap v) {
     case ui.StrokeCap.square:
       return i.StrokeCap.square;
   }
+  throw StateError('Unhandled dart:ui StrokeCap: $v');
 }
 
 ui.StrokeJoin strokeJoinToUi(i.StrokeJoin v) {
@@ -101,6 +103,7 @@ i.StrokeJoin strokeJoinFromUi(ui.StrokeJoin v) {
     case ui.StrokeJoin.bevel:
       return i.StrokeJoin.bevel;
   }
+  throw StateError('Unhandled dart:ui StrokeJoin: $v');
 }
 
 ui.FilterQuality filterQualityToUi(i.FilterQuality v) {
@@ -127,6 +130,7 @@ i.FilterQuality filterQualityFromUi(ui.FilterQuality v) {
     case ui.FilterQuality.high:
       return i.FilterQuality.high;
   }
+  throw StateError('Unhandled dart:ui FilterQuality: $v');
 }
 
 ui.BlendMode blendModeToUi(i.BlendMode v) {
@@ -253,6 +257,7 @@ i.BlendMode blendModeFromUi(ui.BlendMode v) {
     case ui.BlendMode.luminosity:
       return i.BlendMode.luminosity;
   }
+  throw StateError('Unhandled dart:ui BlendMode: $v');
 }
 
 ui.ClipOp clipOpToUi(i.ClipOp v) {
@@ -280,6 +285,7 @@ i.PathFillType pathFillTypeFromUi(ui.PathFillType v) {
     case ui.PathFillType.evenOdd:
       return i.PathFillType.evenOdd;
   }
+  throw StateError('Unhandled dart:ui PathFillType: $v');
 }
 
 ui.PointMode pointModeToUi(i.PointMode v) {
@@ -409,7 +415,8 @@ ui.TextDecorationStyle textDecorationStyleToUi(i.TextDecorationStyle v) {
 }
 
 ui.TextLeadingDistribution textLeadingDistributionToUi(
-    i.TextLeadingDistribution v) {
+  i.TextLeadingDistribution v,
+) {
   switch (v) {
     case i.TextLeadingDistribution.proportional:
       return ui.TextLeadingDistribution.proportional;
@@ -427,8 +434,7 @@ ui.FontStyle fontStyleToUi(i.FontStyle v) {
   }
 }
 
-ui.FontWeight fontWeightToUi(i.FontWeight v) =>
-    ui.FontWeight.values[v.index];
+ui.FontWeight fontWeightToUi(i.FontWeight v) => ui.FontWeight.values[v.index];
 
 ui.TextDecoration textDecorationToUi(i.TextDecoration v) {
   // Reconstruct dart:ui's decoration by ORing the named primitives, since the
@@ -444,59 +450,60 @@ ui.TextDecoration textDecorationToUi(i.TextDecoration v) {
 }
 
 ui.Shadow shadowToUi(i.Shadow s) => ui.Shadow(
-      color: colorToUi(s.color),
-      offset: offsetToUi(s.offset),
-      blurRadius: s.blurRadius,
-    );
+  color: colorToUi(s.color),
+  offset: offsetToUi(s.offset),
+  blurRadius: s.blurRadius,
+);
 
 ui.ParagraphStyle paragraphStyleToUi(i.ParagraphStyle s) => ui.ParagraphStyle(
-      textAlign: s.textAlign == null ? null : textAlignToUi(s.textAlign!),
-      textDirection: s.textDirection == null
-          ? null
-          : textDirectionToUi(s.textDirection!),
-      maxLines: s.maxLines,
-      fontFamily: s.fontFamily,
-      fontSize: s.fontSize,
-      height: s.height,
-      fontWeight: s.fontWeight == null ? null : fontWeightToUi(s.fontWeight!),
-      fontStyle: s.fontStyle == null ? null : fontStyleToUi(s.fontStyle!),
-      ellipsis: s.ellipsis,
-    );
+  textAlign: s.textAlign == null ? null : textAlignToUi(s.textAlign!),
+  textDirection: s.textDirection == null
+      ? null
+      : textDirectionToUi(s.textDirection!),
+  maxLines: s.maxLines,
+  fontFamily: s.fontFamily,
+  fontSize: s.fontSize,
+  height: s.height,
+  fontWeight: s.fontWeight == null ? null : fontWeightToUi(s.fontWeight!),
+  fontStyle: s.fontStyle == null ? null : fontStyleToUi(s.fontStyle!),
+  ellipsis: s.ellipsis,
+);
 
 ui.TextStyle textStyleToUi(i.TextStyle s) => ui.TextStyle(
-      color: s.color == null ? null : colorToUi(s.color!),
-      decoration:
-          s.decoration == null ? null : textDecorationToUi(s.decoration!),
-      decorationColor:
-          s.decorationColor == null ? null : colorToUi(s.decorationColor!),
-      decorationStyle: s.decorationStyle == null
-          ? null
-          : textDecorationStyleToUi(s.decorationStyle!),
-      decorationThickness: s.decorationThickness,
-      fontWeight: s.fontWeight == null ? null : fontWeightToUi(s.fontWeight!),
-      fontStyle: s.fontStyle == null ? null : fontStyleToUi(s.fontStyle!),
-      textBaseline:
-          s.textBaseline == null ? null : textBaselineToUi(s.textBaseline!),
-      fontFamily: s.fontFamily,
-      fontFamilyFallback: s.fontFamilyFallback,
-      fontSize: s.fontSize,
-      letterSpacing: s.letterSpacing,
-      wordSpacing: s.wordSpacing,
-      height: s.height,
-      leadingDistribution: s.leadingDistribution == null
-          ? null
-          : textLeadingDistributionToUi(s.leadingDistribution!),
-      shadows: s.shadows?.map(shadowToUi).toList(),
-    );
+  color: s.color == null ? null : colorToUi(s.color!),
+  decoration: s.decoration == null ? null : textDecorationToUi(s.decoration!),
+  decorationColor: s.decorationColor == null
+      ? null
+      : colorToUi(s.decorationColor!),
+  decorationStyle: s.decorationStyle == null
+      ? null
+      : textDecorationStyleToUi(s.decorationStyle!),
+  decorationThickness: s.decorationThickness,
+  fontWeight: s.fontWeight == null ? null : fontWeightToUi(s.fontWeight!),
+  fontStyle: s.fontStyle == null ? null : fontStyleToUi(s.fontStyle!),
+  textBaseline: s.textBaseline == null
+      ? null
+      : textBaselineToUi(s.textBaseline!),
+  fontFamily: s.fontFamily,
+  fontFamilyFallback: s.fontFamilyFallback,
+  fontSize: s.fontSize,
+  letterSpacing: s.letterSpacing,
+  wordSpacing: s.wordSpacing,
+  height: s.height,
+  leadingDistribution: s.leadingDistribution == null
+      ? null
+      : textLeadingDistributionToUi(s.leadingDistribution!),
+  shadows: s.shadows?.map(shadowToUi).toList(),
+);
 
 i.LineMetrics lineMetricsFromUi(ui.LineMetrics m) => i.LineMetrics(
-      hardBreak: m.hardBreak,
-      ascent: m.ascent,
-      descent: m.descent,
-      unscaledAscent: m.unscaledAscent,
-      height: m.height,
-      width: m.width,
-      left: m.left,
-      baseline: m.baseline,
-      lineNumber: m.lineNumber,
-    );
+  hardBreak: m.hardBreak,
+  ascent: m.ascent,
+  descent: m.descent,
+  unscaledAscent: m.unscaledAscent,
+  height: m.height,
+  width: m.width,
+  left: m.left,
+  baseline: m.baseline,
+  lineNumber: m.lineNumber,
+);
