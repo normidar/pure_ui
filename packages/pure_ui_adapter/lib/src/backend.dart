@@ -75,8 +75,7 @@ class PureUiPaint implements i.Paint {
   final p.Paint raw;
 
   @override
-  i.BlendMode get blendMode =>
-      i.BlendMode.values[raw.blendMode.index]; // read-back rarely used
+  i.BlendMode get blendMode => blendModeFromPure(raw.blendMode);
   @override
   set blendMode(i.BlendMode value) => raw.blendMode = blendModeToPure(value);
 

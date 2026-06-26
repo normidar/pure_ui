@@ -88,31 +88,36 @@ Dart everywhere else. That unlocks:
 
 ## Migrating from dart:ui
 
-Migrating Flutter Canvas code to Pure UI requires minimal changes:
+Migrating Flutter Canvas code to Pure UI is a drop-in change — only the
+import differs:
 
 ```dart
 // Before: Using dart:ui in Flutter projects
 import 'dart:ui' as ui;
 
-void drawInFlutter() {
+Future<ui.Image> drawInFlutter() async {
   final recorder = ui.PictureRecorder();
   final canvas = ui.Canvas(recorder);
   // ... drawing code ...
   final picture = recorder.endRecording();
-  final image = picture.toImage(200, 200); // Sync in Flutter
+  return picture.toImage(200, 200);
 }
 
-// After: Using Pure UI (almost identical!)
+// After: Using Pure UI (identical API surface)
 import 'package:pure_ui/pure_ui.dart' as ui;
 
-void drawWithPureUI() async { // Add async
+Future<ui.Image> drawWithPureUI() async {
   final recorder = ui.PictureRecorder();
-  final canvas = ui.Canvas(recorder, const ui.Rect.fromLTWH(0, 0, 200, 200)); // Add bounds
+  final canvas = ui.Canvas(recorder);
   // ... same drawing code ...
   final picture = recorder.endRecording();
-  final image = await picture.toImage(200, 200); // Add await
+  return picture.toImage(200, 200);
 }
 ```
+
+Both `Canvas`'s `cullRect` parameter and `Picture.toImage`'s `Future<Image>`
+return are part of `dart:ui` as well — no `async`/`await` or constructor
+changes are required when porting.
 
 ## Quick Start
 

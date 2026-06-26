@@ -8,7 +8,7 @@ import 'dart:typed_data';
 import 'package:test/test.dart';
 import 'package:vector_math/vector_math_64.dart';
 
-import '../lib/pure_ui.dart';
+import 'package:pure_ui/pure_ui.dart';
 
 /// Comprehensive test to verify that all the previously missing types and
 /// imports are now working correctly in the pure_ui library.
@@ -294,9 +294,9 @@ void main() {
 
       // Create a complex transformation matrix
       final transform = Matrix4.identity()
-        ..translate(100.0, 100.0, 0.0)
+        ..translateByDouble(100.0, 100.0, 0.0, 1.0)
         ..rotateZ(math.pi / 6) // 30 degrees
-        ..scale(1.5, 1.5, 1.0);
+        ..scaleByDouble(1.5, 1.5, 1.0, 1.0);
 
       // Apply the transformation
       canvas.transform(transform.storage);
@@ -361,9 +361,9 @@ void main() {
 
       // Use Matrix4 for complex transformation
       final transform = Matrix4.identity()
-        ..translate(50.0, 50.0, 0.0)
+        ..translateByDouble(50.0, 50.0, 0.0, 1.0)
         ..rotateZ(math.pi / 4)
-        ..scale(0.8, 0.8, 1.0);
+        ..scaleByDouble(0.8, 0.8, 1.0, 1.0);
 
       canvas.save();
       canvas.transform(transform.storage);

@@ -191,6 +191,69 @@ p.BlendMode blendModeToPure(i.BlendMode v) {
   }
 }
 
+i.BlendMode blendModeFromPure(p.BlendMode v) {
+  switch (v) {
+    case p.BlendMode.clear:
+      return i.BlendMode.clear;
+    case p.BlendMode.src:
+      return i.BlendMode.src;
+    case p.BlendMode.dst:
+      return i.BlendMode.dst;
+    case p.BlendMode.srcOver:
+      return i.BlendMode.srcOver;
+    case p.BlendMode.dstOver:
+      return i.BlendMode.dstOver;
+    case p.BlendMode.srcIn:
+      return i.BlendMode.srcIn;
+    case p.BlendMode.dstIn:
+      return i.BlendMode.dstIn;
+    case p.BlendMode.srcOut:
+      return i.BlendMode.srcOut;
+    case p.BlendMode.dstOut:
+      return i.BlendMode.dstOut;
+    case p.BlendMode.srcATop:
+      return i.BlendMode.srcATop;
+    case p.BlendMode.dstATop:
+      return i.BlendMode.dstATop;
+    case p.BlendMode.xor:
+      return i.BlendMode.xor;
+    case p.BlendMode.plus:
+      return i.BlendMode.plus;
+    case p.BlendMode.modulate:
+      return i.BlendMode.modulate;
+    case p.BlendMode.screen:
+      return i.BlendMode.screen;
+    case p.BlendMode.overlay:
+      return i.BlendMode.overlay;
+    case p.BlendMode.darken:
+      return i.BlendMode.darken;
+    case p.BlendMode.lighten:
+      return i.BlendMode.lighten;
+    case p.BlendMode.colorDodge:
+      return i.BlendMode.colorDodge;
+    case p.BlendMode.colorBurn:
+      return i.BlendMode.colorBurn;
+    case p.BlendMode.hardLight:
+      return i.BlendMode.hardLight;
+    case p.BlendMode.softLight:
+      return i.BlendMode.softLight;
+    case p.BlendMode.difference:
+      return i.BlendMode.difference;
+    case p.BlendMode.exclusion:
+      return i.BlendMode.exclusion;
+    case p.BlendMode.multiply:
+      return i.BlendMode.multiply;
+    case p.BlendMode.hue:
+      return i.BlendMode.hue;
+    case p.BlendMode.saturation:
+      return i.BlendMode.saturation;
+    case p.BlendMode.color:
+      return i.BlendMode.color;
+    case p.BlendMode.luminosity:
+      return i.BlendMode.luminosity;
+  }
+}
+
 p.ClipOp clipOpToPure(i.ClipOp v) {
   switch (v) {
     case i.ClipOp.difference:

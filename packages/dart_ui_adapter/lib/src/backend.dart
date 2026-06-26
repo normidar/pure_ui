@@ -77,7 +77,7 @@ class DartUiPaint implements i.Paint {
   final ui.Paint raw;
 
   @override
-  i.BlendMode get blendMode => i.BlendMode.values[raw.blendMode.index];
+  i.BlendMode get blendMode => blendModeFromUi(raw.blendMode);
   @override
   set blendMode(i.BlendMode value) => raw.blendMode = blendModeToUi(value);
 

@@ -192,6 +192,69 @@ ui.BlendMode blendModeToUi(i.BlendMode v) {
   }
 }
 
+i.BlendMode blendModeFromUi(ui.BlendMode v) {
+  switch (v) {
+    case ui.BlendMode.clear:
+      return i.BlendMode.clear;
+    case ui.BlendMode.src:
+      return i.BlendMode.src;
+    case ui.BlendMode.dst:
+      return i.BlendMode.dst;
+    case ui.BlendMode.srcOver:
+      return i.BlendMode.srcOver;
+    case ui.BlendMode.dstOver:
+      return i.BlendMode.dstOver;
+    case ui.BlendMode.srcIn:
+      return i.BlendMode.srcIn;
+    case ui.BlendMode.dstIn:
+      return i.BlendMode.dstIn;
+    case ui.BlendMode.srcOut:
+      return i.BlendMode.srcOut;
+    case ui.BlendMode.dstOut:
+      return i.BlendMode.dstOut;
+    case ui.BlendMode.srcATop:
+      return i.BlendMode.srcATop;
+    case ui.BlendMode.dstATop:
+      return i.BlendMode.dstATop;
+    case ui.BlendMode.xor:
+      return i.BlendMode.xor;
+    case ui.BlendMode.plus:
+      return i.BlendMode.plus;
+    case ui.BlendMode.modulate:
+      return i.BlendMode.modulate;
+    case ui.BlendMode.screen:
+      return i.BlendMode.screen;
+    case ui.BlendMode.overlay:
+      return i.BlendMode.overlay;
+    case ui.BlendMode.darken:
+      return i.BlendMode.darken;
+    case ui.BlendMode.lighten:
+      return i.BlendMode.lighten;
+    case ui.BlendMode.colorDodge:
+      return i.BlendMode.colorDodge;
+    case ui.BlendMode.colorBurn:
+      return i.BlendMode.colorBurn;
+    case ui.BlendMode.hardLight:
+      return i.BlendMode.hardLight;
+    case ui.BlendMode.softLight:
+      return i.BlendMode.softLight;
+    case ui.BlendMode.difference:
+      return i.BlendMode.difference;
+    case ui.BlendMode.exclusion:
+      return i.BlendMode.exclusion;
+    case ui.BlendMode.multiply:
+      return i.BlendMode.multiply;
+    case ui.BlendMode.hue:
+      return i.BlendMode.hue;
+    case ui.BlendMode.saturation:
+      return i.BlendMode.saturation;
+    case ui.BlendMode.color:
+      return i.BlendMode.color;
+    case ui.BlendMode.luminosity:
+      return i.BlendMode.luminosity;
+  }
+}
+
 ui.ClipOp clipOpToUi(i.ClipOp v) {
   switch (v) {
     case i.ClipOp.difference:
