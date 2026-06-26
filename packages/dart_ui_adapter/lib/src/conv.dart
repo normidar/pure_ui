@@ -318,3 +318,185 @@ ui.ImageByteFormat imageByteFormatToUi(i.ImageByteFormat v) {
       return ui.ImageByteFormat.rawExtendedRgba128;
   }
 }
+
+ui.TileMode tileModeToUi(i.TileMode v) {
+  switch (v) {
+    case i.TileMode.clamp:
+      return ui.TileMode.clamp;
+    case i.TileMode.repeated:
+      return ui.TileMode.repeated;
+    case i.TileMode.mirror:
+      return ui.TileMode.mirror;
+    case i.TileMode.decal:
+      return ui.TileMode.decal;
+  }
+}
+
+ui.VertexMode vertexModeToUi(i.VertexMode v) {
+  switch (v) {
+    case i.VertexMode.triangles:
+      return ui.VertexMode.triangles;
+    case i.VertexMode.triangleStrip:
+      return ui.VertexMode.triangleStrip;
+    case i.VertexMode.triangleFan:
+      return ui.VertexMode.triangleFan;
+  }
+}
+
+ui.BlurStyle blurStyleToUi(i.BlurStyle v) {
+  switch (v) {
+    case i.BlurStyle.normal:
+      return ui.BlurStyle.normal;
+    case i.BlurStyle.solid:
+      return ui.BlurStyle.solid;
+    case i.BlurStyle.outer:
+      return ui.BlurStyle.outer;
+    case i.BlurStyle.inner:
+      return ui.BlurStyle.inner;
+  }
+}
+
+// --- text enums ---
+
+ui.TextAlign textAlignToUi(i.TextAlign v) {
+  switch (v) {
+    case i.TextAlign.left:
+      return ui.TextAlign.left;
+    case i.TextAlign.right:
+      return ui.TextAlign.right;
+    case i.TextAlign.center:
+      return ui.TextAlign.center;
+    case i.TextAlign.justify:
+      return ui.TextAlign.justify;
+    case i.TextAlign.start:
+      return ui.TextAlign.start;
+    case i.TextAlign.end:
+      return ui.TextAlign.end;
+  }
+}
+
+ui.TextDirection textDirectionToUi(i.TextDirection v) {
+  switch (v) {
+    case i.TextDirection.ltr:
+      return ui.TextDirection.ltr;
+    case i.TextDirection.rtl:
+      return ui.TextDirection.rtl;
+  }
+}
+
+ui.TextBaseline textBaselineToUi(i.TextBaseline v) {
+  switch (v) {
+    case i.TextBaseline.alphabetic:
+      return ui.TextBaseline.alphabetic;
+    case i.TextBaseline.ideographic:
+      return ui.TextBaseline.ideographic;
+  }
+}
+
+ui.TextDecorationStyle textDecorationStyleToUi(i.TextDecorationStyle v) {
+  switch (v) {
+    case i.TextDecorationStyle.solid:
+      return ui.TextDecorationStyle.solid;
+    case i.TextDecorationStyle.double:
+      return ui.TextDecorationStyle.double;
+    case i.TextDecorationStyle.dotted:
+      return ui.TextDecorationStyle.dotted;
+    case i.TextDecorationStyle.dashed:
+      return ui.TextDecorationStyle.dashed;
+    case i.TextDecorationStyle.wavy:
+      return ui.TextDecorationStyle.wavy;
+  }
+}
+
+ui.TextLeadingDistribution textLeadingDistributionToUi(
+    i.TextLeadingDistribution v) {
+  switch (v) {
+    case i.TextLeadingDistribution.proportional:
+      return ui.TextLeadingDistribution.proportional;
+    case i.TextLeadingDistribution.even:
+      return ui.TextLeadingDistribution.even;
+  }
+}
+
+ui.FontStyle fontStyleToUi(i.FontStyle v) {
+  switch (v) {
+    case i.FontStyle.normal:
+      return ui.FontStyle.normal;
+    case i.FontStyle.italic:
+      return ui.FontStyle.italic;
+  }
+}
+
+ui.FontWeight fontWeightToUi(i.FontWeight v) =>
+    ui.FontWeight.values[v.index];
+
+ui.TextDecoration textDecorationToUi(i.TextDecoration v) {
+  // Reconstruct dart:ui's decoration by ORing the named primitives, since the
+  // bitmask encoding matches.
+  final mask = v.mask;
+  final parts = <ui.TextDecoration>[];
+  if (mask & 0x1 != 0) parts.add(ui.TextDecoration.underline);
+  if (mask & 0x2 != 0) parts.add(ui.TextDecoration.overline);
+  if (mask & 0x4 != 0) parts.add(ui.TextDecoration.lineThrough);
+  if (parts.isEmpty) return ui.TextDecoration.none;
+  if (parts.length == 1) return parts.first;
+  return ui.TextDecoration.combine(parts);
+}
+
+ui.Shadow shadowToUi(i.Shadow s) => ui.Shadow(
+      color: colorToUi(s.color),
+      offset: offsetToUi(s.offset),
+      blurRadius: s.blurRadius,
+    );
+
+ui.ParagraphStyle paragraphStyleToUi(i.ParagraphStyle s) => ui.ParagraphStyle(
+      textAlign: s.textAlign == null ? null : textAlignToUi(s.textAlign!),
+      textDirection: s.textDirection == null
+          ? null
+          : textDirectionToUi(s.textDirection!),
+      maxLines: s.maxLines,
+      fontFamily: s.fontFamily,
+      fontSize: s.fontSize,
+      height: s.height,
+      fontWeight: s.fontWeight == null ? null : fontWeightToUi(s.fontWeight!),
+      fontStyle: s.fontStyle == null ? null : fontStyleToUi(s.fontStyle!),
+      ellipsis: s.ellipsis,
+    );
+
+ui.TextStyle textStyleToUi(i.TextStyle s) => ui.TextStyle(
+      color: s.color == null ? null : colorToUi(s.color!),
+      decoration:
+          s.decoration == null ? null : textDecorationToUi(s.decoration!),
+      decorationColor:
+          s.decorationColor == null ? null : colorToUi(s.decorationColor!),
+      decorationStyle: s.decorationStyle == null
+          ? null
+          : textDecorationStyleToUi(s.decorationStyle!),
+      decorationThickness: s.decorationThickness,
+      fontWeight: s.fontWeight == null ? null : fontWeightToUi(s.fontWeight!),
+      fontStyle: s.fontStyle == null ? null : fontStyleToUi(s.fontStyle!),
+      textBaseline:
+          s.textBaseline == null ? null : textBaselineToUi(s.textBaseline!),
+      fontFamily: s.fontFamily,
+      fontFamilyFallback: s.fontFamilyFallback,
+      fontSize: s.fontSize,
+      letterSpacing: s.letterSpacing,
+      wordSpacing: s.wordSpacing,
+      height: s.height,
+      leadingDistribution: s.leadingDistribution == null
+          ? null
+          : textLeadingDistributionToUi(s.leadingDistribution!),
+      shadows: s.shadows?.map(shadowToUi).toList(),
+    );
+
+i.LineMetrics lineMetricsFromUi(ui.LineMetrics m) => i.LineMetrics(
+      hardBreak: m.hardBreak,
+      ascent: m.ascent,
+      descent: m.descent,
+      unscaledAscent: m.unscaledAscent,
+      height: m.height,
+      width: m.width,
+      left: m.left,
+      baseline: m.baseline,
+      lineNumber: m.lineNumber,
+    );

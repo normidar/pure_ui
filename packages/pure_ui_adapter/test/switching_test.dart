@@ -9,21 +9,8 @@ class _FakeBackend implements UiBackend {
   @override
   bool supports(BackendFeature feature) => false;
   @override
-  Paint createPaint() => throw UnimplementedError();
-  @override
-  Path createPath() => throw UnimplementedError();
-  @override
-  PictureRecorder createPictureRecorder() => throw UnimplementedError();
-  @override
-  Canvas createCanvas(PictureRecorder recorder, [Rect? cullRect]) =>
-      throw UnimplementedError();
-  @override
-  Future<Image> decodeImageFromPixels(
-          pixels, int width, int height, PixelFormat format) =>
-      throw UnimplementedError();
-  @override
-  Image createImageFromPixels(pixels, int width, int height) =>
-      throw UnimplementedError();
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError(
+      'fake backend has no real implementation; only `name` is observed');
 }
 
 void main() {

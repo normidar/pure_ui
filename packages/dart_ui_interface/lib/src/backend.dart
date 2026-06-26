@@ -7,6 +7,8 @@ import 'dart:typed_data';
 
 import 'enums.dart';
 import 'painting.dart';
+import 'shaders.dart';
+import 'text.dart';
 import 'values.dart';
 
 /// The factory contract a drawing backend (`pure_ui` or `dart:ui`) must
@@ -36,8 +38,11 @@ abstract interface class UiBackend {
   /// Installs [backend] as the global default (typically once at startup).
   static set instance(UiBackend backend) => _global = backend;
 
-  /// Whether a global backend has been registered.
-  static bool get hasInstance => _global != null;
+  /// Whether a backend is currently resolvable — either as a zone override
+  /// (installed by [runWith]) or as the global default. Symmetric with the
+  /// resolution order used by [instance].
+  static bool get hasInstance =>
+      Zone.current[#dartUiBackend] is UiBackend || _global != null;
 
   /// Runs [body] with [backend] selected for the dynamic extent of the call.
   /// Concurrency-safe and nestable (plan §3.2).
@@ -66,6 +71,70 @@ abstract interface class UiBackend {
 
   /// Creates an [Image] directly from already-decoded RGBA pixel data.
   Image createImageFromPixels(Uint8List pixels, int width, int height);
+
+  // --- text ---
+  ParagraphBuilder createParagraphBuilder(ParagraphStyle style);
+
+  /// Registers a font for use by the backend's text rasterizer. Returns when
+  /// the font is ready (pure_ui completes synchronously; dart:ui awaits the
+  /// engine).
+  Future<void> loadFont(
+    String family,
+    Uint8List bytes, {
+    FontWeight weight = FontWeight.normal,
+    FontStyle style = FontStyle.normal,
+  });
+
+  // --- vertices ---
+  Vertices createVertices(
+    VertexMode mode,
+    List<Offset> positions, {
+    List<Offset>? textureCoordinates,
+    List<Color>? colors,
+    List<int>? indices,
+  });
+
+  // --- shaders / filters ---
+  Gradient createLinearGradient(
+    Offset from,
+    Offset to,
+    List<Color> colors,
+    List<double>? colorStops,
+    TileMode tileMode,
+    Float64List? matrix4,
+  );
+
+  Gradient createRadialGradient(
+    Offset center,
+    double radius,
+    List<Color> colors,
+    List<double>? colorStops,
+    TileMode tileMode,
+    Float64List? matrix4,
+    Offset? focal,
+    double focalRadius,
+  );
+
+  Gradient createSweepGradient(
+    Offset center,
+    List<Color> colors,
+    List<double>? colorStops,
+    TileMode tileMode,
+    double startAngle,
+    double endAngle,
+    Float64List? matrix4,
+  );
+
+  ColorFilter createColorFilterMode(Color color, BlendMode blendMode);
+  ColorFilter createColorFilterMatrix(List<double> matrix);
+
+  ImageFilter createBlurFilter({
+    required double sigmaX,
+    required double sigmaY,
+    required TileMode tileMode,
+  });
+
+  MaskFilter createMaskFilterBlur(BlurStyle style, double sigma);
 }
 
 /// Capabilities that a backend may or may not implement (plan §5).
@@ -76,4 +145,7 @@ enum BackendFeature {
   imageFilters,
   text,
   fragmentShaders,
+  atlas,
+  vertices,
+  drawShadow,
 }

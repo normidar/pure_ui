@@ -14,4 +14,10 @@ export 'src/backend.dart'
         PureUiCanvas,
         PureUiPicture,
         PureUiPictureRecorder,
-        PureUiImage;
+        PureUiImage,
+        PureUiParagraphBuilder,
+        PureUiParagraph,
+        PureUiGradient,
+        PureUiColorFilter,
+        PureUiImageFilter,
+        PureUiMaskFilter;

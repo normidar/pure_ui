@@ -306,3 +306,192 @@ p.ImageByteFormat imageByteFormatToPure(i.ImageByteFormat v) {
       return p.ImageByteFormat.rawExtendedRgba128;
   }
 }
+
+p.TileMode tileModeToPure(i.TileMode v) {
+  switch (v) {
+    case i.TileMode.clamp:
+      return p.TileMode.clamp;
+    case i.TileMode.repeated:
+      return p.TileMode.repeated;
+    case i.TileMode.mirror:
+      return p.TileMode.mirror;
+    case i.TileMode.decal:
+      return p.TileMode.decal;
+  }
+}
+
+p.VertexMode vertexModeToPure(i.VertexMode v) {
+  switch (v) {
+    case i.VertexMode.triangles:
+      return p.VertexMode.triangles;
+    case i.VertexMode.triangleStrip:
+      return p.VertexMode.triangleStrip;
+    case i.VertexMode.triangleFan:
+      return p.VertexMode.triangleFan;
+  }
+}
+
+p.BlurStyle blurStyleToPure(i.BlurStyle v) {
+  switch (v) {
+    case i.BlurStyle.normal:
+      return p.BlurStyle.normal;
+    case i.BlurStyle.solid:
+      return p.BlurStyle.solid;
+    case i.BlurStyle.outer:
+      return p.BlurStyle.outer;
+    case i.BlurStyle.inner:
+      return p.BlurStyle.inner;
+  }
+}
+
+// --- text enums ---
+
+p.TextAlign textAlignToPure(i.TextAlign v) {
+  switch (v) {
+    case i.TextAlign.left:
+      return p.TextAlign.left;
+    case i.TextAlign.right:
+      return p.TextAlign.right;
+    case i.TextAlign.center:
+      return p.TextAlign.center;
+    case i.TextAlign.justify:
+      return p.TextAlign.justify;
+    case i.TextAlign.start:
+      return p.TextAlign.start;
+    case i.TextAlign.end:
+      return p.TextAlign.end;
+  }
+}
+
+p.TextDirection textDirectionToPure(i.TextDirection v) {
+  switch (v) {
+    case i.TextDirection.ltr:
+      return p.TextDirection.ltr;
+    case i.TextDirection.rtl:
+      return p.TextDirection.rtl;
+  }
+}
+
+p.TextBaseline textBaselineToPure(i.TextBaseline v) {
+  switch (v) {
+    case i.TextBaseline.alphabetic:
+      return p.TextBaseline.alphabetic;
+    case i.TextBaseline.ideographic:
+      return p.TextBaseline.ideographic;
+  }
+}
+
+p.TextDecorationStyle textDecorationStyleToPure(i.TextDecorationStyle v) {
+  switch (v) {
+    case i.TextDecorationStyle.solid:
+      return p.TextDecorationStyle.solid;
+    case i.TextDecorationStyle.double:
+      return p.TextDecorationStyle.double;
+    case i.TextDecorationStyle.dotted:
+      return p.TextDecorationStyle.dotted;
+    case i.TextDecorationStyle.dashed:
+      return p.TextDecorationStyle.dashed;
+    case i.TextDecorationStyle.wavy:
+      return p.TextDecorationStyle.wavy;
+  }
+}
+
+p.TextLeadingDistribution textLeadingDistributionToPure(
+    i.TextLeadingDistribution v) {
+  switch (v) {
+    case i.TextLeadingDistribution.proportional:
+      return p.TextLeadingDistribution.proportional;
+    case i.TextLeadingDistribution.even:
+      return p.TextLeadingDistribution.even;
+  }
+}
+
+p.FontStyle fontStyleToPure(i.FontStyle v) {
+  switch (v) {
+    case i.FontStyle.normal:
+      return p.FontStyle.normal;
+    case i.FontStyle.italic:
+      return p.FontStyle.italic;
+  }
+}
+
+p.FontWeight fontWeightToPure(i.FontWeight v) {
+  // Both classes are non-enum 9-step weights with a stable index ordering.
+  return p.FontWeight.values[v.index];
+}
+
+p.TextDecoration textDecorationToPure(i.TextDecoration v) {
+  // pure_ui's TextDecoration uses the same bitmask encoding as dart:ui, which
+  // is what `mask` exposes — combine the named decorations to reconstruct it.
+  final mask = v.mask;
+  final parts = <p.TextDecoration>[];
+  if (mask & 0x1 != 0) parts.add(p.TextDecoration.underline);
+  if (mask & 0x2 != 0) parts.add(p.TextDecoration.overline);
+  if (mask & 0x4 != 0) parts.add(p.TextDecoration.lineThrough);
+  if (parts.isEmpty) return p.TextDecoration.none;
+  if (parts.length == 1) return parts.first;
+  return p.TextDecoration.combine(parts);
+}
+
+p.Shadow shadowToPure(i.Shadow s) => p.Shadow(
+      color: colorToPure(s.color),
+      offset: offsetToPure(s.offset),
+      blurRadius: s.blurRadius,
+    );
+
+p.ParagraphStyle paragraphStyleToPure(i.ParagraphStyle s) => p.ParagraphStyle(
+      textAlign:
+          s.textAlign == null ? null : textAlignToPure(s.textAlign!),
+      textDirection: s.textDirection == null
+          ? null
+          : textDirectionToPure(s.textDirection!),
+      maxLines: s.maxLines,
+      fontFamily: s.fontFamily,
+      fontSize: s.fontSize,
+      height: s.height,
+      fontWeight:
+          s.fontWeight == null ? null : fontWeightToPure(s.fontWeight!),
+      fontStyle: s.fontStyle == null ? null : fontStyleToPure(s.fontStyle!),
+      ellipsis: s.ellipsis,
+    );
+
+p.TextStyle textStyleToPure(i.TextStyle s) => p.TextStyle(
+      color: s.color == null ? null : colorToPure(s.color!),
+      decoration:
+          s.decoration == null ? null : textDecorationToPure(s.decoration!),
+      decorationColor: s.decorationColor == null
+          ? null
+          : colorToPure(s.decorationColor!),
+      decorationStyle: s.decorationStyle == null
+          ? null
+          : textDecorationStyleToPure(s.decorationStyle!),
+      decorationThickness: s.decorationThickness,
+      fontWeight:
+          s.fontWeight == null ? null : fontWeightToPure(s.fontWeight!),
+      fontStyle: s.fontStyle == null ? null : fontStyleToPure(s.fontStyle!),
+      textBaseline: s.textBaseline == null
+          ? null
+          : textBaselineToPure(s.textBaseline!),
+      fontFamily: s.fontFamily,
+      fontFamilyFallback: s.fontFamilyFallback,
+      fontSize: s.fontSize,
+      letterSpacing: s.letterSpacing,
+      wordSpacing: s.wordSpacing,
+      height: s.height,
+      leadingDistribution: s.leadingDistribution == null
+          ? null
+          : textLeadingDistributionToPure(s.leadingDistribution!),
+      shadows: s.shadows?.map(shadowToPure).toList(),
+    );
+
+i.LineMetrics lineMetricsFromPure(p.LineMetrics m) => i.LineMetrics(
+      hardBreak: m.hardBreak,
+      ascent: m.ascent,
+      descent: m.descent,
+      unscaledAscent: m.unscaledAscent,
+      height: m.height,
+      width: m.width,
+      left: m.left,
+      baseline: m.baseline,
+      lineNumber: m.lineNumber,
+    );

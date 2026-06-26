@@ -17,4 +17,6 @@ export 'src/backend.dart';
 export 'src/enums.dart';
 export 'src/functions.dart';
 export 'src/painting.dart';
+export 'src/shaders.dart';
+export 'src/text.dart';
 export 'src/values.dart';

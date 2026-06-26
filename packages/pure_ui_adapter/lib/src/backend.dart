@@ -26,8 +26,14 @@ class PureUiBackend implements i.UiBackend {
       case i.BackendFeature.drawing:
       case i.BackendFeature.imageCodec:
       case i.BackendFeature.text:
-        return true;
       case i.BackendFeature.shaders:
+      case i.BackendFeature.atlas:
+        return true;
+      // drawShadow and drawVertices are recorded by pure_ui's Canvas but the
+      // rasterizer has no handler — refuse here so callers don't get a silent
+      // no-op.
+      case i.BackendFeature.drawShadow:
+      case i.BackendFeature.vertices:
       case i.BackendFeature.imageFilters:
       case i.BackendFeature.fragmentShaders:
         return false;
@@ -66,6 +72,137 @@ class PureUiBackend implements i.UiBackend {
   @override
   i.Image createImageFromPixels(Uint8List pixels, int width, int height) =>
       PureUiImage(p.createPureDartImage(pixels, width, height));
+
+  @override
+  i.ParagraphBuilder createParagraphBuilder(i.ParagraphStyle style) =>
+      PureUiParagraphBuilder(p.ParagraphBuilder(paragraphStyleToPure(style)));
+
+  @override
+  Future<void> loadFont(
+    String family,
+    Uint8List bytes, {
+    i.FontWeight weight = i.FontWeight.normal,
+    i.FontStyle style = i.FontStyle.normal,
+  }) async {
+    p.FontLoader.load(
+      family,
+      bytes,
+      weight: fontWeightToPure(weight),
+      style: fontStyleToPure(style),
+    );
+  }
+
+  @override
+  i.Vertices createVertices(
+    i.VertexMode mode,
+    List<i.Offset> positions, {
+    List<i.Offset>? textureCoordinates,
+    List<i.Color>? colors,
+    List<int>? indices,
+  }) {
+    // pure_ui's Vertices is an engine stub (NativeFieldWrapperClass1) and the
+    // rasterizer's drawVertices isn't actually wired. Refuse instead of
+    // returning a half-broken object — gate with supports(vertices).
+    throw UnsupportedError(
+      'pure_ui backend does not implement Vertices yet; '
+      'check UiBackend.instance.supports(BackendFeature.vertices) before use.',
+    );
+  }
+
+  @override
+  i.Gradient createLinearGradient(
+    i.Offset from,
+    i.Offset to,
+    List<i.Color> colors,
+    List<double>? colorStops,
+    i.TileMode tileMode,
+    Float64List? matrix4,
+  ) =>
+      PureUiGradient(p.Gradient.linear(
+        offsetToPure(from),
+        offsetToPure(to),
+        colors.map(colorToPure).toList(),
+        colorStops,
+        tileModeToPure(tileMode),
+        matrix4,
+      ));
+
+  @override
+  i.Gradient createRadialGradient(
+    i.Offset center,
+    double radius,
+    List<i.Color> colors,
+    List<double>? colorStops,
+    i.TileMode tileMode,
+    Float64List? matrix4,
+    i.Offset? focal,
+    double focalRadius,
+  ) =>
+      PureUiGradient(p.Gradient.radial(
+        offsetToPure(center),
+        radius,
+        colors.map(colorToPure).toList(),
+        colorStops,
+        tileModeToPure(tileMode),
+        matrix4,
+        focal == null ? null : offsetToPure(focal),
+        focalRadius,
+      ));
+
+  @override
+  i.Gradient createSweepGradient(
+    i.Offset center,
+    List<i.Color> colors,
+    List<double>? colorStops,
+    i.TileMode tileMode,
+    double startAngle,
+    double endAngle,
+    Float64List? matrix4,
+  ) =>
+      PureUiGradient(p.Gradient.sweep(
+        offsetToPure(center),
+        colors.map(colorToPure).toList(),
+        colorStops,
+        tileModeToPure(tileMode),
+        startAngle,
+        endAngle,
+        matrix4,
+      ));
+
+  @override
+  i.ColorFilter createColorFilterMode(i.Color color, i.BlendMode blendMode) {
+    // pure_ui's Paint.colorFilter setter goes through an FFI native that isn't
+    // resolvable outside Flutter — refuse construction up front rather than
+    // hand back an object that crashes on first assignment.
+    throw UnsupportedError(
+      'pure_ui backend does not implement ColorFilter; '
+      'check UiBackend.instance.supports(BackendFeature.imageFilters) before use.',
+    );
+  }
+
+  @override
+  i.ColorFilter createColorFilterMatrix(List<double> matrix) {
+    throw UnsupportedError(
+      'pure_ui backend does not implement ColorFilter; '
+      'check UiBackend.instance.supports(BackendFeature.imageFilters) before use.',
+    );
+  }
+
+  @override
+  i.ImageFilter createBlurFilter({
+    required double sigmaX,
+    required double sigmaY,
+    required i.TileMode tileMode,
+  }) {
+    throw UnsupportedError(
+      'pure_ui backend does not implement ImageFilter; '
+      'check UiBackend.instance.supports(BackendFeature.imageFilters) before use.',
+    );
+  }
+
+  @override
+  i.MaskFilter createMaskFilterBlur(i.BlurStyle style, double sigma) =>
+      PureUiMaskFilter(p.MaskFilter.blur(blurStyleToPure(style), sigma));
 }
 
 /// Wraps a pure_ui [p.Paint].
@@ -125,6 +262,53 @@ class PureUiPaint implements i.Paint {
   i.PaintingStyle get style => paintingStyleFromPure(raw.style);
   @override
   set style(i.PaintingStyle value) => raw.style = paintingStyleToPure(value);
+
+  // The wrapper objects below remember what the interface caller assigned so
+  // we can return the same `i.*` instance back through the getter without
+  // having to reconstruct it from pure_ui's stored value.
+  i.Shader? _shader;
+  i.ColorFilter? _colorFilter;
+  i.ImageFilter? _imageFilter;
+  i.MaskFilter? _maskFilter;
+
+  @override
+  i.Shader? get shader => _shader;
+  @override
+  set shader(i.Shader? value) {
+    _shader = value;
+    if (value == null) {
+      raw.shader = null;
+    } else if (value is PureUiGradient) {
+      raw.shader = value.raw;
+    } else {
+      throw UnsupportedError(
+          'Unknown Shader implementation: ${value.runtimeType}');
+    }
+  }
+
+  @override
+  i.ColorFilter? get colorFilter => _colorFilter;
+  @override
+  set colorFilter(i.ColorFilter? value) {
+    _colorFilter = value;
+    raw.colorFilter = value == null ? null : (value as PureUiColorFilter).raw;
+  }
+
+  @override
+  i.ImageFilter? get imageFilter => _imageFilter;
+  @override
+  set imageFilter(i.ImageFilter? value) {
+    _imageFilter = value;
+    raw.imageFilter = value == null ? null : (value as PureUiImageFilter).raw;
+  }
+
+  @override
+  i.MaskFilter? get maskFilter => _maskFilter;
+  @override
+  set maskFilter(i.MaskFilter? value) {
+    _maskFilter = value;
+    raw.maskFilter = value == null ? null : (value as PureUiMaskFilter).raw;
+  }
 }
 
 /// Wraps a pure_ui [p.Path].
@@ -316,6 +500,62 @@ class PureUiCanvas implements i.Canvas {
   @override
   void drawPicture(i.Picture picture) =>
       raw.drawPicture((picture as PureUiPicture).raw);
+
+  @override
+  void drawImageNine(i.Image image, i.Rect center, i.Rect dst, i.Paint paint) =>
+      raw.drawImageNine((image as PureUiImage).raw, rectToPure(center),
+          rectToPure(dst), _paint(paint));
+
+  @override
+  void drawParagraph(i.Paragraph paragraph, i.Offset offset) => raw
+      .drawParagraph((paragraph as PureUiParagraph).raw, offsetToPure(offset));
+
+  @override
+  void drawRawAtlas(
+    i.Image atlas,
+    Float32List rstTransforms,
+    Float32List rects,
+    Int32List? colors,
+    i.BlendMode? blendMode,
+    i.Rect? cullRect,
+    i.Paint paint,
+  ) =>
+      raw.drawRawAtlas(
+        (atlas as PureUiImage).raw,
+        rstTransforms,
+        rects,
+        colors,
+        blendMode == null ? null : blendModeToPure(blendMode),
+        cullRect == null ? null : rectToPure(cullRect),
+        _paint(paint),
+      );
+
+  @override
+  void drawVertices(
+    i.Vertices vertices,
+    i.BlendMode blendMode,
+    i.Paint paint,
+  ) {
+    throw UnsupportedError(
+      'pure_ui backend does not implement drawVertices; '
+      'check UiBackend.instance.supports(BackendFeature.vertices) before use.',
+    );
+  }
+
+  @override
+  void drawShadow(
+    i.Path path,
+    i.Color color,
+    double elevation,
+    bool transparentOccluder,
+  ) {
+    // pure_ui records the command but its rasterizer doesn't paint it — refuse
+    // rather than letting the shadow silently disappear.
+    throw UnsupportedError(
+      'pure_ui backend does not implement drawShadow; '
+      'check UiBackend.instance.supports(BackendFeature.drawShadow) before use.',
+    );
+  }
 }
 
 /// Wraps a pure_ui [p.PictureRecorder].
@@ -374,4 +614,90 @@ class PureUiImage implements i.Image {
       raw.toByteData(format: imageByteFormatToPure(format));
   @override
   void dispose() => raw.dispose();
+}
+
+// --- text ---
+
+/// Wraps a pure_ui [p.ParagraphBuilder].
+class PureUiParagraphBuilder implements i.ParagraphBuilder {
+  PureUiParagraphBuilder(this.raw);
+
+  final p.ParagraphBuilder raw;
+
+  @override
+  void pushStyle(i.TextStyle style) => raw.pushStyle(textStyleToPure(style));
+  @override
+  void pop() => raw.pop();
+  @override
+  void addText(String text) => raw.addText(text);
+  @override
+  i.Paragraph build() => PureUiParagraph(raw.build());
+}
+
+/// Wraps a pure_ui [p.Paragraph].
+class PureUiParagraph implements i.Paragraph {
+  PureUiParagraph(this.raw);
+
+  final p.Paragraph raw;
+
+  @override
+  double get width => raw.width;
+  @override
+  double get height => raw.height;
+  @override
+  double get longestLine => raw.longestLine;
+  @override
+  double get minIntrinsicWidth => raw.minIntrinsicWidth;
+  @override
+  double get maxIntrinsicWidth => raw.maxIntrinsicWidth;
+  @override
+  double get alphabeticBaseline => raw.alphabeticBaseline;
+  @override
+  double get ideographicBaseline => raw.ideographicBaseline;
+  @override
+  bool get didExceedMaxLines => raw.didExceedMaxLines;
+  @override
+  int get numberOfLines => raw.numberOfLines;
+  @override
+  bool get debugDisposed => raw.debugDisposed;
+  @override
+  void layout(i.ParagraphConstraints constraints) =>
+      raw.layout(p.ParagraphConstraints(width: constraints.width));
+  @override
+  List<i.LineMetrics> computeLineMetrics() =>
+      raw.computeLineMetrics().map(lineMetricsFromPure).toList();
+  @override
+  void dispose() => raw.dispose();
+}
+
+// --- shaders / filters ---
+
+/// Wraps a pure_ui [p.Gradient]. Acts as a [i.Shader] when assigned to a Paint.
+class PureUiGradient implements i.Gradient {
+  PureUiGradient(this.raw);
+
+  final p.Gradient raw;
+
+  @override
+  bool get debugDisposed => false;
+  @override
+  void dispose() {/* pure_ui Gradients are GC-managed */}
+}
+
+/// Wraps a pure_ui [p.ColorFilter].
+class PureUiColorFilter implements i.ColorFilter {
+  PureUiColorFilter(this.raw);
+  final p.ColorFilter raw;
+}
+
+/// Wraps a pure_ui [p.ImageFilter].
+class PureUiImageFilter implements i.ImageFilter {
+  PureUiImageFilter(this.raw);
+  final p.ImageFilter raw;
+}
+
+/// Wraps a pure_ui [p.MaskFilter].
+class PureUiMaskFilter implements i.MaskFilter {
+  PureUiMaskFilter(this.raw);
+  final p.MaskFilter raw;
 }

@@ -7,6 +7,8 @@ import 'dart:typed_data';
 
 import 'backend.dart';
 import 'enums.dart';
+import 'shaders.dart';
+import 'text.dart';
 import 'values.dart';
 
 /// A description of the style to use when drawing on a [Canvas].
@@ -18,6 +20,18 @@ abstract class Paint {
 
   Color get color;
   set color(Color value);
+
+  Shader? get shader;
+  set shader(Shader? value);
+
+  ColorFilter? get colorFilter;
+  set colorFilter(ColorFilter? value);
+
+  ImageFilter? get imageFilter;
+  set imageFilter(ImageFilter? value);
+
+  MaskFilter? get maskFilter;
+  set maskFilter(MaskFilter? value);
 
   FilterQuality get filterQuality;
   set filterQuality(FilterQuality value);
@@ -123,8 +137,60 @@ abstract class Canvas {
   void drawPath(Path path, Paint paint);
   void drawImage(Image image, Offset offset, Paint paint);
   void drawImageRect(Image image, Rect src, Rect dst, Paint paint);
+  void drawImageNine(Image image, Rect center, Rect dst, Paint paint);
   void drawPoints(PointMode pointMode, List<Offset> points, Paint paint);
   void drawPicture(Picture picture);
+  void drawParagraph(Paragraph paragraph, Offset offset);
+
+  /// Draw a sprite atlas. Backends without atlas support throw
+  /// [UnsupportedError]; gate with `UiBackend.supports(BackendFeature.atlas)`.
+  void drawRawAtlas(
+    Image atlas,
+    Float32List rstTransforms,
+    Float32List rects,
+    Int32List? colors,
+    BlendMode? blendMode,
+    Rect? cullRect,
+    Paint paint,
+  );
+
+  /// Vertices drawing. Backends without support throw [UnsupportedError].
+  void drawVertices(
+    Vertices vertices,
+    BlendMode blendMode,
+    Paint paint,
+  );
+
+  /// Draws an elevation shadow under the given path. Backends without support
+  /// throw [UnsupportedError].
+  void drawShadow(
+    Path path,
+    Color color,
+    double elevation,
+    bool transparentOccluder,
+  );
+}
+
+/// Vertex data for [Canvas.drawVertices]. Construction is backend-dispatched
+/// so each engine can build its native vertex buffer.
+abstract class Vertices {
+  factory Vertices(
+    VertexMode mode,
+    List<Offset> positions, {
+    List<Offset>? textureCoordinates,
+    List<Color>? colors,
+    List<int>? indices,
+  }) =>
+      UiBackend.instance.createVertices(
+        mode,
+        positions,
+        textureCoordinates: textureCoordinates,
+        colors: colors,
+        indices: indices,
+      );
+
+  void dispose();
+  bool get debugDisposed;
 }
 
 /// An object representing a sequence of recorded graphical operations.

@@ -40,11 +40,10 @@ instance — no import changes required.
 | `dart_ui_conformance` | dev | backend-agnostic parity tests |
 
 ```dart
-import 'package:dart_ui_wrapper/dart_ui_wrapper.dart';
 import 'package:dart_ui_wrapper/ui.dart' as ui;
 
 void main() {
-  installPureUiBackend(); // or: UiBackend.instance = const DartUiBackend();
+  ui.installPureUiBackend(); // or: ui.UiBackend.instance = const DartUiBackend();
   final r = ui.PictureRecorder();
   ui.Canvas(r, const ui.Rect.fromLTWH(0, 0, 100, 100))
       .drawCircle(const ui.Offset(50, 50), 40, ui.Paint()..color = const ui.Color(0xFF2196F3));

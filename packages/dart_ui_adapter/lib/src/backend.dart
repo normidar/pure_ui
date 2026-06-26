@@ -68,6 +68,125 @@ class DartUiBackend implements i.UiBackend {
       'decodeImageFromPixels (async) instead.',
     );
   }
+
+  @override
+  i.ParagraphBuilder createParagraphBuilder(i.ParagraphStyle style) =>
+      DartUiParagraphBuilder(ui.ParagraphBuilder(paragraphStyleToUi(style)));
+
+  @override
+  Future<void> loadFont(
+    String family,
+    Uint8List bytes, {
+    i.FontWeight weight = i.FontWeight.normal,
+    i.FontStyle style = i.FontStyle.normal,
+  }) {
+    // dart:ui's loadFontFromList registers a single family; weight/style
+    // distinctions aren't expressible here — callers needing variants must
+    // register them under different family names (e.g. "Roboto-Bold").
+    return ui.loadFontFromList(bytes, fontFamily: family);
+  }
+
+  @override
+  i.Vertices createVertices(
+    i.VertexMode mode,
+    List<i.Offset> positions, {
+    List<i.Offset>? textureCoordinates,
+    List<i.Color>? colors,
+    List<int>? indices,
+  }) =>
+      DartUiVertices(ui.Vertices(
+        vertexModeToUi(mode),
+        positions.map(offsetToUi).toList(),
+        textureCoordinates:
+            textureCoordinates?.map(offsetToUi).toList(),
+        colors: colors?.map(colorToUi).toList(),
+        indices: indices,
+      ));
+
+  @override
+  i.Gradient createLinearGradient(
+    i.Offset from,
+    i.Offset to,
+    List<i.Color> colors,
+    List<double>? colorStops,
+    i.TileMode tileMode,
+    Float64List? matrix4,
+  ) =>
+      DartUiGradient(ui.Gradient.linear(
+        offsetToUi(from),
+        offsetToUi(to),
+        colors.map(colorToUi).toList(),
+        colorStops,
+        tileModeToUi(tileMode),
+        matrix4,
+      ));
+
+  @override
+  i.Gradient createRadialGradient(
+    i.Offset center,
+    double radius,
+    List<i.Color> colors,
+    List<double>? colorStops,
+    i.TileMode tileMode,
+    Float64List? matrix4,
+    i.Offset? focal,
+    double focalRadius,
+  ) =>
+      DartUiGradient(ui.Gradient.radial(
+        offsetToUi(center),
+        radius,
+        colors.map(colorToUi).toList(),
+        colorStops,
+        tileModeToUi(tileMode),
+        matrix4,
+        focal == null ? null : offsetToUi(focal),
+        focalRadius,
+      ));
+
+  @override
+  i.Gradient createSweepGradient(
+    i.Offset center,
+    List<i.Color> colors,
+    List<double>? colorStops,
+    i.TileMode tileMode,
+    double startAngle,
+    double endAngle,
+    Float64List? matrix4,
+  ) =>
+      DartUiGradient(ui.Gradient.sweep(
+        offsetToUi(center),
+        colors.map(colorToUi).toList(),
+        colorStops,
+        tileModeToUi(tileMode),
+        startAngle,
+        endAngle,
+        matrix4,
+      ));
+
+  @override
+  i.ColorFilter createColorFilterMode(i.Color color, i.BlendMode blendMode) =>
+      DartUiColorFilter(
+          ui.ColorFilter.mode(colorToUi(color), blendModeToUi(blendMode)));
+
+  @override
+  i.ColorFilter createColorFilterMatrix(List<double> matrix) =>
+      DartUiColorFilter(ui.ColorFilter.matrix(matrix));
+
+  @override
+  i.ImageFilter createBlurFilter({
+    required double sigmaX,
+    required double sigmaY,
+    required i.TileMode tileMode,
+  }) =>
+      DartUiImageFilter(ui.ImageFilter.blur(
+        sigmaX: sigmaX,
+        sigmaY: sigmaY,
+        tileMode: tileModeToUi(tileMode),
+      ));
+
+  @override
+  i.MaskFilter createMaskFilterBlur(i.BlurStyle style, double sigma) =>
+      DartUiMaskFilter(ui.MaskFilter.blur(blurStyleToUi(style), sigma));
 }
 
 /// Wraps a `dart:ui` [ui.Paint].
@@ -126,6 +245,50 @@ class DartUiPaint implements i.Paint {
   i.PaintingStyle get style => paintingStyleFromUi(raw.style);
   @override
   set style(i.PaintingStyle value) => raw.style = paintingStyleToUi(value);
+
+  i.Shader? _shader;
+  i.ColorFilter? _colorFilter;
+  i.ImageFilter? _imageFilter;
+  i.MaskFilter? _maskFilter;
+
+  @override
+  i.Shader? get shader => _shader;
+  @override
+  set shader(i.Shader? value) {
+    _shader = value;
+    if (value == null) {
+      raw.shader = null;
+    } else if (value is DartUiGradient) {
+      raw.shader = value.raw;
+    } else {
+      throw UnsupportedError(
+          'Unknown Shader implementation: ${value.runtimeType}');
+    }
+  }
+
+  @override
+  i.ColorFilter? get colorFilter => _colorFilter;
+  @override
+  set colorFilter(i.ColorFilter? value) {
+    _colorFilter = value;
+    raw.colorFilter = value == null ? null : (value as DartUiColorFilter).raw;
+  }
+
+  @override
+  i.ImageFilter? get imageFilter => _imageFilter;
+  @override
+  set imageFilter(i.ImageFilter? value) {
+    _imageFilter = value;
+    raw.imageFilter = value == null ? null : (value as DartUiImageFilter).raw;
+  }
+
+  @override
+  i.MaskFilter? get maskFilter => _maskFilter;
+  @override
+  set maskFilter(i.MaskFilter? value) {
+    _maskFilter = value;
+    raw.maskFilter = value == null ? null : (value as DartUiMaskFilter).raw;
+  }
 }
 
 /// Wraps a `dart:ui` [ui.Path].
@@ -352,6 +515,67 @@ class DartUiCanvas implements i.Canvas {
   @override
   void drawPicture(i.Picture picture) =>
       raw.drawPicture((picture as DartUiPicture).raw);
+
+  @override
+  void drawImageNine(i.Image image, i.Rect center, i.Rect dst, i.Paint paint) =>
+      raw.drawImageNine(
+        (image as DartUiImage).raw,
+        rectToUi(center),
+        rectToUi(dst),
+        _paint(paint),
+      );
+
+  @override
+  void drawParagraph(i.Paragraph paragraph, i.Offset offset) => raw.drawParagraph(
+        (paragraph as DartUiParagraph).raw,
+        offsetToUi(offset),
+      );
+
+  @override
+  void drawRawAtlas(
+    i.Image atlas,
+    Float32List rstTransforms,
+    Float32List rects,
+    Int32List? colors,
+    i.BlendMode? blendMode,
+    i.Rect? cullRect,
+    i.Paint paint,
+  ) =>
+      raw.drawRawAtlas(
+        (atlas as DartUiImage).raw,
+        rstTransforms,
+        rects,
+        colors,
+        blendMode == null ? null : blendModeToUi(blendMode),
+        cullRect == null ? null : rectToUi(cullRect),
+        _paint(paint),
+      );
+
+  @override
+  void drawVertices(
+    i.Vertices vertices,
+    i.BlendMode blendMode,
+    i.Paint paint,
+  ) =>
+      raw.drawVertices(
+        (vertices as DartUiVertices).raw,
+        blendModeToUi(blendMode),
+        _paint(paint),
+      );
+
+  @override
+  void drawShadow(
+    i.Path path,
+    i.Color color,
+    double elevation,
+    bool transparentOccluder,
+  ) =>
+      raw.drawShadow(
+        (path as DartUiPath).raw,
+        colorToUi(color),
+        elevation,
+        transparentOccluder,
+      );
 }
 
 /// Wraps a `dart:ui` [ui.PictureRecorder].
@@ -408,6 +632,96 @@ class DartUiImage implements i.Image {
   Future<ByteData?> toByteData({
     i.ImageByteFormat format = i.ImageByteFormat.rawRgba,
   }) => raw.toByteData(format: imageByteFormatToUi(format));
+  @override
+  void dispose() => raw.dispose();
+}
+
+// --- text ---
+
+/// Wraps a `dart:ui` [ui.ParagraphBuilder].
+class DartUiParagraphBuilder implements i.ParagraphBuilder {
+  DartUiParagraphBuilder(this.raw);
+  final ui.ParagraphBuilder raw;
+
+  @override
+  void pushStyle(i.TextStyle style) => raw.pushStyle(textStyleToUi(style));
+  @override
+  void pop() => raw.pop();
+  @override
+  void addText(String text) => raw.addText(text);
+  @override
+  i.Paragraph build() => DartUiParagraph(raw.build());
+}
+
+/// Wraps a `dart:ui` [ui.Paragraph].
+class DartUiParagraph implements i.Paragraph {
+  DartUiParagraph(this.raw);
+  final ui.Paragraph raw;
+
+  @override
+  double get width => raw.width;
+  @override
+  double get height => raw.height;
+  @override
+  double get longestLine => raw.longestLine;
+  @override
+  double get minIntrinsicWidth => raw.minIntrinsicWidth;
+  @override
+  double get maxIntrinsicWidth => raw.maxIntrinsicWidth;
+  @override
+  double get alphabeticBaseline => raw.alphabeticBaseline;
+  @override
+  double get ideographicBaseline => raw.ideographicBaseline;
+  @override
+  bool get didExceedMaxLines => raw.didExceedMaxLines;
+  @override
+  int get numberOfLines => raw.numberOfLines;
+  @override
+  bool get debugDisposed => raw.debugDisposed;
+  @override
+  void layout(i.ParagraphConstraints constraints) =>
+      raw.layout(ui.ParagraphConstraints(width: constraints.width));
+  @override
+  List<i.LineMetrics> computeLineMetrics() =>
+      raw.computeLineMetrics().map(lineMetricsFromUi).toList();
+  @override
+  void dispose() => raw.dispose();
+}
+
+// --- shaders / filters / vertices ---
+
+/// Wraps a `dart:ui` [ui.Gradient]. Acts as both [i.Gradient] and [i.Shader].
+class DartUiGradient implements i.Gradient {
+  DartUiGradient(this.raw);
+  final ui.Gradient raw;
+
+  @override
+  bool get debugDisposed => false;
+  @override
+  void dispose() {/* dart:ui gradients are GC-managed */}
+}
+
+class DartUiColorFilter implements i.ColorFilter {
+  DartUiColorFilter(this.raw);
+  final ui.ColorFilter raw;
+}
+
+class DartUiImageFilter implements i.ImageFilter {
+  DartUiImageFilter(this.raw);
+  final ui.ImageFilter raw;
+}
+
+class DartUiMaskFilter implements i.MaskFilter {
+  DartUiMaskFilter(this.raw);
+  final ui.MaskFilter raw;
+}
+
+class DartUiVertices implements i.Vertices {
+  DartUiVertices(this.raw);
+  final ui.Vertices raw;
+
+  @override
+  bool get debugDisposed => false;
   @override
   void dispose() => raw.dispose();
 }

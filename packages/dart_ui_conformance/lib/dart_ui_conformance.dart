@@ -110,3 +110,145 @@ void runDrawingConformanceTests() {
     });
   });
 }
+
+/// Conformance for the text vertical slice (plan §4.3 text). Requires a font
+/// to be passed in since neither backend assumes any built-in font.
+void runTextConformanceTests({
+  required Uint8List fontBytes,
+  String family = 'TestFont',
+}) {
+  group('text conformance', () {
+    setUpAll(() async {
+      await FontLoader.load(family, fontBytes);
+    });
+
+    test('ParagraphBuilder builds and lays out', () {
+      final para = (ParagraphBuilder(
+        ParagraphStyle(fontFamily: family, fontSize: 20),
+      )
+            ..pushStyle(TextStyle(
+              fontFamily: family,
+              fontSize: 20,
+              color: const Color(0xFF222222),
+            ))
+            ..addText('Hello')
+            ..pop())
+          .build()
+        ..layout(const ParagraphConstraints(width: 300));
+      expect(para.width, greaterThan(0));
+      expect(para.height, greaterThan(0));
+      expect(para.longestLine, greaterThan(0));
+      expect(para.numberOfLines, greaterThanOrEqualTo(1));
+      expect(para.didExceedMaxLines, isFalse);
+      final lines = para.computeLineMetrics();
+      expect(lines, isNotEmpty);
+      para.dispose();
+    });
+
+    test('Canvas.drawParagraph paints without throwing', () async {
+      final para = (ParagraphBuilder(
+        ParagraphStyle(fontFamily: family, fontSize: 16),
+      )
+            ..pushStyle(TextStyle(
+              fontFamily: family,
+              fontSize: 16,
+              color: const Color(0xFF000000),
+            ))
+            ..addText('Hi')
+            ..pop())
+          .build()
+        ..layout(const ParagraphConstraints(width: 200));
+
+      final recorder = PictureRecorder();
+      Canvas(recorder, const Rect.fromLTWH(0, 0, 200, 60))
+        ..drawRect(
+          const Rect.fromLTWH(0, 0, 200, 60),
+          Paint()..color = const Color(0xFFFFFFFF),
+        )
+        ..drawParagraph(para, const Offset(4, 8));
+      final picture = recorder.endRecording();
+      final image = await picture.toImage(200, 60);
+      expect(image.width, 200);
+      image.dispose();
+      picture.dispose();
+      para.dispose();
+    });
+
+    test('maxLines + ellipsis is respected', () {
+      final para = (ParagraphBuilder(
+        ParagraphStyle(
+          fontFamily: family,
+          fontSize: 20,
+          maxLines: 1,
+          ellipsis: '...',
+        ),
+      )
+            ..pushStyle(TextStyle(fontFamily: family, fontSize: 20))
+            ..addText('this line is far too long to fit in twenty pixels')
+            ..pop())
+          .build()
+        ..layout(const ParagraphConstraints(width: 20));
+      // didExceedMaxLines is true *if* truncation actually happened. With
+      // ellipsis, the value is backend-dependent (dart:ui sometimes reports
+      // false because the line was replaced); just check that the laid-out
+      // paragraph honours maxLines.
+      expect(para.numberOfLines, 1);
+      para.dispose();
+    });
+  });
+}
+
+/// Conformance for the shader / filter slice (plan §4.3 shader). Branches on
+/// `UiBackend.instance.supports(...)` because pure_ui covers gradients but not
+/// `ColorFilter` / `ImageFilter` (no native engine to call into).
+void runShaderConformanceTests() {
+  group('shader conformance', () {
+    test('Paint.shader accepts a linear gradient', () {
+      final paint = Paint()
+        ..shader = Gradient.linear(
+          Offset.zero,
+          const Offset(100, 0),
+          const <Color>[Color(0xFFFF0000), Color(0xFF0000FF)],
+        );
+      expect(paint.shader, isNotNull);
+    });
+
+    test('ColorFilter.mode either works or refuses cleanly', () {
+      final backend = UiBackend.instance;
+      if (backend.supports(BackendFeature.imageFilters)) {
+        final paint = Paint()
+          ..colorFilter =
+              ColorFilter.mode(const Color(0xFFFF0000), BlendMode.srcIn);
+        expect(paint.colorFilter, isNotNull);
+      } else {
+        expect(
+          () => ColorFilter.mode(const Color(0xFFFF0000), BlendMode.srcIn),
+          throwsA(isA<UnsupportedError>()),
+        );
+      }
+    });
+
+    test('Paint.maskFilter accepts a blur', () {
+      final paint = Paint()..maskFilter = MaskFilter.blur(BlurStyle.normal, 4);
+      expect(paint.maskFilter, isNotNull);
+    });
+
+    test('gradient renders to image without throwing', () async {
+      final recorder = PictureRecorder();
+      Canvas(recorder, const Rect.fromLTWH(0, 0, 40, 40)).drawRect(
+        const Rect.fromLTWH(0, 0, 40, 40),
+        Paint()
+          ..shader = Gradient.linear(
+            Offset.zero,
+            const Offset(40, 0),
+            const <Color>[Color(0xFFFF0000), Color(0xFF0000FF)],
+          ),
+      );
+      final picture = recorder.endRecording();
+      final image = await picture.toImage(40, 40);
+      expect(image.width, 40);
+      image.dispose();
+      picture.dispose();
+    });
+  });
+}
